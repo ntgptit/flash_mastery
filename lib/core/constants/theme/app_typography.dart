@@ -1,141 +1,160 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Defines the global font / text style system for the app using Material 3.
-///
-/// If you want to use Google Fonts (e.g. Roboto, Inter),
-/// add the `google_fonts` package to `pubspec.yaml` and
-/// replace the `TextTheme` below with `GoogleFonts.xxxTextTheme()`.
 class AppTypography {
   AppTypography._();
+
+  static const double baseFontSize = 14;
+  static const List<String> _fontFamilyFallback = ['Pretendard', 'sans-serif'];
+
+  static String get primaryFontFamily =>
+      GoogleFonts.inter().fontFamily ?? 'Inter';
+  static List<String> get fontFallback => _fontFamilyFallback;
+
+  static TextStyle _inter({
+    required double size,
+    required FontWeight weight,
+    required double height,
+    double letterSpacing = -0.05,
+  }) {
+    final base = GoogleFonts.inter(
+      fontSize: size,
+      fontWeight: weight,
+      height: height,
+      letterSpacing: letterSpacing,
+    );
+    return base.copyWith(fontFamilyFallback: _fontFamilyFallback);
+  }
 
   // ==================== DISPLAY STYLES ====================
 
   /// Display Large (57sp)
-  static const TextStyle displayLarge = TextStyle(
-    fontSize: 57,
-    fontWeight: FontWeight.w400,
-    letterSpacing: -0.25,
-    height: 64 / 57,
+  static final TextStyle displayLarge = _inter(
+    size: 57,
+    weight: FontWeight.w700,
+    letterSpacing: -0.06,
+    height: 1.3,
   );
 
   /// Display Medium (45sp)
-  static const TextStyle displayMedium = TextStyle(
-    fontSize: 45,
-    fontWeight: FontWeight.w400,
-    letterSpacing: 0,
-    height: 52 / 45,
+  static final TextStyle displayMedium = _inter(
+    size: 45,
+    weight: FontWeight.w700,
+    letterSpacing: -0.06,
+    height: 1.3,
   );
 
   /// Display Small (36sp)
-  static const TextStyle displaySmall = TextStyle(
-    fontSize: 36,
-    fontWeight: FontWeight.w400,
-    letterSpacing: 0,
-    height: 44 / 36,
+  static final TextStyle displaySmall = _inter(
+    size: 36,
+    weight: FontWeight.w700,
+    letterSpacing: -0.05,
+    height: 1.3,
   );
 
   // ==================== HEADLINE STYLES ====================
 
   /// Headline Large (32sp)
-  static const TextStyle headlineLarge = TextStyle(
-    fontSize: 32,
-    fontWeight: FontWeight.w600,
-    letterSpacing: 0,
-    height: 40 / 32,
+  static final TextStyle headlineLarge = _inter(
+    size: 32,
+    weight: FontWeight.w700,
+    letterSpacing: -0.04,
+    height: 1.32,
   );
 
   /// Headline Medium (28sp)
-  static const TextStyle headlineMedium = TextStyle(
-    fontSize: 28,
-    fontWeight: FontWeight.w600,
-    letterSpacing: 0,
-    height: 36 / 28,
+  static final TextStyle headlineMedium = _inter(
+    size: 28,
+    weight: FontWeight.w700,
+    letterSpacing: -0.04,
+    height: 1.32,
   );
 
   /// Headline Small (24sp)
-  static const TextStyle headlineSmall = TextStyle(
-    fontSize: 24,
-    fontWeight: FontWeight.w600,
-    letterSpacing: 0,
-    height: 32 / 24,
+  static final TextStyle headlineSmall = _inter(
+    size: 24,
+    weight: FontWeight.w700,
+    letterSpacing: -0.03,
+    height: 1.32,
   );
 
   // ==================== TITLE STYLES ====================
 
   /// Title Large (22sp)
-  static const TextStyle titleLarge = TextStyle(
-    fontSize: 22,
-    fontWeight: FontWeight.w600,
-    letterSpacing: 0,
-    height: 28 / 22,
+  static final TextStyle titleLarge = _inter(
+    size: 22,
+    weight: FontWeight.w700,
+    letterSpacing: -0.03,
+    height: 1.36,
   );
 
   /// Title Medium (16sp)
-  static const TextStyle titleMedium = TextStyle(
-    fontSize: 16,
-    fontWeight: FontWeight.w600,
-    letterSpacing: 0.15,
-    height: 24 / 16,
+  static final TextStyle titleMedium = _inter(
+    size: 16,
+    weight: FontWeight.w700,
+    letterSpacing: -0.02,
+    height: 1.4,
   );
 
   /// Title Small (14sp)
-  static const TextStyle titleSmall = TextStyle(
-    fontSize: 14,
-    fontWeight: FontWeight.w600,
-    letterSpacing: 0.1,
-    height: 20 / 14,
+  static final TextStyle titleSmall = _inter(
+    size: 14,
+    weight: FontWeight.w700,
+    letterSpacing: -0.02,
+    height: 1.4,
   );
 
   // ==================== BODY STYLES ====================
 
   /// Body Large (16sp)
-  static const TextStyle bodyLarge = TextStyle(
-    fontSize: 16,
-    fontWeight: FontWeight.w400,
-    letterSpacing: 0.5,
-    height: 24 / 16,
+  static final TextStyle bodyLarge = _inter(
+    size: 16,
+    weight: FontWeight.w500,
+    letterSpacing: -0.02,
+    height: 1.4,
   );
 
   /// Body Medium (14sp)
-  static const TextStyle bodyMedium = TextStyle(
-    fontSize: 14,
-    fontWeight: FontWeight.w400,
-    letterSpacing: 0.25,
-    height: 20 / 14,
+  static final TextStyle bodyMedium = _inter(
+    size: 14,
+    weight: FontWeight.w500,
+    letterSpacing: -0.02,
+    height: 1.4,
   );
 
   /// Body Small (12sp)
-  static const TextStyle bodySmall = TextStyle(
-    fontSize: 12,
-    fontWeight: FontWeight.w400,
-    letterSpacing: 0.4,
-    height: 16 / 12,
+  static final TextStyle bodySmall = _inter(
+    size: 12,
+    weight: FontWeight.w500,
+    letterSpacing: -0.01,
+    height: 1.38,
   );
 
   // ==================== LABEL STYLES ====================
 
   /// Label Large (14sp)
-  static const TextStyle labelLarge = TextStyle(
-    fontSize: 14,
-    fontWeight: FontWeight.w600,
-    letterSpacing: 0.1,
-    height: 20 / 14,
+  static final TextStyle labelLarge = _inter(
+    size: 14,
+    weight: FontWeight.w600,
+    letterSpacing: -0.01,
+    height: 1.35,
   );
 
   /// Label Medium (12sp)
-  static const TextStyle labelMedium = TextStyle(
-    fontSize: 12,
-    fontWeight: FontWeight.w600,
-    letterSpacing: 0.5,
-    height: 16 / 12,
+  static final TextStyle labelMedium = _inter(
+    size: 12,
+    weight: FontWeight.w600,
+    letterSpacing: -0.01,
+    height: 1.35,
   );
 
   /// Label Small (11sp)
-  static const TextStyle labelSmall = TextStyle(
-    fontSize: 11,
-    fontWeight: FontWeight.w600,
-    letterSpacing: 0.5,
-    height: 16 / 11,
+  static final TextStyle labelSmall = _inter(
+    size: 11,
+    weight: FontWeight.w600,
+    letterSpacing: -0.01,
+    height: 1.34,
   );
 
   // ==================== TEXT THEME BUILDER ====================
@@ -161,5 +180,3 @@ class AppTypography {
     );
   }
 }
-
-

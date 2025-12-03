@@ -99,6 +99,20 @@ class AppConstants {
   /// Default study cards per session.
   static const int defaultStudyCardsPerSession = 20;
 
+  // ==================== INPUT DEFAULTS ====================
+
+  /// Default OTP length.
+  static const int otpLength = 6;
+
+  /// Default minimum lines for multiline text fields.
+  static const int defaultMultilineMinLines = 3;
+
+  /// Default maximum lines for multiline text fields.
+  static const int defaultMultilineMaxLines = 5;
+
+  /// Default maximum lines for single-line text fields.
+  static const int singleLineMaxLines = 1;
+
   // ==================== TIMING CONSTANTS ====================
 
   /// Splash screen duration in milliseconds.
@@ -137,6 +151,17 @@ class AppConstants {
 
   /// Slow animation duration in milliseconds.
   static const int slowAnimationDuration = 600;
+
+  // ==================== SHEET DEFAULTS ====================
+
+  /// Initial child size for draggable bottom sheets.
+  static const double draggableSheetInitialChildSize = 0.5;
+
+  /// Minimum child size for draggable bottom sheets.
+  static const double draggableSheetMinChildSize = 0.25;
+
+  /// Maximum child size for draggable bottom sheets.
+  static const double draggableSheetMaxChildSize = 0.95;
 
   // ==================== FILE UPLOAD ====================
 

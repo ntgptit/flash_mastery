@@ -1,3 +1,4 @@
+import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flutter/material.dart';
 
 /// Flash Mastery button widget with various styles
@@ -267,10 +268,10 @@ class FMButton extends StatelessWidget {
   Widget _buildButtonContent(BuildContext context) {
     if (isLoading) {
       return SizedBox(
-        height: 20,
-        width: 20,
+        height: AppSpacing.loaderSizeSmall,
+        width: AppSpacing.loaderSizeSmall,
         child: CircularProgressIndicator(
-          strokeWidth: 2,
+          strokeWidth: AppSpacing.strokeWidthThin,
           valueColor: AlwaysStoppedAnimation<Color>(
             type == ButtonType.outlined || type == ButtonType.text
                 ? Theme.of(context).colorScheme.primary
@@ -285,7 +286,7 @@ class FMButton extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: _getIconSize()),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
           Text(text),
         ],
       );
@@ -297,11 +298,20 @@ class FMButton extends StatelessWidget {
   EdgeInsets _getPadding() {
     switch (size) {
       case ButtonSize.small:
-        return const EdgeInsets.symmetric(horizontal: 16, vertical: 8);
+        return const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.sm,
+        );
       case ButtonSize.medium:
-        return const EdgeInsets.symmetric(horizontal: 24, vertical: 12);
+        return const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl,
+          vertical: AppSpacing.md,
+        );
       case ButtonSize.large:
-        return const EdgeInsets.symmetric(horizontal: 32, vertical: 16);
+        return const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xxl,
+          vertical: AppSpacing.lg,
+        );
     }
   }
 
@@ -319,11 +329,11 @@ class FMButton extends StatelessWidget {
   double _getIconSize() {
     switch (size) {
       case ButtonSize.small:
-        return 16;
+        return AppSpacing.iconSmall;
       case ButtonSize.medium:
-        return 20;
+        return AppSpacing.iconSmallMedium;
       case ButtonSize.large:
-        return 24;
+        return AppSpacing.iconMedium;
     }
   }
 }
@@ -360,7 +370,7 @@ class FMIconButton extends StatelessWidget {
     this.tooltip,
     this.color,
     this.backgroundColor,
-    this.size = 24,
+    this.size = AppSpacing.iconMedium,
   });
 
   @override

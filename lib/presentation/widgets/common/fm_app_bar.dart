@@ -1,3 +1,4 @@
+import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flutter/material.dart';
 
 /// Custom AppBar widget with various styles
@@ -22,7 +23,7 @@ class FMAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.automaticallyImplyLeading = true,
     this.backgroundColor,
     this.foregroundColor,
-    this.elevation = 0,
+    this.elevation = AppSpacing.elevationNone,
     this.centerTitle = true,
     this.bottom,
   });
@@ -55,11 +56,9 @@ class FMAppBar extends StatelessWidget implements PreferredSizeWidget {
         decoration: InputDecoration(
           hintText: hintText ?? 'Search...',
           border: InputBorder.none,
-          hintStyle: const TextStyle(
-            fontSize: 16,
-          ),
+          hintStyle: AppTypography.bodyLarge,
         ),
-        style: const TextStyle(fontSize: 16),
+        style: AppTypography.bodyLarge,
         onChanged: onChanged,
       ),
       leading: IconButton(
@@ -114,7 +113,7 @@ class FMAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize => Size.fromHeight(
-        kToolbarHeight + (bottom?.preferredSize.height ?? 0),
+        kToolbarHeight + (bottom?.preferredSize.height ?? AppSpacing.elevationNone),
       );
 }
 
@@ -142,7 +141,7 @@ class FMSliverAppBar extends StatelessWidget {
     this.automaticallyImplyLeading = true,
     this.backgroundColor,
     this.foregroundColor,
-    this.expandedHeight = 200,
+    this.expandedHeight = AppSpacing.sliverExpandedHeight,
     this.flexibleSpace,
     this.pinned = true,
     this.floating = false,
@@ -154,7 +153,7 @@ class FMSliverAppBar extends StatelessWidget {
     required String imageUrl,
     String? title,
     List<Widget>? actions,
-    double expandedHeight = 250,
+    double expandedHeight = AppSpacing.sliverExpandedHeightLarge,
   }) {
     return FMSliverAppBar(
       title: title,
@@ -200,7 +199,7 @@ class FMBottomAppBar extends StatelessWidget {
     required this.children,
     this.floatingActionButton,
     this.backgroundColor,
-    this.height = 60,
+    this.height = AppSpacing.bottomAppBarHeight,
     this.fabLocation,
   });
 

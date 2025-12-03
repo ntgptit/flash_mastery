@@ -16,6 +16,8 @@ library;
 export 'theme/app_colors.dart';
 export 'theme/app_typography.dart';
 export 'theme/app_spacing.dart';
+export 'theme/app_opacity.dart';
+export 'theme/app_animation.dart';
 
 // ==================== CONFIG CONSTANTS ====================
 export 'config/app_constants.dart';

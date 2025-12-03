@@ -1,3 +1,4 @@
+import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flutter/material.dart';
 
 /// Custom card widget with various styles
@@ -19,7 +20,7 @@ class FMCard extends StatelessWidget {
     this.margin,
     this.color,
     this.elevation,
-    this.borderRadius = 12,
+    this.borderRadius = AppSpacing.radiusLarge,
     this.onTap,
     this.onLongPress,
     this.border,
@@ -30,8 +31,8 @@ class FMCard extends StatelessWidget {
     required Widget child,
     EdgeInsetsGeometry? padding,
     EdgeInsetsGeometry? margin,
-    double elevation = 2,
-    double borderRadius = 12,
+    double elevation = AppSpacing.elevationLow,
+    double borderRadius = AppSpacing.radiusLarge,
     VoidCallback? onTap,
   }) {
     return FMCard(
@@ -49,7 +50,7 @@ class FMCard extends StatelessWidget {
     required Widget child,
     EdgeInsetsGeometry? padding,
     EdgeInsetsGeometry? margin,
-    double borderRadius = 12,
+    double borderRadius = AppSpacing.radiusLarge,
     Color? borderColor,
     VoidCallback? onTap,
     required BuildContext context,
@@ -57,7 +58,7 @@ class FMCard extends StatelessWidget {
     return FMCard(
       padding: padding,
       margin: margin,
-      elevation: 0,
+      elevation: AppSpacing.elevationNone,
       borderRadius: borderRadius,
       onTap: onTap,
       border: Border.all(
@@ -73,14 +74,14 @@ class FMCard extends StatelessWidget {
     EdgeInsetsGeometry? padding,
     EdgeInsetsGeometry? margin,
     Color? color,
-    double borderRadius = 12,
+    double borderRadius = AppSpacing.radiusLarge,
     VoidCallback? onTap,
     required BuildContext context,
   }) {
     return FMCard(
       padding: padding,
       margin: margin,
-      elevation: 0,
+      elevation: AppSpacing.elevationNone,
       borderRadius: borderRadius,
       color: color ?? Theme.of(context).colorScheme.surfaceContainerHighest,
       onTap: onTap,
@@ -101,7 +102,7 @@ class FMCard extends StatelessWidget {
             : BorderSide.none,
       ),
       child: Padding(
-        padding: padding ?? const EdgeInsets.all(16),
+        padding: padding ?? const EdgeInsets.all(AppSpacing.lg),
         child: child,
       ),
     );
@@ -148,18 +149,19 @@ class InfoCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: (iconColor ?? theme.colorScheme.primary).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              color: (iconColor ?? theme.colorScheme.primary)
+                  .withValues(alpha: AppOpacity.extraLow),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
             ),
             child: Icon(
               icon,
               color: iconColor ?? theme.colorScheme.primary,
-              size: 24,
+              size: AppSpacing.iconMedium,
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: AppSpacing.lg),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -171,11 +173,12 @@ class InfoCard extends StatelessWidget {
                   ),
                 ),
                 if (subtitle != null) ...[
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppSpacing.xs),
                   Text(
                     subtitle!,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      color:
+                          theme.colorScheme.onSurface.withValues(alpha: AppOpacity.high),
                     ),
                   ),
                 ],
@@ -185,8 +188,9 @@ class InfoCard extends StatelessWidget {
           if (onTap != null)
             Icon(
               Icons.arrow_forward_ios_rounded,
-              size: 16,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              size: AppSpacing.iconSmall,
+              color:
+                  theme.colorScheme.onSurface.withValues(alpha: AppOpacity.medium),
             ),
         ],
       ),
@@ -230,27 +234,27 @@ class StatCard extends StatelessWidget {
             children: [
               if (icon != null)
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(AppSpacing.sm),
                   decoration: BoxDecoration(
-                    color: cardColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    color: cardColor.withValues(alpha: AppOpacity.extraLow),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
                   ),
                   child: Icon(
                     icon,
                     color: cardColor,
-                    size: 20,
+                    size: AppSpacing.iconSmallMedium,
                   ),
                 ),
               if (trend != null)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
                   ),
                   decoration: BoxDecoration(
-                    color: (isTrendPositive ? Colors.green : Colors.red)
-                        .withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    color: (isTrendPositive ? AppColors.success : AppColors.error)
+                        .withValues(alpha: AppOpacity.extraLow),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -259,14 +263,14 @@ class StatCard extends StatelessWidget {
                         isTrendPositive
                             ? Icons.trending_up_rounded
                             : Icons.trending_down_rounded,
-                        size: 14,
-                        color: isTrendPositive ? Colors.green : Colors.red,
+                        size: AppSpacing.iconExtraSmall,
+                        color: isTrendPositive ? AppColors.success : AppColors.error,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: AppSpacing.xs),
                       Text(
                         trend!,
                         style: theme.textTheme.labelSmall?.copyWith(
-                          color: isTrendPositive ? Colors.green : Colors.red,
+                          color: isTrendPositive ? AppColors.success : AppColors.error,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -275,7 +279,7 @@ class StatCard extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           Text(
             value,
             style: theme.textTheme.headlineMedium?.copyWith(
@@ -283,11 +287,11 @@ class StatCard extends StatelessWidget {
               color: cardColor,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xs),
           Text(
             label,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              color: theme.colorScheme.onSurface.withValues(alpha: AppOpacity.high),
             ),
           ),
         ],
@@ -331,42 +335,42 @@ class FeatureCard extends StatelessWidget {
           if (image != null)
             ClipRRect(
               borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
+                top: Radius.circular(AppSpacing.radiusLarge),
               ),
               child: image!,
             )
           else if (imageUrl != null)
             ClipRRect(
               borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
+                top: Radius.circular(AppSpacing.radiusLarge),
               ),
               child: Image.network(
                 imageUrl!,
-                height: 150,
+                height: AppSpacing.featureMediaHeight,
                 width: double.infinity,
                 fit: BoxFit.cover,
               ),
             )
           else if (icon != null)
             Container(
-              height: 150,
+              height: AppSpacing.featureMediaHeight,
               width: double.infinity,
               decoration: BoxDecoration(
                 color: theme.colorScheme.surfaceContainerHighest,
                 borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(12),
+                  top: Radius.circular(AppSpacing.radiusLarge),
                 ),
               ),
               child: Icon(
                 icon,
-                size: 64,
+                size: AppSpacing.iconHuge,
                 color: theme.colorScheme.primary,
               ),
             ),
 
           // Content
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -377,16 +381,17 @@ class FeatureCard extends StatelessWidget {
                   ),
                 ),
                 if (description != null) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   Text(
                     description!,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      color:
+                          theme.colorScheme.onSurface.withValues(alpha: AppOpacity.high),
                     ),
                   ),
                 ],
                 if (action != null) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   action!,
                 ],
               ],

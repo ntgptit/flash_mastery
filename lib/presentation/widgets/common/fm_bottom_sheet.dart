@@ -1,3 +1,4 @@
+import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flutter/material.dart';
 
 /// Custom bottom sheet widget
@@ -36,7 +37,7 @@ class FMBottomSheet extends StatelessWidget {
       enableDrag: enableDrag,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
-          top: Radius.circular(20),
+          top: Radius.circular(AppSpacing.radiusJumbo),
         ),
       ),
       builder: (context) => FMBottomSheet(
@@ -54,11 +55,11 @@ class FMBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: height,
-      padding: padding ?? const EdgeInsets.all(20),
+      padding: padding ?? const EdgeInsets.all(AppSpacing.lgPlus),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(20),
+          top: Radius.circular(AppSpacing.radiusJumbo),
         ),
       ),
       child: Column(
@@ -67,12 +68,13 @@ class FMBottomSheet extends StatelessWidget {
           // Drag handle
           if (enableDrag)
             Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 16),
+              width: AppSpacing.dragHandleWidth,
+              height: AppSpacing.dragHandleHeight,
+              margin: const EdgeInsets.only(bottom: AppSpacing.lg),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(2),
+                color:
+                    Theme.of(context).colorScheme.onSurface.withValues(alpha: AppOpacity.low),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusTiny),
               ),
             ),
 
@@ -95,7 +97,7 @@ class FMBottomSheet extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
           ],
 
           // Content
@@ -148,7 +150,10 @@ class ListBottomSheet<T> extends StatelessWidget {
     return ListView.separated(
       shrinkWrap: true,
       itemCount: items.length,
-      separatorBuilder: (context, index) => const Divider(height: 1),
+      separatorBuilder: (context, index) => const Divider(
+        height: AppSpacing.borderWidthThin,
+        thickness: AppSpacing.borderWidthThin,
+      ),
       itemBuilder: (context, index) {
         final item = items[index];
         final icon = iconBuilder?.call(item);
@@ -194,7 +199,10 @@ class ActionBottomSheet extends StatelessWidget {
     return ListView.separated(
       shrinkWrap: true,
       itemCount: actions.length,
-      separatorBuilder: (context, index) => const Divider(height: 1),
+      separatorBuilder: (context, index) => const Divider(
+        height: AppSpacing.borderWidthThin,
+        thickness: AppSpacing.borderWidthThin,
+      ),
       itemBuilder: (context, index) {
         final action = actions[index];
 
@@ -252,9 +260,9 @@ class DraggableBottomSheet extends StatelessWidget {
     super.key,
     required this.child,
     this.title,
-    this.initialChildSize = 0.5,
-    this.minChildSize = 0.25,
-    this.maxChildSize = 0.95,
+    this.initialChildSize = AppConstants.draggableSheetInitialChildSize,
+    this.minChildSize = AppConstants.draggableSheetMinChildSize,
+    this.maxChildSize = AppConstants.draggableSheetMaxChildSize,
   });
 
   /// Show draggable bottom sheet
@@ -262,9 +270,9 @@ class DraggableBottomSheet extends StatelessWidget {
     required BuildContext context,
     required Widget child,
     String? title,
-    double initialChildSize = 0.5,
-    double minChildSize = 0.25,
-    double maxChildSize = 0.95,
+    double initialChildSize = AppConstants.draggableSheetInitialChildSize,
+    double minChildSize = AppConstants.draggableSheetMinChildSize,
+    double maxChildSize = AppConstants.draggableSheetMaxChildSize,
   }) {
     return showModalBottomSheet<T>(
       context: context,
@@ -291,26 +299,29 @@ class DraggableBottomSheet extends StatelessWidget {
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
             borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(20),
+              top: Radius.circular(AppSpacing.radiusJumbo),
             ),
           ),
           child: Column(
             children: [
               // Drag handle
               Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.symmetric(vertical: 12),
+                width: AppSpacing.dragHandleWidth,
+                height: AppSpacing.dragHandleHeight,
+                margin: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(2),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: AppOpacity.low),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusTiny),
                 ),
               ),
 
               // Title
               if (title != null) ...[
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lgPlus),
                   child: Text(
                     title!,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -318,14 +329,15 @@ class DraggableBottomSheet extends StatelessWidget {
                         ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
               ],
 
               // Content
               Expanded(
                 child: SingleChildScrollView(
                   controller: scrollController,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: AppSpacing.lgPlus),
                   child: child,
                 ),
               ),

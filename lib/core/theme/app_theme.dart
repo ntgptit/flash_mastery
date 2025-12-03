@@ -12,6 +12,8 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.light,
       colorScheme: _lightColorScheme,
+      fontFamily: AppTypography.primaryFontFamily,
+      fontFamilyFallback: AppTypography.fontFallback,
       scaffoldBackgroundColor: AppColors.backgroundLight,
       appBarTheme: _lightAppBarTheme,
       cardTheme: _cardTheme,
@@ -19,7 +21,7 @@ class AppTheme {
       outlinedButtonTheme: _outlinedButtonTheme,
       textButtonTheme: _textButtonTheme,
       inputDecorationTheme: _lightInputDecorationTheme,
-      textTheme: _textTheme,
+      textTheme: _lightTextTheme,
       iconTheme: _lightIconTheme,
       floatingActionButtonTheme: _fabTheme,
       chipTheme: _chipTheme,
@@ -38,6 +40,8 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: _darkColorScheme,
+      fontFamily: AppTypography.primaryFontFamily,
+      fontFamilyFallback: AppTypography.fontFallback,
       scaffoldBackgroundColor: AppColors.backgroundDark,
       appBarTheme: _darkAppBarTheme,
       cardTheme: _cardTheme,
@@ -45,7 +49,7 @@ class AppTheme {
       outlinedButtonTheme: _outlinedButtonTheme,
       textButtonTheme: _textButtonTheme,
       inputDecorationTheme: _darkInputDecorationTheme,
-      textTheme: _textTheme,
+      textTheme: _darkTextTheme,
       iconTheme: _darkIconTheme,
       floatingActionButtonTheme: _fabTheme,
       chipTheme: _chipTheme,
@@ -108,7 +112,9 @@ class AppTheme {
     titleTextStyle: TextStyle(
       color: AppColors.textPrimary,
       fontSize: 18,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w700,
+      letterSpacing: -0.02,
+      height: 1.35,
     ),
   );
 
@@ -121,7 +127,9 @@ class AppTheme {
     titleTextStyle: TextStyle(
       color: AppColors.white,
       fontSize: 18,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w700,
+      letterSpacing: -0.02,
+      height: 1.35,
     ),
   );
 
@@ -240,23 +248,11 @@ class AppTheme {
 
   // ==================== TEXT THEME ====================
 
-  static const TextTheme _textTheme = TextTheme(
-    displayLarge: AppTypography.displayLarge,
-    displayMedium: AppTypography.displayMedium,
-    displaySmall: AppTypography.displaySmall,
-    headlineLarge: AppTypography.headlineLarge,
-    headlineMedium: AppTypography.headlineMedium,
-    headlineSmall: AppTypography.headlineSmall,
-    titleLarge: AppTypography.titleLarge,
-    titleMedium: AppTypography.titleMedium,
-    titleSmall: AppTypography.titleSmall,
-    bodyLarge: AppTypography.bodyLarge,
-    bodyMedium: AppTypography.bodyMedium,
-    bodySmall: AppTypography.bodySmall,
-    labelLarge: AppTypography.labelLarge,
-    labelMedium: AppTypography.labelMedium,
-    labelSmall: AppTypography.labelSmall,
-  );
+  static TextTheme get _lightTextTheme =>
+      AppTypography.textTheme(_lightColorScheme);
+
+  static TextTheme get _darkTextTheme =>
+      AppTypography.textTheme(_darkColorScheme);
 
   // ==================== ICON THEMES ====================
 

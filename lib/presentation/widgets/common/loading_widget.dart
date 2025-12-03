@@ -1,3 +1,4 @@
+import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flutter/material.dart';
 
 /// A reusable loading widget with various styles
@@ -11,7 +12,7 @@ class LoadingWidget extends StatelessWidget {
     super.key,
     this.message,
     this.color,
-    this.size = 50.0,
+    this.size = AppSpacing.loaderSizeDefault,
     this.style = LoadingStyle.circular,
   });
 
@@ -26,7 +27,7 @@ class LoadingWidget extends StatelessWidget {
         children: [
           _buildLoadingIndicator(loadingColor),
           if (message != null) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               message!,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -48,12 +49,12 @@ class LoadingWidget extends StatelessWidget {
           height: size,
           child: CircularProgressIndicator(
             valueColor: AlwaysStoppedAnimation<Color>(loadingColor),
-            strokeWidth: 3,
+            strokeWidth: AppSpacing.strokeWidthRegular,
           ),
         );
       case LoadingStyle.linear:
         return SizedBox(
-          width: size * 2,
+          width: size * AppAnimation.linearLoadingWidthFactor,
           child: LinearProgressIndicator(
             valueColor: AlwaysStoppedAnimation<Color>(loadingColor),
           ),
@@ -94,7 +95,7 @@ class _DotsLoadingIndicatorState extends State<_DotsLoadingIndicator>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: AppAnimation.loadingDotsDuration,
     )..repeat();
   }
 
@@ -108,24 +109,36 @@ class _DotsLoadingIndicatorState extends State<_DotsLoadingIndicator>
   Widget build(BuildContext context) {
     return SizedBox(
       width: widget.size,
-      height: widget.size / 3,
+      height: widget.size / AppAnimation.loadingDotsHeightFactor,
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
           return Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: List.generate(3, (index) {
-              final delay = index * 0.2;
-              final value = (_controller.value - delay).clamp(0.0, 1.0);
-              final scale = (value < 0.5 ? value * 2 : (1 - value) * 2);
+            children: List.generate(AppAnimation.loadingDotsCount, (index) {
+              final delay = index * AppAnimation.loadingDotsDelayInterval;
+              final normalizedValue =
+                  (_controller.value - delay)
+                      .clamp(AppAnimation.loadingProgressMin, AppAnimation.loadingProgressMax);
+
+              final progressWithinHalf =
+                  normalizedValue < AppAnimation.loadingDotsHalfCycle
+                      ? normalizedValue / AppAnimation.loadingDotsHalfCycle
+                      : (AppAnimation.loadingProgressMax - normalizedValue) /
+                          AppAnimation.loadingDotsHalfCycle;
+
+              final scaleValue = AppAnimation.loadingDotsBaseScale +
+                  (AppAnimation.loadingDotsScaleRange * progressWithinHalf);
+              final effectiveOpacity =
+                  AppOpacity.mediumHigh + (AppOpacity.mediumHigh * progressWithinHalf);
 
               return Transform.scale(
-                scale: 0.5 + (scale * 0.5),
+                scale: scaleValue,
                 child: Container(
-                  width: widget.size / 6,
-                  height: widget.size / 6,
+                  width: widget.size / AppAnimation.loadingDotsCircleFactor,
+                  height: widget.size / AppAnimation.loadingDotsCircleFactor,
                   decoration: BoxDecoration(
-                    color: widget.color.withValues(alpha: 0.5 + (scale * 0.5)),
+                    color: widget.color.withValues(alpha: effectiveOpacity),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -161,7 +174,10 @@ class LoadingOverlay extends StatelessWidget {
         if (isLoading)
           Container(
             color: backgroundColor ??
-                Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
+                Theme.of(context)
+                    .colorScheme
+                    .surface
+                    .withValues(alpha: AppOpacity.overlay),
             child: LoadingWidget(message: message),
           ),
       ],

@@ -1,3 +1,4 @@
+import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flutter/material.dart';
 
 /// Custom dialog widget
@@ -94,7 +95,7 @@ class FMDialog extends StatelessWidget {
       title: title,
       contentText: message,
       icon: Icons.check_circle_rounded,
-      iconColor: Colors.green,
+      iconColor: AppColors.success,
       actions: [
         ElevatedButton(
           onPressed: () => Navigator.of(context).pop(),
@@ -154,26 +155,27 @@ class FMDialog extends StatelessWidget {
 
     return AlertDialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusExtraLarge),
       ),
       title: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color:
-                    (iconColor ?? theme.colorScheme.primary).withValues(alpha: 0.1),
+                    (iconColor ?? theme.colorScheme.primary)
+                        .withValues(alpha: AppOpacity.extraLow),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
-                size: 48,
+                size: AppSpacing.iconExtraLarge,
                 color: iconColor ?? theme.colorScheme.primary,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
           ],
           if (title != null)
             Text(
@@ -229,16 +231,16 @@ class LoadingDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusExtraLarge),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const CircularProgressIndicator(),
             if (message != null) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               Text(
                 message!,
                 textAlign: TextAlign.center,
@@ -271,7 +273,7 @@ class InputDialog extends StatefulWidget {
     this.confirmText,
     this.cancelText,
     this.keyboardType,
-    this.maxLines = 1,
+    this.maxLines = AppConstants.singleLineMaxLines,
     this.validator,
   });
 
@@ -332,7 +334,7 @@ class _InputDialogState extends State<InputDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusExtraLarge),
       ),
       title: Text(widget.title),
       content: Form(
@@ -342,12 +344,12 @@ class _InputDialogState extends State<InputDialog> {
           autofocus: true,
           keyboardType: widget.keyboardType,
           maxLines: widget.maxLines,
-          decoration: InputDecoration(
-            hintText: widget.hint,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
+        decoration: InputDecoration(
+          hintText: widget.hint,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
           ),
+        ),
           validator: widget.validator,
           onFieldSubmitted: (_) => _handleConfirm(),
         ),

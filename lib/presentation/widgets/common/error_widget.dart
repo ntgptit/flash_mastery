@@ -1,3 +1,4 @@
+import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flutter/material.dart';
 
 /// A reusable error display widget
@@ -78,25 +79,25 @@ class AppErrorWidget extends StatelessWidget {
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
             // Error Icon
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
-                color: errorColor.withValues(alpha: 0.1),
+                color: errorColor.withValues(alpha: AppOpacity.extraLow),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon ?? Icons.error_outline_rounded,
-                size: 64,
+                size: AppSpacing.iconHuge,
                 color: errorColor,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xl),
 
             // Title
             if (title != null) ...[
@@ -107,29 +108,29 @@ class AppErrorWidget extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
             ],
 
             // Error Message
             Text(
               message,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                color: theme.colorScheme.onSurface.withValues(alpha: AppOpacity.veryHigh),
               ),
               textAlign: TextAlign.center,
             ),
 
             // Retry Button
             if (onRetry != null) ...[
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.xl),
               ElevatedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh_rounded),
                 label: Text(retryButtonText ?? 'Try Again'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
+                    horizontal: AppSpacing.xl,
+                    vertical: AppSpacing.md,
                   ),
                 ),
               ),
@@ -157,22 +158,22 @@ class InlineErrorWidget extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: theme.colorScheme.error.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        color: theme.colorScheme.error.withValues(alpha: AppOpacity.extraLow),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
         border: Border.all(
-          color: theme.colorScheme.error.withValues(alpha: 0.3),
+          color: theme.colorScheme.error.withValues(alpha: AppOpacity.mediumLow),
         ),
       ),
       child: Row(
         children: [
           Icon(
             Icons.error_outline_rounded,
-            size: 20,
+            size: AppSpacing.iconSmallMedium,
             color: theme.colorScheme.error,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Text(
               message,
@@ -182,13 +183,13 @@ class InlineErrorWidget extends StatelessWidget {
             ),
           ),
           if (onDismiss != null) ...[
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.sm),
             InkWell(
               onTap: onDismiss,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusExtraLarge),
               child: Icon(
                 Icons.close_rounded,
-                size: 20,
+                size: AppSpacing.iconSmallMedium,
                 color: theme.colorScheme.error,
               ),
             ),

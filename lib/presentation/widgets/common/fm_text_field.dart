@@ -1,3 +1,4 @@
+import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -43,7 +44,7 @@ class FMTextField extends StatefulWidget {
     this.obscureText = false,
     this.enabled = true,
     this.readOnly = false,
-    this.maxLines = 1,
+    this.maxLines = AppConstants.singleLineMaxLines,
     this.minLines,
     this.maxLength,
     this.inputFormatters,
@@ -79,8 +80,7 @@ class FMTextField extends StatefulWidget {
         if (value == null || value.isEmpty) {
           return 'Email is required';
         }
-        final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-        if (!emailRegex.hasMatch(value)) {
+        if (!RegexConstants.emailSimple.hasMatch(value)) {
           return 'Enter a valid email';
         }
         return null;
@@ -126,7 +126,7 @@ class FMTextField extends StatefulWidget {
     String? label,
     String? hint,
     String? errorText,
-    int maxLines = 5,
+    int maxLines = AppConstants.defaultMultilineMaxLines,
     int? maxLength,
     void Function(String)? onChanged,
   }) {
@@ -136,7 +136,7 @@ class FMTextField extends StatefulWidget {
       hint: hint,
       errorText: errorText,
       maxLines: maxLines,
-      minLines: 3,
+      minLines: AppConstants.defaultMultilineMinLines,
       maxLength: maxLength,
       keyboardType: TextInputType.multiline,
       textInputAction: TextInputAction.newline,
@@ -170,32 +170,32 @@ class _CustomTextFieldState extends State<FMTextField> {
               )
             : null,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
           borderSide: BorderSide(
             color: Theme.of(context).colorScheme.outline,
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
           borderSide: BorderSide(
             color: Theme.of(context).colorScheme.primary,
-            width: 2,
+            width: AppSpacing.borderWidthMedium,
           ),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
           borderSide: BorderSide(
             color: Theme.of(context).colorScheme.error,
           ),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
           borderSide: BorderSide(
             color: Theme.of(context).colorScheme.error,
-            width: 2,
+            width: AppSpacing.borderWidthMedium,
           ),
         ),
         filled: !widget.enabled,
@@ -241,8 +241,8 @@ class FMPasswordTextField extends FMTextField {
             if (value == null || value.isEmpty) {
               return 'FMPassword is required';
             }
-            if (value.length < 6) {
-              return 'FMPassword must be at least 6 characters';
+            if (value.length < AppConstants.minPasswordLength) {
+              return 'FMPassword must be at least ${AppConstants.minPasswordLength} characters';
             }
             return null;
           },
@@ -278,8 +278,8 @@ class _PasswordTextFieldState extends State<FMPasswordTextField> {
         if (value == null || value.isEmpty) {
           return 'FMPassword is required';
         }
-        if (value.length < 6) {
-          return 'FMPassword must be at least 6 characters';
+        if (value.length < AppConstants.minPasswordLength) {
+          return 'FMPassword must be at least ${AppConstants.minPasswordLength} characters';
         }
         return null;
       },
@@ -296,7 +296,7 @@ class FMPinTextField extends StatelessWidget {
 
   const FMPinTextField({
     super.key,
-    this.length = 6,
+    this.length = AppConstants.otpLength,
     this.controller,
     this.onCompleted,
     this.onChanged,
@@ -316,11 +316,11 @@ class FMPinTextField extends StatelessWidget {
       decoration: InputDecoration(
         counterText: '',
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
         ),
       ),
       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            letterSpacing: 8,
+            letterSpacing: AppSpacing.sm,
             fontWeight: FontWeight.bold,
           ),
       onChanged: (value) {
