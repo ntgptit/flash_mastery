@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
-import 'package:flash_mastery/core/exceptions/exceptions.dart';
 import 'package:flutter/foundation.dart';
+
+import 'package:flash_mastery/core/error/failure_mapper.dart';
+import 'package:flash_mastery/core/exceptions/exceptions.dart';
 
 /// Interceptor to handle and transform errors
 class ErrorInterceptor extends Interceptor {
@@ -10,14 +12,15 @@ class ErrorInterceptor extends Interceptor {
 
     // Transform DioException to custom exceptions
     final exception = _transformError(err);
+    final failure = FailureMapper.fromException(exception);
 
     // Create a new DioException with the custom error
     final transformedError = DioException(
       requestOptions: err.requestOptions,
       response: err.response,
       type: err.type,
-      error: exception,
-      message: exception.toString(),
+      error: failure,
+      message: failure.message,
     );
 
     super.onError(transformedError, handler);

@@ -1,7 +1,8 @@
 import 'package:dartz/dartz.dart';
+
 import 'package:flash_mastery/core/constants/config/app_constants.dart';
 import 'package:flash_mastery/core/constants/validation/error_messages.dart';
-import 'package:flash_mastery/core/exceptions/exceptions.dart';
+import 'package:flash_mastery/core/error/error_guard.dart';
 import 'package:flash_mastery/core/exceptions/failures.dart';
 import 'package:flash_mastery/data/datasources/deck_local_data_source.dart';
 import 'package:flash_mastery/data/datasources/folder_local_data_source.dart';
@@ -13,7 +14,10 @@ class DeckRepositoryImpl implements DeckRepository {
   final DeckLocalDataSource deckLocalDataSource;
   final FolderLocalDataSource folderLocalDataSource;
 
-  DeckRepositoryImpl({required this.deckLocalDataSource, required this.folderLocalDataSource});
+  DeckRepositoryImpl({
+    required this.deckLocalDataSource,
+    required this.folderLocalDataSource,
+  });
 
   @override
   Future<Either<Failure, Deck>> createDeck({
@@ -21,34 +25,16 @@ class DeckRepositoryImpl implements DeckRepository {
     String? description,
     String? folderId,
   }) async {
-    try {
-      final trimmedName = name.trim();
-      final trimmedDescription = description?.trim();
-      if (trimmedName.isEmpty) {
-        return Left(ValidationFailure(message: ErrorMessages.deckNameRequired));
-      }
+    final trimmedName = name.trim();
+    final trimmedDescription = description?.trim();
 
-      if (trimmedName.length < AppConstants.minDeckNameLength) {
-        return Left(
-          ValidationFailure(message: ErrorMessages.textTooShort(AppConstants.minDeckNameLength)),
-        );
-      }
+    final validationFailure = _validateNameAndDescription(
+      trimmedName,
+      trimmedDescription,
+    );
+    if (validationFailure != null) return Left(validationFailure);
 
-      if (trimmedName.length > AppConstants.maxDeckNameLength) {
-        return Left(
-          ValidationFailure(message: ErrorMessages.textTooLong(AppConstants.maxDeckNameLength)),
-        );
-      }
-
-      if (trimmedDescription != null &&
-          trimmedDescription.length > AppConstants.maxDeckDescriptionLength) {
-        return Left(
-          ValidationFailure(
-            message: ErrorMessages.textTooLong(AppConstants.maxDeckDescriptionLength),
-          ),
-        );
-      }
-
+    return ErrorGuard.run(() async {
       if (folderId != null) {
         await _ensureFolderExists(folderId);
       }
@@ -69,23 +55,13 @@ class DeckRepositoryImpl implements DeckRepository {
         await _updateFolderDeckCount(folderId, 1);
       }
 
-      return Right(createdDeck.toEntity());
-    } on NotFoundException catch (e) {
-      return Left(NotFoundFailure(message: e.message));
-    } on ValidationException catch (e) {
-      return Left(ValidationFailure(message: e.message, errors: e.errors));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
-    } on CacheException catch (e) {
-      return Left(CacheFailure(message: e.message));
-    } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
-    }
+      return createdDeck.toEntity();
+    });
   }
 
   @override
   Future<Either<Failure, void>> deleteDeck(String id) async {
-    try {
+    return ErrorGuard.run(() async {
       final deck = await deckLocalDataSource.getDeckById(id);
       await deckLocalDataSource.deleteDeck(id);
 
@@ -93,60 +69,35 @@ class DeckRepositoryImpl implements DeckRepository {
         await _updateFolderDeckCount(deck.folderId!, -1);
       }
 
-      return const Right(null);
-    } on NotFoundException catch (e) {
-      return Left(NotFoundFailure(message: e.message));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
-    } on CacheException catch (e) {
-      return Left(CacheFailure(message: e.message));
-    } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
-    }
+      return;
+    });
   }
 
   @override
   Future<Either<Failure, Deck>> getDeckById(String id) async {
-    try {
+    return ErrorGuard.run(() async {
       final deck = await deckLocalDataSource.getDeckById(id);
-      return Right(deck.toEntity());
-    } on NotFoundException catch (e) {
-      return Left(NotFoundFailure(message: e.message));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
-    } on CacheException catch (e) {
-      return Left(CacheFailure(message: e.message));
-    } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
-    }
+      return deck.toEntity();
+    });
   }
 
   @override
   Future<Either<Failure, List<Deck>>> getDecks({String? folderId}) async {
-    try {
+    return ErrorGuard.run(() async {
       final decks = await deckLocalDataSource.getDecks(folderId: folderId);
-      return Right(decks.map((d) => d.toEntity()).toList());
-    } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
-    } on CacheException catch (e) {
-      return Left(CacheFailure(message: e.message));
-    } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
-    }
+      return decks.map((d) => d.toEntity()).toList();
+    });
   }
 
   @override
-  Future<Either<Failure, List<Deck>>> searchDecks(String query, {String? folderId}) async {
-    try {
+  Future<Either<Failure, List<Deck>>> searchDecks(
+    String query, {
+    String? folderId,
+  }) async {
+    return ErrorGuard.run(() async {
       final decks = await deckLocalDataSource.searchDecks(query, folderId: folderId);
-      return Right(decks.map((d) => d.toEntity()).toList());
-    } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
-    } on CacheException catch (e) {
-      return Left(CacheFailure(message: e.message));
-    } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
-    }
+      return decks.map((d) => d.toEntity()).toList();
+    });
   }
 
   @override
@@ -156,44 +107,27 @@ class DeckRepositoryImpl implements DeckRepository {
     String? description,
     String? folderId,
   }) async {
-    try {
+    final trimmedName = name?.trim();
+    final trimmedDescription = description?.trim();
+
+    final validationFailure = _validateNameAndDescription(
+      trimmedName ?? '',
+      trimmedDescription,
+      allowEmptyName: trimmedName == null,
+    );
+    if (validationFailure != null) return Left(validationFailure);
+
+    return ErrorGuard.run(() async {
       final existingDeck = await deckLocalDataSource.getDeckById(id);
       final String? oldFolderId = existingDeck.folderId;
-      final trimmedName = name?.trim();
-      final trimmedDescription = description?.trim();
 
       if (folderId != null && folderId != oldFolderId) {
         await _ensureFolderExists(folderId);
       }
 
-      if (trimmedName != null && trimmedName.isEmpty) {
-        return Left(ValidationFailure(message: ErrorMessages.deckNameRequired));
-      }
-
-      if (trimmedName != null && trimmedName.length < AppConstants.minDeckNameLength) {
-        return Left(
-          ValidationFailure(message: ErrorMessages.textTooShort(AppConstants.minDeckNameLength)),
-        );
-      }
-
-      if (trimmedName != null && trimmedName.length > AppConstants.maxDeckNameLength) {
-        return Left(
-          ValidationFailure(message: ErrorMessages.textTooLong(AppConstants.maxDeckNameLength)),
-        );
-      }
-
-      if (trimmedDescription != null &&
-          trimmedDescription.length > AppConstants.maxDeckDescriptionLength) {
-        return Left(
-          ValidationFailure(
-            message: ErrorMessages.textTooLong(AppConstants.maxDeckDescriptionLength),
-          ),
-        );
-      }
-
       final updatedDeck = existingDeck.copyWith(
-        name: trimmedName,
-        description: trimmedDescription,
+        name: trimmedName ?? existingDeck.name,
+        description: trimmedDescription ?? existingDeck.description,
         folderId: folderId ?? existingDeck.folderId,
       );
 
@@ -206,26 +140,38 @@ class DeckRepositoryImpl implements DeckRepository {
         await _updateFolderDeckCount(folderId, 1);
       }
 
-      return Right(result.toEntity());
-    } on NotFoundException catch (e) {
-      return Left(NotFoundFailure(message: e.message));
-    } on ValidationException catch (e) {
-      return Left(ValidationFailure(message: e.message, errors: e.errors));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
-    } on CacheException catch (e) {
-      return Left(CacheFailure(message: e.message));
-    } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
+      return result.toEntity();
+    });
+  }
+
+  Failure? _validateNameAndDescription(
+    String name,
+    String? description, {
+    bool allowEmptyName = false,
+  }) {
+    if (!allowEmptyName && name.isEmpty) {
+      return ValidationFailure(message: ErrorMessages.deckNameRequired);
     }
+
+    if (name.isNotEmpty && name.length < AppConstants.minDeckNameLength) {
+      return ValidationFailure(message: ErrorMessages.textTooShort(AppConstants.minDeckNameLength));
+    }
+
+    if (name.isNotEmpty && name.length > AppConstants.maxDeckNameLength) {
+      return ValidationFailure(message: ErrorMessages.textTooLong(AppConstants.maxDeckNameLength));
+    }
+
+    if (description != null && description.length > AppConstants.maxDeckDescriptionLength) {
+      return ValidationFailure(
+        message: ErrorMessages.textTooLong(AppConstants.maxDeckDescriptionLength),
+      );
+    }
+
+    return null;
   }
 
   Future<void> _ensureFolderExists(String folderId) async {
-    try {
-      await folderLocalDataSource.getFolderById(folderId);
-    } catch (_) {
-      throw const NotFoundException(message: ErrorMessages.folderNotFound);
-    }
+    await folderLocalDataSource.getFolderById(folderId);
   }
 
   Future<void> _updateFolderDeckCount(String folderId, int delta) async {
