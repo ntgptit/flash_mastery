@@ -4,8 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
-import 'package:flash_mastery/presentation/providers/flashcard_providers.dart';
 import 'package:flash_mastery/presentation/screens/flashcards/widgets/flashcard_form_dialog.dart';
+import 'package:flash_mastery/domain/usecases/flashcards/flashcard_usecases.dart';
+import 'package:flash_mastery/presentation/viewmodels/flashcard_view_model.dart';
 import 'package:flash_mastery/presentation/widgets/common/common_widgets.dart';
 
 class FlashcardListScreen extends ConsumerStatefulWidget {
@@ -19,11 +20,25 @@ class FlashcardListScreen extends ConsumerStatefulWidget {
 
 class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
   String _searchQuery = '';
+  bool _initialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialized) return;
+    _initialized = true;
+    Future.microtask(
+      () => ref.read(flashcardListViewModelProvider(widget.deck.id).notifier).load(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final flashcardsAsync = ref.watch(flashcardListProvider(widget.deck.id));
-    final filteredCards = _filterFlashcards(flashcardsAsync.asData?.value);
+    final flashcardsState = ref.watch(flashcardListViewModelProvider(widget.deck.id));
+    final filteredCards = flashcardsState.maybeWhen(
+      success: (cards) => _filterFlashcards(cards),
+      orElse: () => null,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -41,8 +56,10 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
-        child: flashcardsAsync.when(
-          data: (cards) {
+        child: flashcardsState.when(
+          initial: () => const LoadingWidget(),
+          loading: () => const LoadingWidget(),
+          success: (cards) {
             final visibleCards = filteredCards ?? cards;
             if (visibleCards.isEmpty) {
               return EmptyStateWidget(
@@ -56,7 +73,7 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
 
             return RefreshIndicator(
               onRefresh: () async =>
-                  ref.read(flashcardListProvider(widget.deck.id).notifier).refresh(),
+                  ref.read(flashcardListViewModelProvider(widget.deck.id).notifier).load(),
               child: ListView.separated(
                 itemCount: visibleCards.length,
                 separatorBuilder: (_, __) => const Divider(
@@ -74,11 +91,10 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
               ),
             );
           },
-          loading: () => const LoadingWidget(),
-          error: (error, _) => AppErrorWidget(
-            message: error.toString(),
+          error: (message) => AppErrorWidget(
+            message: message,
             onRetry: () =>
-                ref.read(flashcardListProvider(widget.deck.id).notifier).refresh(),
+                ref.read(flashcardListViewModelProvider(widget.deck.id).notifier).load(),
           ),
         ),
       ),
@@ -160,29 +176,39 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
           String? hint,
         }) async {
           try {
-            if (card == null) {
-              await ref.read(flashcardListProvider(widget.deck.id).notifier).createFlashcard(
-                    deckId: widget.deck.id,
-                    question: question,
-                    answer: answer,
-                    hint: hint,
+            final notifier =
+                ref.read(flashcardListViewModelProvider(widget.deck.id).notifier);
+            final errorMessage = card == null
+                ? await notifier.createFlashcard(
+                    CreateFlashcardParams(
+                      deckId: widget.deck.id,
+                      question: question,
+                      answer: answer,
+                      hint: hint,
+                    ),
+                  )
+                : await notifier.updateFlashcard(
+                    UpdateFlashcardParams(
+                      id: card.id,
+                      question: question,
+                      answer: answer,
+                      hint: hint,
+                    ),
                   );
-            } else {
-              await ref.read(flashcardListProvider(widget.deck.id).notifier).updateFlashcard(
-                    id: card.id,
-                    question: question,
-                    answer: answer,
-                    hint: hint,
-                  );
-            }
 
             if (!mounted) return;
             Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(card == null ? 'Flashcard created' : 'Flashcard updated'),
-              ),
-            );
+            if (errorMessage != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: $errorMessage')),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(card == null ? 'Flashcard created' : 'Flashcard updated'),
+                ),
+              );
+            }
           } catch (e) {
             if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
@@ -226,7 +252,17 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
     if (shouldDelete != true) return;
 
     try {
-      await ref.read(flashcardListProvider(widget.deck.id).notifier).deleteFlashcard(card.id);
+      final errorMessage =
+          await ref.read(flashcardListViewModelProvider(widget.deck.id).notifier).deleteFlashcard(
+                card.id,
+              );
+      if (errorMessage != null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $errorMessage')),
+        );
+        return;
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Flashcard deleted')));

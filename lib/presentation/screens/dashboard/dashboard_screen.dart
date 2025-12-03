@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:flash_mastery/core/constants/constants.dart';
-import 'package:flash_mastery/domain/entities/folder.dart';
-import 'package:flash_mastery/presentation/providers/folder_providers.dart';
+import 'package:flash_mastery/domain/usecases/folders/folder_usecases.dart';
 import 'package:flash_mastery/presentation/screens/decks/deck_list_screen.dart';
 import 'package:flash_mastery/presentation/screens/folders/widgets/folder_card.dart';
 import 'package:flash_mastery/presentation/screens/folders/widgets/folder_form_dialog.dart';
+import 'package:flash_mastery/domain/entities/folder.dart';
+import 'package:flash_mastery/presentation/viewmodels/folder_view_model.dart';
 import 'package:flash_mastery/presentation/widgets/common/common_widgets.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -28,7 +29,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final foldersAsync = ref.watch(folderListProvider);
+    final foldersState = ref.watch(folderListViewModelProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -78,8 +79,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
             ),
           Expanded(
-            child: foldersAsync.when(
-              data: (folders) {
+            child: foldersState.when(
+              initial: () => const LoadingWidget(),
+              loading: () => const LoadingWidget(),
+              success: (folders) {
                 if (folders.isEmpty) {
                   return EmptyStateWidget(
                     icon: Icons.folder_outlined,
@@ -113,7 +116,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
                 return RefreshIndicator(
                   onRefresh: () async {
-                    await ref.read(folderListProvider.notifier).refresh();
+                    await ref.read(folderListViewModelProvider.notifier).load();
                   },
                   child: GridView.builder(
                     padding: const EdgeInsets.all(AppSpacing.lg),
@@ -136,12 +139,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                 );
               },
-              loading: () => const LoadingWidget(),
-              error: (error, stack) => AppErrorWidget(
-                message: error.toString(),
-                onRetry: () {
-                  ref.invalidate(folderListProvider);
-                },
+              error: (message) => AppErrorWidget(
+                message: message,
+                onRetry: () => ref.read(folderListViewModelProvider.notifier).load(),
               ),
             ),
           ),
@@ -199,16 +199,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       builder: (context) => FolderFormDialog(
         onSubmit: (name, description, color) async {
           try {
-            await ref.read(folderListProvider.notifier).createFolder(
-                  name: name,
-                  description: description,
-                  color: color,
+            final errorMessage = await ref.read(folderListViewModelProvider.notifier).createFolder(
+                  CreateFolderParams(
+                    name: name,
+                    description: description,
+                    color: color,
+                  ),
                 );
             if (context.mounted) {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Folder created successfully')),
-              );
+              if (errorMessage != null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error: $errorMessage')),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Folder created successfully')),
+                );
+              }
             }
           } catch (e) {
             if (context.mounted) {
@@ -229,17 +237,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         folder: folder,
         onSubmit: (name, description, color) async {
           try {
-            await ref.read(folderListProvider.notifier).updateFolder(
-                  id: folder.id,
-                  name: name,
-                  description: description,
-                  color: color,
+            final errorMessage = await ref.read(folderListViewModelProvider.notifier).updateFolder(
+                  UpdateFolderParams(
+                    id: folder.id,
+                    name: name,
+                    description: description,
+                    color: color,
+                  ),
                 );
             if (context.mounted) {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Folder updated successfully')),
-              );
+              if (errorMessage != null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error: $errorMessage')),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Folder updated successfully')),
+                );
+              }
             }
           } catch (e) {
             if (context.mounted) {
@@ -273,12 +289,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           FilledButton(
             onPressed: () async {
               try {
-                await ref.read(folderListProvider.notifier).deleteFolder(folder.id);
+                final errorMessage =
+                    await ref.read(folderListViewModelProvider.notifier).deleteFolder(
+                          folder.id,
+                        );
                 if (context.mounted) {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Folder deleted successfully')),
-                  );
+                  if (errorMessage != null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: $errorMessage')),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Folder deleted successfully')),
+                    );
+                  }
                 }
               } catch (e) {
                 if (context.mounted) {

@@ -3,10 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/folder.dart';
-import 'package:flash_mastery/presentation/providers/folder_providers.dart';
+import 'package:flash_mastery/domain/usecases/folders/folder_usecases.dart';
 import 'package:flash_mastery/presentation/screens/decks/deck_list_screen.dart';
 import 'package:flash_mastery/presentation/screens/folders/widgets/folder_card.dart';
 import 'package:flash_mastery/presentation/screens/folders/widgets/folder_form_dialog.dart';
+import 'package:flash_mastery/presentation/viewmodels/folder_view_model.dart';
 import 'package:flash_mastery/presentation/widgets/common/common_widgets.dart';
 
 class FolderListScreen extends ConsumerStatefulWidget {
@@ -18,11 +19,26 @@ class FolderListScreen extends ConsumerStatefulWidget {
 
 class _FolderListScreenState extends ConsumerState<FolderListScreen> {
   String _searchQuery = '';
+  bool _initialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialized) return;
+    _initialized = true;
+    Future.microtask(() => ref.read(folderListViewModelProvider.notifier).load());
+  }
 
   @override
   Widget build(BuildContext context) {
-    final foldersAsync = ref.watch(folderListProvider);
-    final visibleFolders = _filterFolders(foldersAsync.asData?.value);
+    final folderState = ref.watch(folderListViewModelProvider);
+    final folders = folderState.when(
+      initial: () => <Folder>[],
+      loading: () => <Folder>[],
+      success: (data) => data,
+      error: (_) => <Folder>[],
+    );
+    final visibleFolders = _filterFolders(folders);
 
     return Scaffold(
       appBar: AppBar(
@@ -34,10 +50,12 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
           ),
         ],
       ),
-      body: foldersAsync.when(
-        data: (folders) {
-          final data = visibleFolders ?? folders;
-          if (data.isEmpty) {
+      body: folderState.when(
+        initial: () => const LoadingWidget(),
+        loading: () => const LoadingWidget(),
+        success: (data) {
+          final displayFolders = visibleFolders ?? data;
+          if (displayFolders.isEmpty) {
             return EmptyStateWidget(
               icon: Icons.folder_outlined,
               title: 'No folders yet',
@@ -48,7 +66,7 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
           }
 
           return RefreshIndicator(
-            onRefresh: () async => ref.read(folderListProvider.notifier).refresh(),
+            onRefresh: () async => ref.read(folderListViewModelProvider.notifier).load(),
             child: GridView.builder(
               padding: const EdgeInsets.all(AppSpacing.lg),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -57,9 +75,9 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
                 mainAxisSpacing: AppSpacing.lg,
                 childAspectRatio: AppConstants.folderGridAspectRatio,
               ),
-              itemCount: data.length,
+              itemCount: displayFolders.length,
               itemBuilder: (context, index) {
-                final folder = data[index];
+                final folder = displayFolders[index];
                 return FolderCard(
                   folder: folder,
                   onTap: () => _openFolder(folder),
@@ -70,10 +88,9 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
             ),
           );
         },
-        loading: () => const LoadingWidget(),
-        error: (error, _) => AppErrorWidget(
-          message: error.toString(),
-          onRetry: () => ref.read(folderListProvider.notifier).refresh(),
+        error: (message) => AppErrorWidget(
+          message: message,
+          onRetry: () => ref.read(folderListViewModelProvider.notifier).load(),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -84,8 +101,7 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
     );
   }
 
-  List<Folder>? _filterFolders(List<Folder>? folders) {
-    if (folders == null) return null;
+  List<Folder>? _filterFolders(List<Folder> folders) {
     if (_searchQuery.isEmpty) return folders;
 
     final lower = _searchQuery.toLowerCase();
@@ -142,30 +158,39 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
         folder: folder,
         onSubmit: (name, description, color) async {
           try {
-            if (folder == null) {
-              await ref.read(folderListProvider.notifier).createFolder(
-                    name: name,
-                    description: description,
-                    color: color,
+            final notifier = ref.read(folderListViewModelProvider.notifier);
+            final errorMessage = folder == null
+                ? await notifier.createFolder(
+                    CreateFolderParams(
+                      name: name,
+                      description: description,
+                      color: color,
+                    ),
+                  )
+                : await notifier.updateFolder(
+                    UpdateFolderParams(
+                      id: folder.id,
+                      name: name,
+                      description: description,
+                      color: color,
+                    ),
                   );
-            } else {
-              await ref.read(folderListProvider.notifier).updateFolder(
-                    id: folder.id,
-                    name: name,
-                    description: description,
-                    color: color,
-                  );
-            }
 
             if (!mounted) return;
             Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  folder == null ? 'Folder created successfully' : 'Folder updated successfully',
+            if (errorMessage != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: $errorMessage')),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    folder == null ? 'Folder created successfully' : 'Folder updated successfully',
+                  ),
                 ),
-              ),
-            );
+              );
+            }
           } catch (e) {
             if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
@@ -209,7 +234,15 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
     if (shouldDelete != true) return;
 
     try {
-      await ref.read(folderListProvider.notifier).deleteFolder(folder.id);
+      final errorMessage =
+          await ref.read(folderListViewModelProvider.notifier).deleteFolder(folder.id);
+      if (errorMessage != null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $errorMessage')),
+        );
+        return;
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Folder deleted')),

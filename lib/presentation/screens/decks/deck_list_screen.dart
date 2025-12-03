@@ -4,10 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/entities/folder.dart';
-import 'package:flash_mastery/presentation/providers/deck_providers.dart';
-import 'package:flash_mastery/presentation/providers/folder_providers.dart';
+import 'package:flash_mastery/domain/usecases/decks/deck_usecases.dart';
 import 'package:flash_mastery/presentation/screens/decks/widgets/deck_form_dialog.dart';
 import 'package:flash_mastery/presentation/screens/flashcards/flashcard_list_screen.dart';
+import 'package:flash_mastery/presentation/viewmodels/deck_view_model.dart';
+import 'package:flash_mastery/presentation/viewmodels/folder_view_model.dart';
 import 'package:flash_mastery/presentation/widgets/common/common_widgets.dart';
 
 class DeckListScreen extends ConsumerStatefulWidget {
@@ -21,14 +22,34 @@ class DeckListScreen extends ConsumerStatefulWidget {
 
 class _DeckListScreenState extends ConsumerState<DeckListScreen> {
   String _searchQuery = '';
+  bool _initialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialized) return;
+    _initialized = true;
+    Future.microtask(() {
+      ref.read(folderListViewModelProvider.notifier).load();
+      ref.read(deckListViewModelProvider(widget.folder?.id).notifier).load();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final folderList = ref.watch(folderListProvider);
-    final deckListState = ref.watch(deckListProvider(widget.folder?.id));
+    final folderState = ref.watch(folderListViewModelProvider);
+    final deckListState = ref.watch(deckListViewModelProvider(widget.folder?.id));
 
-    final folders = folderList.asData?.value ?? [];
-    final filteredDecks = _filterDecks(deckListState.asData?.value);
+    final folders = folderState.when(
+      initial: () => <Folder>[],
+      loading: () => <Folder>[],
+      success: (data) => data,
+      error: (_) => <Folder>[],
+    );
+    final filteredDecks = deckListState.maybeWhen(
+      success: (data) => _filterDecks(data),
+      orElse: () => null,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -48,7 +69,9 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
       body: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: deckListState.when(
-          data: (decks) {
+          initial: () => const LoadingWidget(),
+          loading: () => const LoadingWidget(),
+          success: (decks) {
             final visibleDecks = filteredDecks ?? decks;
 
             if (visibleDecks.isEmpty) {
@@ -63,7 +86,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
 
             return RefreshIndicator(
               onRefresh: () async =>
-                  ref.read(deckListProvider(widget.folder?.id).notifier).refresh(),
+                  ref.read(deckListViewModelProvider(widget.folder?.id).notifier).load(),
               child: ListView.separated(
                 itemCount: visibleDecks.length,
                 separatorBuilder: (_, __) => const Divider(
@@ -96,10 +119,10 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
               ),
             );
           },
-          loading: () => const LoadingWidget(),
-          error: (error, _) => AppErrorWidget(
-            message: error.toString(),
-            onRetry: () => ref.read(deckListProvider(widget.folder?.id).notifier).refresh(),
+          error: (message) => AppErrorWidget(
+            message: message,
+            onRetry: () =>
+                ref.read(deckListViewModelProvider(widget.folder?.id).notifier).load(),
           ),
         ),
       ),
@@ -178,30 +201,39 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
         initialFolderId: deck?.folderId ?? widget.folder?.id ?? folders.first.id,
         onSubmit: (name, description, folderId) async {
           try {
-            if (deck == null) {
-              await ref
-                  .read(deckListProvider(widget.folder?.id).notifier)
-                  .createDeck(name: name, description: description, folderId: folderId);
-            } else {
-              await ref
-                  .read(deckListProvider(widget.folder?.id).notifier)
-                  .updateDeck(
-                    id: deck.id,
-                    name: name,
-                    description: description,
-                    folderId: folderId,
+            final notifier = ref.read(deckListViewModelProvider(widget.folder?.id).notifier);
+            final errorMessage = deck == null
+                ? await notifier.createDeck(
+                    CreateDeckParams(
+                      name: name,
+                      description: description,
+                      folderId: folderId,
+                    ),
+                  )
+                : await notifier.updateDeck(
+                    UpdateDeckParams(
+                      id: deck.id,
+                      name: name,
+                      description: description,
+                      folderId: folderId,
+                    ),
                   );
-            }
 
             if (!mounted) return;
             Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  deck == null ? 'Deck created successfully' : 'Deck updated successfully',
+            if (errorMessage != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: $errorMessage')),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    deck == null ? 'Deck created successfully' : 'Deck updated successfully',
+                  ),
                 ),
-              ),
-            );
+              );
+            }
           } catch (e) {
             if (!mounted) return;
             ScaffoldMessenger.of(
@@ -242,7 +274,17 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
     if (shouldDelete != true) return;
 
     try {
-      await ref.read(deckListProvider(widget.folder?.id).notifier).deleteDeck(deck.id);
+      final errorMessage =
+          await ref.read(deckListViewModelProvider(widget.folder?.id).notifier).deleteDeck(
+                deck.id,
+              );
+      if (errorMessage != null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $errorMessage')),
+        );
+        return;
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Deck deleted')));
     } catch (e) {
