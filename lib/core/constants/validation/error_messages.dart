@@ -192,6 +192,9 @@ class ErrorMessages {
   /// Deck not found.
   static const String deckNotFound = 'Deck not found.';
 
+  /// Folder not found.
+  static const String folderNotFound = 'Folder not found.';
+
   /// Flashcard not found.
   static const String flashcardNotFound = 'Flashcard not found.';
 

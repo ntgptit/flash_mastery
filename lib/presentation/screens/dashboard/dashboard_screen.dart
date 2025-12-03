@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../domain/entities/folder.dart';
 import '../../providers/folder_providers.dart';
+import '../decks/deck_list_screen.dart';
 import '../../widgets/common/common_widgets.dart';
 import 'widgets/folder_card.dart';
 import 'widgets/folder_form_dialog.dart';
@@ -35,6 +36,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: _showSearchDialog,
+          ),
+          IconButton(
+            icon: const Icon(Icons.layers),
+            tooltip: 'Manage decks',
+            onPressed: _openAllDecks,
           ),
           IconButton(
             icon: const Icon(Icons.more_vert),
@@ -286,10 +292,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   void _openFolder(Folder folder) {
-    // Navigate to folder detail screen
-    // TODO: Implement folder detail navigation
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Opening folder: ${folder.name}')),
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => DeckListScreen(folder: folder),
+      ),
+    );
+  }
+
+  void _openAllDecks() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const DeckListScreen(),
+      ),
     );
   }
 }

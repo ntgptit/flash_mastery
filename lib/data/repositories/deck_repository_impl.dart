@@ -1,0 +1,195 @@
+import 'package:dartz/dartz.dart';
+import '../../core/constants/validation/error_messages.dart';
+import '../../core/exceptions/exceptions.dart';
+import '../../core/exceptions/failures.dart';
+import '../../domain/entities/deck.dart';
+import '../../domain/repositories/deck_repository.dart';
+import '../datasources/deck_local_data_source.dart';
+import '../datasources/folder_local_data_source.dart';
+import '../models/deck_model.dart';
+
+class DeckRepositoryImpl implements DeckRepository {
+  final DeckLocalDataSource deckLocalDataSource;
+  final FolderLocalDataSource folderLocalDataSource;
+
+  DeckRepositoryImpl({
+    required this.deckLocalDataSource,
+    required this.folderLocalDataSource,
+  });
+
+  @override
+  Future<Either<Failure, Deck>> createDeck({
+    required String name,
+    String? description,
+    String? folderId,
+  }) async {
+    try {
+      if (name.trim().isEmpty) {
+        return Left(ValidationFailure(message: ErrorMessages.deckNameRequired));
+      }
+
+      if (folderId != null) {
+        await _ensureFolderExists(folderId);
+      }
+
+      final deckModel = DeckModel(
+        id: '',
+        name: name.trim(),
+        description: description?.trim(),
+        folderId: folderId,
+        cardCount: 0,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      final createdDeck = await deckLocalDataSource.createDeck(deckModel);
+
+      if (folderId != null) {
+        await _updateFolderDeckCount(folderId, 1);
+      }
+
+      return Right(createdDeck.toEntity());
+    } on NotFoundException catch (e) {
+      return Left(NotFoundFailure(message: e.message));
+    } on ValidationException catch (e) {
+      return Left(ValidationFailure(message: e.message, errors: e.errors));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message));
+    } on CacheException catch (e) {
+      return Left(CacheFailure(message: e.message));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteDeck(String id) async {
+    try {
+      final deck = await deckLocalDataSource.getDeckById(id);
+      await deckLocalDataSource.deleteDeck(id);
+
+      if (deck.folderId != null) {
+        await _updateFolderDeckCount(deck.folderId!, -1);
+      }
+
+      return const Right(null);
+    } on NotFoundException catch (e) {
+      return Left(NotFoundFailure(message: e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message));
+    } on CacheException catch (e) {
+      return Left(CacheFailure(message: e.message));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Deck>> getDeckById(String id) async {
+    try {
+      final deck = await deckLocalDataSource.getDeckById(id);
+      return Right(deck.toEntity());
+    } on NotFoundException catch (e) {
+      return Left(NotFoundFailure(message: e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message));
+    } on CacheException catch (e) {
+      return Left(CacheFailure(message: e.message));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Deck>>> getDecks({String? folderId}) async {
+    try {
+      final decks = await deckLocalDataSource.getDecks(folderId: folderId);
+      return Right(decks.map((d) => d.toEntity()).toList());
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message));
+    } on CacheException catch (e) {
+      return Left(CacheFailure(message: e.message));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Deck>>> searchDecks(
+    String query, {
+    String? folderId,
+  }) async {
+    try {
+      final decks = await deckLocalDataSource.searchDecks(
+        query,
+        folderId: folderId,
+      );
+      return Right(decks.map((d) => d.toEntity()).toList());
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message));
+    } on CacheException catch (e) {
+      return Left(CacheFailure(message: e.message));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Deck>> updateDeck({
+    required String id,
+    String? name,
+    String? description,
+    String? folderId,
+  }) async {
+    try {
+      final existingDeck = await deckLocalDataSource.getDeckById(id);
+      String? oldFolderId = existingDeck.folderId;
+
+      if (folderId != null && folderId != oldFolderId) {
+        await _ensureFolderExists(folderId);
+      }
+
+      final updatedDeck = existingDeck.copyWith(
+        name: name?.trim(),
+        description: description?.trim(),
+        folderId: folderId ?? existingDeck.folderId,
+      );
+
+      final result = await deckLocalDataSource.updateDeck(updatedDeck);
+
+      if (folderId != null && folderId != oldFolderId) {
+        if (oldFolderId != null) {
+          await _updateFolderDeckCount(oldFolderId, -1);
+        }
+        await _updateFolderDeckCount(folderId, 1);
+      }
+
+      return Right(result.toEntity());
+    } on NotFoundException catch (e) {
+      return Left(NotFoundFailure(message: e.message));
+    } on ValidationException catch (e) {
+      return Left(ValidationFailure(message: e.message, errors: e.errors));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message));
+    } on CacheException catch (e) {
+      return Left(CacheFailure(message: e.message));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  Future<void> _ensureFolderExists(String folderId) async {
+    try {
+      await folderLocalDataSource.getFolderById(folderId);
+    } catch (_) {
+      throw const NotFoundException(message: ErrorMessages.folderNotFound);
+    }
+  }
+
+  Future<void> _updateFolderDeckCount(String folderId, int delta) async {
+    final folder = await folderLocalDataSource.getFolderById(folderId);
+    final nextCount = folder.deckCount + delta;
+    final updatedFolder = folder.copyWith(deckCount: nextCount < 0 ? 0 : nextCount);
+    await folderLocalDataSource.updateFolder(updatedFolder);
+  }
+}

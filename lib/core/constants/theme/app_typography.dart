@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Defines the global font / text style system for the app using Material 3.
 class AppTypography {
   AppTypography._();
 
   static const double baseFontSize = 14;
+  static const String primaryFontFamily = 'Inter';
   static const List<String> _fontFamilyFallback = ['Pretendard', 'sans-serif'];
 
-  static String get primaryFontFamily =>
-      GoogleFonts.inter().fontFamily ?? 'Inter';
   static List<String> get fontFallback => _fontFamilyFallback;
 
   static TextStyle _inter({
@@ -18,13 +16,14 @@ class AppTypography {
     required double height,
     double letterSpacing = -0.05,
   }) {
-    final base = GoogleFonts.inter(
+    return TextStyle(
+      fontFamily: primaryFontFamily,
+      fontFamilyFallback: _fontFamilyFallback,
       fontSize: size,
       fontWeight: weight,
       height: height,
       letterSpacing: letterSpacing,
     );
-    return base.copyWith(fontFamilyFallback: _fontFamilyFallback);
   }
 
   // ==================== DISPLAY STYLES ====================
