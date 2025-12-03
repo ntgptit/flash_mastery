@@ -1,62 +1,42 @@
 import 'package:flash_mastery/domain/entities/flashcard.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-/// Data model for flashcard with mapping helpers.
-class FlashcardModel {
-  final String id;
-  final String deckId;
-  final String question;
-  final String answer;
-  final String? hint;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+part 'flashcard_model.freezed.dart';
+part 'flashcard_model.g.dart';
 
-  const FlashcardModel({
-    required this.id,
-    required this.deckId,
-    required this.question,
-    required this.answer,
-    this.hint,
-    required this.createdAt,
-    required this.updatedAt,
-  });
+@freezed
+abstract class FlashcardModel with _$FlashcardModel {
+  const FlashcardModel._();
 
-  FlashcardModel copyWith({
-    String? id,
-    String? deckId,
-    String? question,
-    String? answer,
+  const factory FlashcardModel({
+    required String id,
+    required String deckId,
+    required String question,
+    required String answer,
     String? hint,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) {
-    return FlashcardModel(
-      id: id ?? this.id,
-      deckId: deckId ?? this.deckId,
-      question: question ?? this.question,
-      answer: answer ?? this.answer,
-      hint: hint ?? this.hint,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-    );
-  }
+    required DateTime createdAt,
+    required DateTime updatedAt,
+  }) = _FlashcardModel;
+
+  factory FlashcardModel.fromJson(Map<String, dynamic> json) => _$FlashcardModelFromJson(json);
 
   Flashcard toEntity() => Flashcard(
-        id: id,
-        deckId: deckId,
-        question: question,
-        answer: answer,
-        hint: hint,
-        createdAt: createdAt,
-        updatedAt: updatedAt,
-      );
+    id: id,
+    deckId: deckId,
+    question: question,
+    answer: answer,
+    hint: hint,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+  );
 
   factory FlashcardModel.fromEntity(Flashcard flashcard) => FlashcardModel(
-        id: flashcard.id,
-        deckId: flashcard.deckId,
-        question: flashcard.question,
-        answer: flashcard.answer,
-        hint: flashcard.hint,
-        createdAt: flashcard.createdAt,
-        updatedAt: flashcard.updatedAt,
-      );
+    id: flashcard.id,
+    deckId: flashcard.deckId,
+    question: flashcard.question,
+    answer: flashcard.answer,
+    hint: flashcard.hint,
+    createdAt: flashcard.createdAt,
+    updatedAt: flashcard.updatedAt,
+  );
 }

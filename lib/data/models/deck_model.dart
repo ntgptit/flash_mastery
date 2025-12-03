@@ -1,44 +1,24 @@
 import 'package:flash_mastery/domain/entities/deck.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-/// Data model for Deck with mapping helpers.
-class DeckModel {
-  final String id;
-  final String name;
-  final String? description;
-  final String? folderId;
-  final int cardCount;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+part 'deck_model.freezed.dart';
+part 'deck_model.g.dart';
 
-  const DeckModel({
-    required this.id,
-    required this.name,
-    this.description,
-    this.folderId,
-    this.cardCount = 0,
-    required this.createdAt,
-    required this.updatedAt,
-  });
+@freezed
+abstract class DeckModel with _$DeckModel {
+  const DeckModel._();
 
-  DeckModel copyWith({
-    String? id,
-    String? name,
+  const factory DeckModel({
+    required String id,
+    required String name,
     String? description,
     String? folderId,
-    int? cardCount,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) {
-    return DeckModel(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      description: description ?? this.description,
-      folderId: folderId ?? this.folderId,
-      cardCount: cardCount ?? this.cardCount,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-    );
-  }
+    @Default(0) int cardCount,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+  }) = _DeckModel;
+
+  factory DeckModel.fromJson(Map<String, dynamic> json) => _$DeckModelFromJson(json);
 
   Deck toEntity() => Deck(
     id: id,
