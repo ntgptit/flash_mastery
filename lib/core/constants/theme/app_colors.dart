@@ -1,36 +1,94 @@
 import 'package:flutter/material.dart';
 
 /// Defines the primary brand color palette following Material 3 guidelines.
-/// You can tweak these values once your design guideline is finalized.
+/// Light palette follows brand seed; dark palette is anti-eye-strain (warm, low-glare).
 class AppColors {
   AppColors._(); // private constructor to prevent instantiation
 
-  // ==================== PRIMARY COLORS ====================
+  // ==================== PRIMARY COLORS (LIGHT) ====================
 
-  /// Main seed color for the ColorScheme (e.g. modern blue).
-  static const Color primary = Color(0xFF1565C0);
+  /// Main seed color for the ColorScheme (H?a tone).
+  static const Color primary = Color(0xFFFF6A3D);
 
-  /// Light variant of primary color
-  static const Color primaryLight = Color(0xFF5E92F3);
+  /// Light variant / container of primary color
+  static const Color primaryLight = Color(0xFFFFE2D8);
 
-  /// Dark variant of primary color
-  static const Color primaryDark = Color(0xFF003C8F);
+  /// Dark/on-container variant of primary
+  static const Color primaryDark = Color(0xFF7F2F15);
+
+  /// On primary color
+  static const Color onPrimary = Color(0xFFFFFFFF);
+
+  /// Color on top of primary container
+  static const Color onPrimaryContainer = Color(0xFF7F2F15);
+
+  // ==================== PRIMARY COLORS (DARK / ANTI-EYE-STRAIN) ====================
+
+  /// Dark theme primary (coral soft)
+  static const Color primaryDarkMode = Color(0xFFFF8A65);
+
+  /// On primary for dark theme
+  static const Color onPrimaryDarkMode = Color(0xFF3A1A12);
+
+  /// Primary container for dark theme
+  static const Color primaryContainerDark = Color(0xFF7A3F2D);
+
+  /// On primary container for dark theme
+  static const Color onPrimaryContainerDark = Color(0xFFFFD8CC);
 
   // ==================== SECONDARY COLORS ====================
 
-  /// Secondary accent color – can be used for icons, chips, etc.
-  static const Color secondary = Color(0xFF00BFA5);
+  /// Secondary accent color (light)
+  static const Color secondary = Color(0xFFFF9F6E);
 
   /// Light variant of secondary color
-  static const Color secondaryLight = Color(0xFF5DF2D6);
+  static const Color secondaryLight = Color(0xFFFFC9AE);
 
   /// Dark variant of secondary color
-  static const Color secondaryDark = Color(0xFF008E76);
+  static const Color secondaryDark = Color(0xFF9F5536);
+
+  /// Secondary (dark theme)
+  static const Color secondaryDarkMode = Color(0xFFFFAF87);
+
+  /// On secondary (dark theme)
+  static const Color onSecondaryDarkMode = Color(0xFF3A1A12);
+
+  /// Secondary container (dark theme)
+  static const Color secondaryContainerDark = Color(0xFF7A4A32);
+
+  /// On secondary container (dark theme)
+  static const Color onSecondaryContainerDark = Color(0xFFFFD8CC);
+
+  // ==================== TERTIARY COLORS ====================
+
+  /// Tertiary color (light)
+  static const Color tertiary = Color(0xFFE75461);
+
+  /// On tertiary color (light)
+  static const Color onTertiary = Color(0xFFFFFFFF);
+
+  /// Tertiary (dark theme)
+  static const Color tertiaryDarkMode = Color(0xFFFF6F7D);
+
+  /// On tertiary (dark theme)
+  static const Color onTertiaryDarkMode = Color(0xFF3A1A12);
+
+  /// Tertiary container (dark theme)
+  static const Color tertiaryContainerDark = Color(0xFF7A2F3A);
+
+  /// On tertiary container (dark theme)
+  static const Color onTertiaryContainerDark = Color(0xFFFFD8CC);
 
   // ==================== SEMANTIC COLORS ====================
 
   /// Error color for error states and messages
   static const Color error = Color(0xFFD32F2F);
+
+  /// Error color for dark theme
+  static const Color errorDark = Color(0xFFFF6F6F);
+
+  /// On error for dark theme
+  static const Color onErrorDark = Color(0xFF3A1A12);
 
   /// Warning color for warnings
   static const Color warning = Color(0xFFF57C00);
@@ -50,16 +108,22 @@ class AppColors {
   static const Color black = Color(0xFF000000);
 
   /// Light background color
-  static const Color backgroundLight = Color(0xFFF5F7FB);
+  static const Color backgroundLight = Color(0xFFFFF9F6);
 
-  /// Dark background color
-  static const Color backgroundDark = Color(0xFF121212);
+  /// Dark background color (anti-eye-strain)
+  static const Color backgroundDark = Color(0xFF121110);
 
   /// Surface color for cards, sheets, app bars (light mode)
-  static const Color surface = Colors.white;
+  static const Color surface = Color(0xFFFFFFFF);
 
-  /// Surface color for dark mode
-  static const Color surfaceDark = Color(0xFF1E1E1E);
+  /// Surface variant for light mode
+  static const Color surfaceVariant = Color(0xFFF5E7E2);
+
+  /// Surface color for dark mode (warm gray)
+  static const Color surfaceDark = Color(0xFF1C1B1A);
+
+  /// Surface variant for dark mode (deep warm)
+  static const Color surfaceVariantDark = Color(0xFF2B2928);
 
   // ==================== GREY SCALE ====================
 
@@ -113,7 +177,10 @@ class AppColors {
   static const Color divider = Color(0xFFE0E0E0);
 
   /// Border color
-  static const Color border = Color(0xFFE0E0E0);
+  static const Color border = Color(0xFFD2B9B0);
+
+  /// Outline color for dark surfaces
+  static const Color outlineDark = Color(0xFF8C756B);
 
   // ==================== OVERLAY COLORS ====================
 
@@ -126,5 +193,3 @@ class AppColors {
   /// Shimmer highlight color
   static const Color shimmerHighlight = Color(0xFFF5F5F5);
 }
-
-
