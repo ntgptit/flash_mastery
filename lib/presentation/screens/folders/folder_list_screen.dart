@@ -157,6 +157,8 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
       builder: (context) => FolderFormDialog(
         folder: folder,
         onSubmit: (name, description, color) async {
+          final navigator = Navigator.of(context);
+          final messenger = ScaffoldMessenger.of(context);
           try {
             final notifier = ref.read(folderListViewModelProvider.notifier);
             final errorMessage = folder == null
@@ -177,13 +179,13 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
                   );
 
             if (!mounted) return;
-            Navigator.pop(context);
+            navigator.pop();
             if (errorMessage != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
+              messenger.showSnackBar(
                 SnackBar(content: Text('Error: $errorMessage')),
               );
             } else {
-              ScaffoldMessenger.of(context).showSnackBar(
+              messenger.showSnackBar(
                 SnackBar(
                   content: Text(
                     folder == null ? 'Folder created successfully' : 'Folder updated successfully',
@@ -193,9 +195,7 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
             }
           } catch (e) {
             if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error: ${e.toString()}')),
-            );
+            messenger.showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
           }
         },
       ),
@@ -231,6 +231,7 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
       ),
     );
 
+    if (!mounted) return;
     if (shouldDelete != true) return;
 
     try {

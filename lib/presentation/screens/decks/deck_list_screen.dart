@@ -200,6 +200,8 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
         folders: folders,
         initialFolderId: deck?.folderId ?? widget.folder?.id ?? folders.first.id,
         onSubmit: (name, description, folderId) async {
+          final navigator = Navigator.of(context);
+          final messenger = ScaffoldMessenger.of(context);
           try {
             final notifier = ref.read(deckListViewModelProvider(widget.folder?.id).notifier);
             final errorMessage = deck == null
@@ -220,13 +222,11 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                   );
 
             if (!mounted) return;
-            Navigator.pop(context);
+            navigator.pop();
             if (errorMessage != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: $errorMessage')),
-              );
+              messenger.showSnackBar(SnackBar(content: Text('Error: $errorMessage')));
             } else {
-              ScaffoldMessenger.of(context).showSnackBar(
+              messenger.showSnackBar(
                 SnackBar(
                   content: Text(
                     deck == null ? 'Deck created successfully' : 'Deck updated successfully',
@@ -236,9 +236,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
             }
           } catch (e) {
             if (!mounted) return;
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+            messenger.showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
           }
         },
       ),
@@ -271,6 +269,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
       ),
     );
 
+    if (!mounted) return;
     if (shouldDelete != true) return;
 
     try {

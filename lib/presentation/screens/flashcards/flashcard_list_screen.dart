@@ -175,6 +175,8 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
           required String answer,
           String? hint,
         }) async {
+          final navigator = Navigator.of(context);
+          final messenger = ScaffoldMessenger.of(context);
           try {
             final notifier =
                 ref.read(flashcardListViewModelProvider(widget.deck.id).notifier);
@@ -197,13 +199,11 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
                   );
 
             if (!mounted) return;
-            Navigator.pop(context);
+            navigator.pop();
             if (errorMessage != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: $errorMessage')),
-              );
+              messenger.showSnackBar(SnackBar(content: Text('Error: $errorMessage')));
             } else {
-              ScaffoldMessenger.of(context).showSnackBar(
+              messenger.showSnackBar(
                 SnackBar(
                   content: Text(card == null ? 'Flashcard created' : 'Flashcard updated'),
                 ),
@@ -211,9 +211,7 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
             }
           } catch (e) {
             if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error: ${e.toString()}')),
-            );
+            messenger.showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
           }
         },
       ),
@@ -249,6 +247,7 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
       ),
     );
 
+    if (!mounted) return;
     if (shouldDelete != true) return;
 
     try {
