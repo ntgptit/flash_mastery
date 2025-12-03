@@ -1,11 +1,14 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/entities/folder.dart';
 import 'package:flash_mastery/presentation/providers/deck_providers.dart';
 import 'package:flash_mastery/presentation/providers/folder_providers.dart';
 import 'package:flash_mastery/presentation/screens/decks/widgets/deck_form_dialog.dart';
+import 'package:flash_mastery/presentation/screens/flashcards/flashcard_list_screen.dart';
 import 'package:flash_mastery/presentation/widgets/common/common_widgets.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class DeckListScreen extends ConsumerStatefulWidget {
   final Folder? folder;
@@ -29,7 +32,11 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.folder != null ? 'Decks in ${widget.folder!.name}' : 'Decks'),
+        title: Text(
+          widget.folder != null ? 'Decks in ${widget.folder!.name}' : 'Decks',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         actions: [
           IconButton(
             onPressed: _showSearchDialog,
@@ -39,7 +46,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: deckListState.when(
           data: (decks) {
             final visibleDecks = filteredDecks ?? decks;
@@ -59,7 +66,10 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                   ref.read(deckListProvider(widget.folder?.id).notifier).refresh(),
               child: ListView.separated(
                 itemCount: visibleDecks.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
+                separatorBuilder: (_, __) => const Divider(
+                  height: AppSpacing.borderWidthThin,
+                  thickness: AppSpacing.borderWidthThin,
+                ),
                 itemBuilder: (context, index) {
                   final deck = visibleDecks[index];
                   return _DeckTile(
@@ -80,6 +90,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                     ),
                     onEdit: () => _openDeckForm(deck: deck, folders: folders),
                     onDelete: () => _confirmDelete(deck),
+                    onOpen: () => _openDeck(deck),
                   );
                 },
               ),
@@ -207,14 +218,21 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Deck'),
-        content: Text(
-          'Are you sure you want to delete "${deck.name}"?\nThis action cannot be undone.',
+        content: SingleChildScrollView(
+          child: Text(
+            'Are you sure you want to delete "${deck.name}"?\nThis action cannot be undone.',
+            maxLines: AppConstants.confirmationDialogMaxLines,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
             child: const Text('Delete'),
           ),
         ],
@@ -234,6 +252,14 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
       ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
     }
   }
+
+  void _openDeck(Deck deck) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => FlashcardListScreen(deck: deck),
+      ),
+    );
+  }
 }
 
 class _DeckTile extends StatelessWidget {
@@ -241,22 +267,29 @@ class _DeckTile extends StatelessWidget {
   final Folder folder;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback onOpen;
 
   const _DeckTile({
     required this.deck,
     required this.folder,
     required this.onEdit,
     required this.onDelete,
+    required this.onOpen,
   });
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+        backgroundColor:
+            Theme.of(context).colorScheme.primary.withValues(alpha: AppOpacity.low),
         child: const Icon(Icons.layers, color: Colors.white),
       ),
-      title: Text(deck.name),
+      title: Text(
+        deck.name,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -265,6 +298,8 @@ class _DeckTile extends StatelessWidget {
           Text(
             'Folder: ${folder.name} · ${deck.cardCount} cards',
             style: Theme.of(context).textTheme.bodySmall,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -277,27 +312,34 @@ class _DeckTile extends StatelessWidget {
           }
         },
         itemBuilder: (context) => [
-          const PopupMenuItem(
+          PopupMenuItem(
             value: 'edit',
-            child: Row(children: [Icon(Icons.edit, size: 20), SizedBox(width: 8), Text('Edit')]),
+            child: Row(children: const [
+              Icon(Icons.edit, size: AppSpacing.iconSmallMedium),
+              SizedBox(width: AppSpacing.sm),
+              Text('Edit')
+            ]),
           ),
-          const PopupMenuItem(
+          PopupMenuItem(
             value: 'delete',
             child: Row(
               children: [
-                Icon(Icons.delete, size: 20, color: Colors.red),
-                SizedBox(width: 8),
-                Text('Delete', style: TextStyle(color: Colors.red)),
+                Icon(
+                  Icons.delete,
+                  size: AppSpacing.iconSmallMedium,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  'Delete',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
               ],
             ),
           ),
         ],
       ),
-      onTap: () {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Deck open not implemented yet')));
-      },
+      onTap: onOpen,
     );
   }
 }

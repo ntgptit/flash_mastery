@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import '../../core/constants/config/app_constants.dart';
 import '../../core/constants/validation/error_messages.dart';
 import '../../core/exceptions/exceptions.dart';
 import '../../core/exceptions/failures.dart';
@@ -24,8 +25,31 @@ class DeckRepositoryImpl implements DeckRepository {
     String? folderId,
   }) async {
     try {
-      if (name.trim().isEmpty) {
+      final trimmedName = name.trim();
+      final trimmedDescription = description?.trim();
+      if (trimmedName.isEmpty) {
         return Left(ValidationFailure(message: ErrorMessages.deckNameRequired));
+      }
+
+      if (trimmedName.length < AppConstants.minDeckNameLength) {
+        return Left(
+          ValidationFailure(message: ErrorMessages.textTooShort(AppConstants.minDeckNameLength)),
+        );
+      }
+
+      if (trimmedName.length > AppConstants.maxDeckNameLength) {
+        return Left(
+          ValidationFailure(message: ErrorMessages.textTooLong(AppConstants.maxDeckNameLength)),
+        );
+      }
+
+      if (trimmedDescription != null &&
+          trimmedDescription.length > AppConstants.maxDeckDescriptionLength) {
+        return Left(
+          ValidationFailure(
+            message: ErrorMessages.textTooLong(AppConstants.maxDeckDescriptionLength),
+          ),
+        );
       }
 
       if (folderId != null) {
@@ -34,8 +58,8 @@ class DeckRepositoryImpl implements DeckRepository {
 
       final deckModel = DeckModel(
         id: '',
-        name: name.trim(),
-        description: description?.trim(),
+        name: trimmedName,
+        description: trimmedDescription,
         folderId: folderId,
         cardCount: 0,
         createdAt: DateTime.now(),
@@ -143,15 +167,42 @@ class DeckRepositoryImpl implements DeckRepository {
   }) async {
     try {
       final existingDeck = await deckLocalDataSource.getDeckById(id);
-      String? oldFolderId = existingDeck.folderId;
+      final String? oldFolderId = existingDeck.folderId;
+      final trimmedName = name?.trim();
+      final trimmedDescription = description?.trim();
 
       if (folderId != null && folderId != oldFolderId) {
         await _ensureFolderExists(folderId);
       }
 
+      if (trimmedName != null && trimmedName.isEmpty) {
+        return Left(ValidationFailure(message: ErrorMessages.deckNameRequired));
+      }
+
+      if (trimmedName != null && trimmedName.length < AppConstants.minDeckNameLength) {
+        return Left(
+          ValidationFailure(message: ErrorMessages.textTooShort(AppConstants.minDeckNameLength)),
+        );
+      }
+
+      if (trimmedName != null && trimmedName.length > AppConstants.maxDeckNameLength) {
+        return Left(
+          ValidationFailure(message: ErrorMessages.textTooLong(AppConstants.maxDeckNameLength)),
+        );
+      }
+
+      if (trimmedDescription != null &&
+          trimmedDescription.length > AppConstants.maxDeckDescriptionLength) {
+        return Left(
+          ValidationFailure(
+            message: ErrorMessages.textTooLong(AppConstants.maxDeckDescriptionLength),
+          ),
+        );
+      }
+
       final updatedDeck = existingDeck.copyWith(
-        name: name?.trim(),
-        description: description?.trim(),
+        name: trimmedName,
+        description: trimmedDescription,
         folderId: folderId ?? existingDeck.folderId,
       );
 

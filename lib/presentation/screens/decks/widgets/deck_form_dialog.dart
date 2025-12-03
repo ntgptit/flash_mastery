@@ -1,7 +1,8 @@
-import 'package:flash_mastery/core/constants/config/app_constants.dart';
+import 'package:flutter/material.dart';
+
+import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/entities/folder.dart';
-import 'package:flutter/material.dart';
 
 class DeckFormDialog extends StatefulWidget {
   final Deck? deck;
@@ -54,9 +55,9 @@ class _DeckFormDialogState extends State<DeckFormDialog> {
 
     return Dialog(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
+        constraints: const BoxConstraints(maxWidth: AppSpacing.dialogMaxWidth),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.xl),
           child: Form(
             key: _formKey,
             child: Column(
@@ -67,7 +68,7 @@ class _DeckFormDialogState extends State<DeckFormDialog> {
                   isEditing ? 'Edit Deck' : 'Create Deck',
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(
@@ -78,18 +79,19 @@ class _DeckFormDialogState extends State<DeckFormDialog> {
                   ),
                   autofocus: true,
                   maxLength: AppConstants.maxDeckNameLength,
+                  maxLines: AppConstants.singleLineMaxLines,
                   validator: (value) {
                     final text = value?.trim() ?? '';
                     if (text.isEmpty) {
                       return 'Please enter a deck name';
                     }
-                    if (text.length < 2) {
-                      return 'Name must be at least 2 characters';
+                    if (text.length < AppConstants.minDeckNameLength) {
+                      return 'Name must be at least ${AppConstants.minDeckNameLength} characters';
                     }
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 TextFormField(
                   controller: _descriptionController,
                   decoration: const InputDecoration(
@@ -98,10 +100,10 @@ class _DeckFormDialogState extends State<DeckFormDialog> {
                     prefixIcon: Icon(Icons.description_outlined),
                     border: OutlineInputBorder(),
                   ),
-                  maxLines: 3,
+                  maxLines: AppConstants.defaultMultilineMinLines,
                   maxLength: AppConstants.maxDeckDescriptionLength,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 DropdownButtonFormField<String>(
                   initialValue: _selectedFolderId,
                   decoration: const InputDecoration(
@@ -110,7 +112,16 @@ class _DeckFormDialogState extends State<DeckFormDialog> {
                     border: OutlineInputBorder(),
                   ),
                   items: widget.folders
-                      .map((folder) => DropdownMenuItem(value: folder.id, child: Text(folder.name)))
+                      .map(
+                        (folder) => DropdownMenuItem(
+                          value: folder.id,
+                          child: Text(
+                            folder.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      )
                       .toList(),
                   onChanged: (value) {
                     setState(() {
@@ -124,7 +135,7 @@ class _DeckFormDialogState extends State<DeckFormDialog> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -132,14 +143,16 @@ class _DeckFormDialogState extends State<DeckFormDialog> {
                       onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
                       child: const Text('Cancel'),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppSpacing.md),
                     FilledButton(
                       onPressed: _isSubmitting ? null : _handleSubmit,
                       child: _isSubmitting
                           ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              width: AppSpacing.loaderSizeSmall,
+                              height: AppSpacing.loaderSizeSmall,
+                              child: CircularProgressIndicator(
+                                strokeWidth: AppSpacing.strokeWidthThin,
+                              ),
                             )
                           : Text(isEditing ? 'Update' : 'Create'),
                     ),

@@ -87,8 +87,20 @@ class AppConstants {
   /// Maximum deck description length.
   static const int maxDeckDescriptionLength = 500;
 
+  /// Maximum folder name length.
+  static const int maxFolderNameLength = 100;
+
+  /// Maximum folder description length.
+  static const int maxFolderDescriptionLength = 500;
+
   /// Maximum number of flashcards per deck.
   static const int maxFlashcardsPerDeck = 1000;
+
+  /// Minimum folder name length.
+  static const int minFolderNameLength = 2;
+
+  /// Minimum deck name length.
+  static const int minDeckNameLength = 2;
 
   /// Minimum study cards per session.
   static const int minStudyCardsPerSession = 5;
@@ -112,6 +124,17 @@ class AppConstants {
 
   /// Default maximum lines for single-line text fields.
   static const int singleLineMaxLines = 1;
+
+  // ==================== UI DEFAULTS ====================
+
+  /// Maximum lines for confirmation dialogs to avoid overflow.
+  static const int confirmationDialogMaxLines = 3;
+
+  /// Default cross axis count for grid-based cards (folders/decks).
+  static const int defaultGridCrossAxisCount = 2;
+
+  /// Default aspect ratio for grid-based cards.
+  static const double folderGridAspectRatio = 1.2;
 
   // ==================== TIMING CONSTANTS ====================
 

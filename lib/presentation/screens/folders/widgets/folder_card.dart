@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../domain/entities/folder.dart';
+
+import 'package:flash_mastery/core/constants/constants.dart';
+import 'package:flash_mastery/domain/entities/folder.dart';
 
 class FolderCard extends StatelessWidget {
   final Folder folder;
@@ -17,10 +19,11 @@ class FolderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _parseColor(folder.color);
+    final fallbackColor = Theme.of(context).colorScheme.primary;
+    final color = _parseColor(folder.color, fallbackColor);
 
     return Card(
-      elevation: 2,
+      elevation: AppSpacing.elevationLow,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
@@ -32,24 +35,24 @@ class FolderCard extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    color.withValues(alpha: 0.7),
-                    color.withValues(alpha: 0.3),
+                    color.withValues(alpha: AppOpacity.veryHigh),
+                    color.withValues(alpha: AppOpacity.mediumLow),
                   ],
                 ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.folder,
                         color: Colors.white,
-                        size: 32,
+                        size: AppSpacing.iconLarge,
                       ),
                       PopupMenuButton<String>(
                         icon: const Icon(
@@ -64,23 +67,30 @@ class FolderCard extends StatelessWidget {
                           }
                         },
                         itemBuilder: (context) => [
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'edit',
                             child: Row(
                               children: [
-                                Icon(Icons.edit, size: 20),
-                                SizedBox(width: 8),
+                                const Icon(Icons.edit, size: AppSpacing.iconSmallMedium),
+                                const SizedBox(width: AppSpacing.sm),
                                 Text('Edit'),
                               ],
                             ),
                           ),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'delete',
                             child: Row(
                               children: [
-                                Icon(Icons.delete, size: 20, color: Colors.red),
-                                SizedBox(width: 8),
-                                Text('Delete', style: TextStyle(color: Colors.red)),
+                                Icon(
+                                  Icons.delete,
+                                  size: AppSpacing.iconSmallMedium,
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                                const SizedBox(width: AppSpacing.sm),
+                                Text(
+                                  'Delete',
+                                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                                ),
                               ],
                             ),
                           ),
@@ -88,7 +98,7 @@ class FolderCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -103,14 +113,13 @@ class FolderCard extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (folder.description != null &&
-                            folder.description!.isNotEmpty) ...[
-                          const SizedBox(height: 4),
+                        if ((folder.description ?? '').isNotEmpty) ...[
+                          const SizedBox(height: AppSpacing.xs),
                           Text(
                             folder.description!,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.white.withValues(alpha: 0.9),
-                              ),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Colors.white.withValues(alpha: AppOpacity.veryHigh),
+                                ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -118,15 +127,15 @@ class FolderCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.xs,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.white.withValues(alpha: AppOpacity.low),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
                     ),
                     child: Text(
                       '${folder.deckCount} deck${folder.deckCount != 1 ? 's' : ''}',
@@ -145,26 +154,22 @@ class FolderCard extends StatelessWidget {
     );
   }
 
-  Color _parseColor(String? colorString) {
+  Color _parseColor(String? colorString, Color fallback) {
     if (colorString == null || colorString.isEmpty) {
-      return Colors.blue;
+      return fallback;
     }
 
     try {
-      // Remove '#' if present
       final hexColor = colorString.replaceAll('#', '');
-
-      // Parse hex color
       if (hexColor.length == 6) {
         return Color(int.parse('FF$hexColor', radix: 16));
       } else if (hexColor.length == 8) {
         return Color(int.parse(hexColor, radix: 16));
       }
-    } catch (e) {
-      // If parsing fails, return default color
-      return Colors.blue;
+    } catch (_) {
+      return fallback;
     }
 
-    return Colors.blue;
+    return fallback;
   }
 }

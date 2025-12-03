@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../domain/entities/folder.dart';
-import '../../providers/folder_providers.dart';
-import '../decks/deck_list_screen.dart';
-import '../../widgets/common/common_widgets.dart';
-import 'widgets/folder_card.dart';
-import 'widgets/folder_form_dialog.dart';
+
+import 'package:flash_mastery/core/constants/constants.dart';
+import 'package:flash_mastery/domain/entities/folder.dart';
+import 'package:flash_mastery/presentation/providers/folder_providers.dart';
+import 'package:flash_mastery/presentation/screens/decks/deck_list_screen.dart';
+import 'package:flash_mastery/presentation/screens/folders/widgets/folder_card.dart';
+import 'package:flash_mastery/presentation/screens/folders/widgets/folder_form_dialog.dart';
+import 'package:flash_mastery/presentation/widgets/common/common_widgets.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -31,7 +33,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
-        elevation: 0,
+        elevation: AppSpacing.elevationNone,
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
@@ -52,13 +54,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         children: [
           if (_searchQuery.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
                       'Searching for: "$_searchQuery"',
                       style: Theme.of(context).textTheme.bodyMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   IconButton(
@@ -112,12 +116,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     await ref.read(folderListProvider.notifier).refresh();
                   },
                   child: GridView.builder(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppSpacing.lg),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 1.2,
+                      crossAxisCount: AppConstants.defaultGridCrossAxisCount,
+                      crossAxisSpacing: AppSpacing.lg,
+                      mainAxisSpacing: AppSpacing.lg,
+                      childAspectRatio: AppConstants.folderGridAspectRatio,
                     ),
                     itemCount: filteredFolders.length,
                     itemBuilder: (context, index) {
@@ -254,8 +258,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Folder'),
-        content: Text(
-          'Are you sure you want to delete "${folder.name}"?\nThis action cannot be undone.',
+        content: SingleChildScrollView(
+          child: Text(
+            'Are you sure you want to delete "${folder.name}"?\nThis action cannot be undone.',
+            maxLines: AppConstants.confirmationDialogMaxLines,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
         actions: [
           TextButton(
@@ -282,7 +290,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               }
             },
             style: FilledButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
             ),
             child: const Text('Delete'),
           ),

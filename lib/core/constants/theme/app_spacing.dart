@@ -145,6 +145,9 @@ class AppSpacing {
   /// Bottom sheet drag handle height
   static const double dragHandleHeight = 4.0;
 
+  /// Dialog max width for forms/modals
+  static const double dialogMaxWidth = 520.0;
+
   // ==================== BORDER WIDTHS ====================
 
   /// Hairline border width
@@ -152,6 +155,9 @@ class AppSpacing {
 
   /// Medium border width
   static const double borderWidthMedium = 2.0;
+
+  /// Thick border width
+  static const double borderWidthThick = 3.0;
 
   // ==================== ELEVATION ====================
 
