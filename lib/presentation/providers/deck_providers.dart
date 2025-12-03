@@ -1,9 +1,9 @@
+import 'package:flash_mastery/data/datasources/deck_local_data_source.dart';
+import 'package:flash_mastery/data/repositories/deck_repository_impl.dart';
+import 'package:flash_mastery/domain/entities/deck.dart';
+import 'package:flash_mastery/domain/repositories/deck_repository.dart';
+import 'package:flash_mastery/presentation/providers/folder_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../data/datasources/deck_local_data_source.dart';
-import '../../data/repositories/deck_repository_impl.dart';
-import '../../domain/entities/deck.dart';
-import '../../domain/repositories/deck_repository.dart';
-import 'folder_providers.dart';
 
 part 'deck_providers.g.dart';
 
@@ -34,10 +34,7 @@ class DeckList extends _$DeckList {
     final repository = ref.watch(deckRepositoryProvider);
     final result = await repository.getDecks(folderId: folderId);
 
-    return result.fold(
-      (failure) => throw Exception(failure.message),
-      (decks) => decks,
-    );
+    return result.fold((failure) => throw Exception(failure.message), (decks) => decks);
   }
 
   /// Refresh deck list.
@@ -47,19 +44,12 @@ class DeckList extends _$DeckList {
       final repository = ref.read(deckRepositoryProvider);
       final result = await repository.getDecks(folderId: folderId);
 
-      return result.fold(
-        (failure) => throw Exception(failure.message),
-        (decks) => decks,
-      );
+      return result.fold((failure) => throw Exception(failure.message), (decks) => decks);
     });
   }
 
   /// Create new deck.
-  Future<void> createDeck({
-    required String name,
-    String? description,
-    String? folderId,
-  }) async {
+  Future<void> createDeck({required String name, String? description, String? folderId}) async {
     final repository = ref.read(deckRepositoryProvider);
     final targetFolderId = folderId ?? this.folderId;
 
@@ -69,13 +59,10 @@ class DeckList extends _$DeckList {
       folderId: targetFolderId,
     );
 
-    result.fold(
-      (failure) => throw Exception(failure.message),
-      (_) async {
-        await refresh();
-        await _refreshFolders();
-      },
-    );
+    result.fold((failure) => throw Exception(failure.message), (_) async {
+      await refresh();
+      await _refreshFolders();
+    });
   }
 
   /// Update deck.
@@ -95,13 +82,10 @@ class DeckList extends _$DeckList {
       folderId: targetFolderId,
     );
 
-    result.fold(
-      (failure) => throw Exception(failure.message),
-      (_) async {
-        await refresh();
-        await _refreshFolders();
-      },
-    );
+    result.fold((failure) => throw Exception(failure.message), (_) async {
+      await refresh();
+      await _refreshFolders();
+    });
   }
 
   /// Delete deck.
@@ -109,13 +93,10 @@ class DeckList extends _$DeckList {
     final repository = ref.read(deckRepositoryProvider);
     final result = await repository.deleteDeck(id);
 
-    result.fold(
-      (failure) => throw Exception(failure.message),
-      (_) async {
-        await refresh();
-        await _refreshFolders();
-      },
-    );
+    result.fold((failure) => throw Exception(failure.message), (_) async {
+      await refresh();
+      await _refreshFolders();
+    });
   }
 
   Future<void> _refreshFolders() async {
@@ -131,10 +112,7 @@ Future<Deck> deck(Ref ref, String id) async {
   final repository = ref.watch(deckRepositoryProvider);
   final result = await repository.getDeckById(id);
 
-  return result.fold(
-    (failure) => throw Exception(failure.message),
-    (deck) => deck,
-  );
+  return result.fold((failure) => throw Exception(failure.message), (deck) => deck);
 }
 
 // ==================== SEARCH PROVIDER ====================
@@ -151,9 +129,6 @@ class DeckSearch extends _$DeckSearch {
     final repository = ref.watch(deckRepositoryProvider);
     final result = await repository.searchDecks(query);
 
-    return result.fold(
-      (failure) => throw Exception(failure.message),
-      (decks) => decks,
-    );
+    return result.fold((failure) => throw Exception(failure.message), (decks) => decks);
   }
 }

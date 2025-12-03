@@ -1,7 +1,6 @@
 import 'package:dartz/dartz.dart';
+import 'package:flash_mastery/core/exceptions/failures.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
-
-import '../../core/exceptions/failures.dart';
 
 /// Repository interface for flashcard operations.
 abstract class FlashcardRepository {
@@ -31,8 +30,5 @@ abstract class FlashcardRepository {
   Future<Either<Failure, void>> deleteFlashcard(String id);
 
   /// Search flashcards by text in a deck.
-  Future<Either<Failure, List<Flashcard>>> searchFlashcards(
-    String deckId,
-    String query,
-  );
+  Future<Either<Failure, List<Flashcard>>> searchFlashcards(String deckId, String query);
 }

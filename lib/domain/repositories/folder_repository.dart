@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
-import '../../core/exceptions/failures.dart';
-import '../entities/folder.dart';
+import 'package:flash_mastery/core/exceptions/failures.dart';
+import 'package:flash_mastery/domain/entities/folder.dart';
 
 /// Repository interface for folder operations
 abstract class FolderRepository {

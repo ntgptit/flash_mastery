@@ -1,7 +1,8 @@
 import 'dart:io';
+
 import 'package:dio/dio.dart';
+import 'package:flash_mastery/core/exceptions/exceptions.dart';
 import 'package:flutter/foundation.dart';
-import '../../exceptions/exceptions.dart';
 
 /// Interceptor to check network connectivity before making requests
 class ConnectivityInterceptor extends Interceptor {
@@ -14,10 +15,7 @@ class ConnectivityInterceptor extends Interceptor {
   });
 
   @override
-  void onRequest(
-    RequestOptions options,
-    RequestInterceptorHandler handler,
-  ) async {
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
     // Skip connectivity check if disabled for this request
     final skipCheck = options.extra['skip_connectivity_check'] as bool? ?? false;
     if (skipCheck) {
@@ -32,9 +30,7 @@ class ConnectivityInterceptor extends Interceptor {
       return handler.reject(
         DioException(
           requestOptions: options,
-          error: NetworkException(
-            message: 'No internet connection. Please check your network.',
-          ),
+          error: NetworkException(message: 'No internet connection. Please check your network.'),
           type: DioExceptionType.connectionError,
         ),
       );
@@ -49,8 +45,7 @@ class ConnectivityInterceptor extends Interceptor {
       // Try to lookup multiple hosts for reliability
       for (final host in testHosts) {
         try {
-          final result = await InternetAddress.lookup(host)
-              .timeout(timeout);
+          final result = await InternetAddress.lookup(host).timeout(timeout);
 
           if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
             return true;

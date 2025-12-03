@@ -1,5 +1,5 @@
-import '../../core/exceptions/exceptions.dart';
-import '../models/deck_model.dart';
+import 'package:flash_mastery/core/exceptions/exceptions.dart';
+import 'package:flash_mastery/data/models/deck_model.dart';
 
 /// Local data source for deck operations (in-memory for now).
 abstract class DeckLocalDataSource {
@@ -71,9 +71,11 @@ class DeckLocalDataSourceImpl implements DeckLocalDataSource {
     if (query.isEmpty) return source;
     final lower = query.toLowerCase();
     return source
-        .where((deck) =>
-            deck.name.toLowerCase().contains(lower) ||
-            (deck.description?.toLowerCase().contains(lower) ?? false))
+        .where(
+          (deck) =>
+              deck.name.toLowerCase().contains(lower) ||
+              (deck.description?.toLowerCase().contains(lower) ?? false),
+        )
         .toList();
   }
 }

@@ -1,10 +1,9 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-
 import 'package:flash_mastery/data/datasources/flashcard_local_data_source.dart';
 import 'package:flash_mastery/data/repositories/flashcard_repository_impl.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
 import 'package:flash_mastery/domain/repositories/flashcard_repository.dart';
 import 'package:flash_mastery/presentation/providers/deck_providers.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'flashcard_providers.g.dart';
 
@@ -35,10 +34,7 @@ class FlashcardList extends _$FlashcardList {
     final repository = ref.watch(flashcardRepositoryProvider);
     final result = await repository.getFlashcards(deckId);
 
-    return result.fold(
-      (failure) => throw Exception(failure.message),
-      (flashcards) => flashcards,
-    );
+    return result.fold((failure) => throw Exception(failure.message), (flashcards) => flashcards);
   }
 
   Future<void> refresh() async {
@@ -47,10 +43,7 @@ class FlashcardList extends _$FlashcardList {
       final repository = ref.read(flashcardRepositoryProvider);
       final result = await repository.getFlashcards(deckId);
 
-      return result.fold(
-        (failure) => throw Exception(failure.message),
-        (flashcards) => flashcards,
-      );
+      return result.fold((failure) => throw Exception(failure.message), (flashcards) => flashcards);
     });
   }
 
@@ -68,10 +61,7 @@ class FlashcardList extends _$FlashcardList {
       hint: hint,
     );
 
-    result.fold(
-      (failure) => throw Exception(failure.message),
-      (_) async => refresh(),
-    );
+    result.fold((failure) => throw Exception(failure.message), (_) async => refresh());
   }
 
   Future<void> updateFlashcard({
@@ -88,20 +78,14 @@ class FlashcardList extends _$FlashcardList {
       hint: hint,
     );
 
-    result.fold(
-      (failure) => throw Exception(failure.message),
-      (_) async => refresh(),
-    );
+    result.fold((failure) => throw Exception(failure.message), (_) async => refresh());
   }
 
   Future<void> deleteFlashcard(String id) async {
     final repository = ref.read(flashcardRepositoryProvider);
     final result = await repository.deleteFlashcard(id);
 
-    result.fold(
-      (failure) => throw Exception(failure.message),
-      (_) async => refresh(),
-    );
+    result.fold((failure) => throw Exception(failure.message), (_) async => refresh());
   }
 }
 
@@ -111,8 +95,5 @@ class FlashcardList extends _$FlashcardList {
 Future<Flashcard> flashcard(Ref ref, String id) async {
   final repository = ref.watch(flashcardRepositoryProvider);
   final result = await repository.getFlashcardById(id);
-  return result.fold(
-    (failure) => throw Exception(failure.message),
-    (card) => card,
-  );
+  return result.fold((failure) => throw Exception(failure.message), (card) => card);
 }

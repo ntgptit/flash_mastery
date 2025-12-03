@@ -1,4 +1,3 @@
-import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/folder.dart';
 import 'package:flutter/material.dart';
 
@@ -51,10 +50,10 @@ class _FolderFormDialogState extends State<FolderFormDialog> {
     final isEditing = widget.folder != null;
 
     return Dialog(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: AppSpacing.dialogMaxWidth),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.xl),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 500),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
           child: Form(
             key: _formKey,
             child: Column(
@@ -65,7 +64,7 @@ class _FolderFormDialogState extends State<FolderFormDialog> {
                   isEditing ? 'Edit Folder' : 'Create New Folder',
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
-                const SizedBox(height: AppSpacing.xl),
+                const SizedBox(height: 24),
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(
@@ -75,23 +74,21 @@ class _FolderFormDialogState extends State<FolderFormDialog> {
                     border: OutlineInputBorder(),
                   ),
                   validator: (value) {
-                    final text = value?.trim() ?? '';
-                    if (text.isEmpty) {
+                    if (value == null || value.trim().isEmpty) {
                       return 'Please enter a folder name';
                     }
-                    if (text.length < AppConstants.minFolderNameLength) {
-                      return 'Name must be at least ${AppConstants.minFolderNameLength} characters';
+                    if (value.trim().length < 2) {
+                      return 'Name must be at least 2 characters';
                     }
-                    if (text.length > AppConstants.maxFolderNameLength) {
-                      return 'Name must not exceed ${AppConstants.maxFolderNameLength} characters';
+                    if (value.trim().length > 50) {
+                      return 'Name must not exceed 50 characters';
                     }
                     return null;
                   },
                   autofocus: true,
                   textCapitalization: TextCapitalization.words,
-                  maxLines: AppConstants.singleLineMaxLines,
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: 16),
                 TextFormField(
                   controller: _descriptionController,
                   decoration: const InputDecoration(
@@ -100,22 +97,21 @@ class _FolderFormDialogState extends State<FolderFormDialog> {
                     prefixIcon: Icon(Icons.description),
                     border: OutlineInputBorder(),
                   ),
-                  maxLines: AppConstants.defaultMultilineMinLines,
-                  maxLength: AppConstants.maxFolderDescriptionLength,
+                  maxLines: 3,
+                  maxLength: 200,
                   validator: (value) {
-                    if (value != null &&
-                        value.trim().length > AppConstants.maxFolderDescriptionLength) {
-                      return 'Description must not exceed ${AppConstants.maxFolderDescriptionLength} characters';
+                    if (value != null && value.trim().length > 200) {
+                      return 'Description must not exceed 200 characters';
                     }
                     return null;
                   },
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: 16),
                 Text('Choose Color', style: Theme.of(context).textTheme.titleSmall),
-                const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: 12),
                 Wrap(
-                  spacing: AppSpacing.md,
-                  runSpacing: AppSpacing.md,
+                  spacing: 12,
+                  runSpacing: 12,
                   children: _availableColors.map((color) {
                     final colorString = _colorToString(color);
                     final isSelected = _selectedColor == colorString;
@@ -127,8 +123,8 @@ class _FolderFormDialogState extends State<FolderFormDialog> {
                         });
                       },
                       child: Container(
-                        width: AppSpacing.iconExtraLarge,
-                        height: AppSpacing.iconExtraLarge,
+                        width: 48,
+                        height: 48,
                         decoration: BoxDecoration(
                           color: color,
                           shape: BoxShape.circle,
@@ -136,30 +132,26 @@ class _FolderFormDialogState extends State<FolderFormDialog> {
                             color: isSelected
                                 ? Theme.of(context).colorScheme.primary
                                 : Colors.transparent,
-                            width: AppSpacing.borderWidthThick,
+                            width: 3,
                           ),
                           boxShadow: isSelected
                               ? [
                                   BoxShadow(
-                                    color: color.withValues(alpha: AppOpacity.medium),
-                                    blurRadius: AppSpacing.radiusMedium,
-                                    spreadRadius: AppSpacing.borderWidthMedium,
+                                    color: color.withAlpha(100),
+                                    blurRadius: 8,
+                                    spreadRadius: 2,
                                   ),
                                 ]
                               : null,
                         ),
                         child: isSelected
-                            ? const Icon(
-                                Icons.check,
-                                color: Colors.white,
-                                size: AppSpacing.iconMedium,
-                              )
+                            ? const Icon(Icons.check, color: Colors.white, size: 24)
                             : null,
                       ),
                     );
                   }).toList(),
                 ),
-                const SizedBox(height: AppSpacing.xl),
+                const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -167,7 +159,7 @@ class _FolderFormDialogState extends State<FolderFormDialog> {
                       onPressed: () => Navigator.pop(context),
                       child: const Text('Cancel'),
                     ),
-                    const SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: 8),
                     FilledButton(
                       onPressed: _handleSubmit,
                       child: Text(isEditing ? 'Update' : 'Create'),

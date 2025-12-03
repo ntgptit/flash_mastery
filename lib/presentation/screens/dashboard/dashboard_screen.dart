@@ -1,14 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:flash_mastery/core/constants/constants.dart';
+import 'package:flash_mastery/domain/entities/folder.dart';
 import 'package:flash_mastery/domain/usecases/folders/folder_usecases.dart';
 import 'package:flash_mastery/presentation/screens/decks/deck_list_screen.dart';
 import 'package:flash_mastery/presentation/screens/folders/widgets/folder_card.dart';
 import 'package:flash_mastery/presentation/screens/folders/widgets/folder_form_dialog.dart';
-import 'package:flash_mastery/domain/entities/folder.dart';
 import 'package:flash_mastery/presentation/viewmodels/folder_view_model.dart';
 import 'package:flash_mastery/presentation/widgets/common/common_widgets.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -36,19 +35,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         title: const Text('Dashboard'),
         elevation: AppSpacing.elevationNone,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: _showSearchDialog,
-          ),
+          IconButton(icon: const Icon(Icons.search), onPressed: _showSearchDialog),
           IconButton(
             icon: const Icon(Icons.layers),
             tooltip: 'Manage decks',
             onPressed: _openAllDecks,
           ),
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () {},
-          ),
+          IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
         ],
       ),
       body: Column(
@@ -96,15 +89,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 final filteredFolders = _searchQuery.isEmpty
                     ? folders
                     : folders
-                        .where((folder) =>
-                            folder.name
-                                .toLowerCase()
-                                .contains(_searchQuery.toLowerCase()) ||
-                            (folder.description
-                                    ?.toLowerCase()
-                                    .contains(_searchQuery.toLowerCase()) ??
-                                false))
-                        .toList();
+                          .where(
+                            (folder) =>
+                                folder.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                                (folder.description?.toLowerCase().contains(
+                                      _searchQuery.toLowerCase(),
+                                    ) ??
+                                    false),
+                          )
+                          .toList();
 
                 if (filteredFolders.isEmpty) {
                   return EmptyStateWidget(
@@ -175,10 +168,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           },
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           FilledButton(
             onPressed: () {
               setState(() {
@@ -199,30 +189,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       builder: (context) => FolderFormDialog(
         onSubmit: (name, description, color) async {
           try {
-            final errorMessage = await ref.read(folderListViewModelProvider.notifier).createFolder(
-                  CreateFolderParams(
-                    name: name,
-                    description: description,
-                    color: color,
-                  ),
+            final errorMessage = await ref
+                .read(folderListViewModelProvider.notifier)
+                .createFolder(
+                  CreateFolderParams(name: name, description: description, color: color),
                 );
             if (context.mounted) {
               Navigator.pop(context);
               if (errorMessage != null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error: $errorMessage')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('Error: $errorMessage')));
               } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Folder created successfully')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('Folder created successfully')));
               }
             }
           } catch (e) {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: ${e.toString()}')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
             }
           }
         },
@@ -237,7 +225,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         folder: folder,
         onSubmit: (name, description, color) async {
           try {
-            final errorMessage = await ref.read(folderListViewModelProvider.notifier).updateFolder(
+            final errorMessage = await ref
+                .read(folderListViewModelProvider.notifier)
+                .updateFolder(
                   UpdateFolderParams(
                     id: folder.id,
                     name: name,
@@ -248,20 +238,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             if (context.mounted) {
               Navigator.pop(context);
               if (errorMessage != null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error: $errorMessage')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('Error: $errorMessage')));
               } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Folder updated successfully')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('Folder updated successfully')));
               }
             }
           } catch (e) {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: ${e.toString()}')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
             }
           }
         },
@@ -282,35 +272,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           FilledButton(
             onPressed: () async {
               try {
-                final errorMessage =
-                    await ref.read(folderListViewModelProvider.notifier).deleteFolder(
-                          folder.id,
-                        );
+                final errorMessage = await ref
+                    .read(folderListViewModelProvider.notifier)
+                    .deleteFolder(folder.id);
                 if (context.mounted) {
                   Navigator.pop(context);
                   if (errorMessage != null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: $errorMessage')),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('Error: $errorMessage')));
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Folder deleted successfully')),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(const SnackBar(content: Text('Folder deleted successfully')));
                   }
                 }
               } catch (e) {
                 if (context.mounted) {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: ${e.toString()}')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
                 }
               }
             },
@@ -326,18 +312,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   void _openFolder(Folder folder) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => DeckListScreen(folder: folder),
-      ),
-    );
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => DeckListScreen(folder: folder)));
   }
 
   void _openAllDecks() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const DeckListScreen(),
-      ),
-    );
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DeckListScreen()));
   }
 }

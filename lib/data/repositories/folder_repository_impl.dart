@@ -1,12 +1,12 @@
 import 'package:dartz/dartz.dart';
-import '../../core/constants/config/app_constants.dart';
-import '../../core/constants/validation/error_messages.dart';
-import '../../core/exceptions/exceptions.dart';
-import '../../core/exceptions/failures.dart';
-import '../../domain/entities/folder.dart';
-import '../../domain/repositories/folder_repository.dart';
-import '../datasources/folder_local_data_source.dart';
-import '../models/folder_model.dart';
+import 'package:flash_mastery/core/constants/config/app_constants.dart';
+import 'package:flash_mastery/core/constants/validation/error_messages.dart';
+import 'package:flash_mastery/core/exceptions/exceptions.dart';
+import 'package:flash_mastery/core/exceptions/failures.dart';
+import 'package:flash_mastery/data/datasources/folder_local_data_source.dart';
+import 'package:flash_mastery/data/models/folder_model.dart';
+import 'package:flash_mastery/domain/entities/folder.dart';
+import 'package:flash_mastery/domain/repositories/folder_repository.dart';
 
 class FolderRepositoryImpl implements FolderRepository {
   final FolderLocalDataSource localDataSource;

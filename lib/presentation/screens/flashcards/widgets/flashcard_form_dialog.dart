@@ -1,21 +1,13 @@
-import 'package:flutter/material.dart';
-
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
+import 'package:flutter/material.dart';
 
 class FlashcardFormDialog extends StatefulWidget {
   final Flashcard? flashcard;
-  final Future<void> Function({
-    required String question,
-    required String answer,
-    String? hint,
-  }) onSubmit;
+  final Future<void> Function({required String question, required String answer, String? hint})
+  onSubmit;
 
-  const FlashcardFormDialog({
-    super.key,
-    this.flashcard,
-    required this.onSubmit,
-  });
+  const FlashcardFormDialog({super.key, this.flashcard, required this.onSubmit});
 
   @override
   State<FlashcardFormDialog> createState() => _FlashcardFormDialogState();

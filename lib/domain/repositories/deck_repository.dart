@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
-import '../../core/exceptions/failures.dart';
-import '../entities/deck.dart';
+import 'package:flash_mastery/core/exceptions/failures.dart';
+import 'package:flash_mastery/domain/entities/deck.dart';
 
 /// Repository interface for deck operations.
 abstract class DeckRepository {
@@ -29,8 +29,5 @@ abstract class DeckRepository {
   Future<Either<Failure, void>> deleteDeck(String id);
 
   /// Search decks by text, optionally scoped to a folder.
-  Future<Either<Failure, List<Deck>>> searchDecks(
-    String query, {
-    String? folderId,
-  });
+  Future<Either<Failure, List<Deck>>> searchDecks(String query, {String? folderId});
 }

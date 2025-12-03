@@ -1,5 +1,5 @@
+import 'package:flash_mastery/domain/entities/folder.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import '../../domain/entities/folder.dart';
 
 part 'folder_model.freezed.dart';
 part 'folder_model.g.dart';
@@ -18,8 +18,7 @@ abstract class FolderModel with _$FolderModel {
     required DateTime updatedAt,
   }) = _FolderModel;
 
-  factory FolderModel.fromJson(Map<String, dynamic> json) =>
-      _$FolderModelFromJson(json);
+  factory FolderModel.fromJson(Map<String, dynamic> json) => _$FolderModelFromJson(json);
 
   /// Convert model to entity
   Folder toEntity() {

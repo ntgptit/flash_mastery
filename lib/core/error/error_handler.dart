@@ -1,16 +1,13 @@
 import 'package:dio/dio.dart';
-import '../exceptions/exceptions.dart';
-import '../exceptions/failures.dart';
+import 'package:flash_mastery/core/exceptions/exceptions.dart';
+import 'package:flash_mastery/core/exceptions/failures.dart';
 
 /// Handles conversion of exceptions to failures
 class ErrorHandler {
   /// Converts an exception to a failure
   static Failure handleException(dynamic error) {
     if (error is ServerException) {
-      return ServerFailure(
-        message: error.message,
-        code: error.statusCode,
-      );
+      return ServerFailure(message: error.message, code: error.statusCode);
     } else if (error is CacheException) {
       return CacheFailure(message: error.message);
     } else if (error is NetworkException) {
@@ -20,10 +17,7 @@ class ErrorHandler {
     } else if (error is AuthorizationException) {
       return AuthorizationFailure(message: error.message);
     } else if (error is ValidationException) {
-      return ValidationFailure(
-        message: error.message,
-        errors: error.errors,
-      );
+      return ValidationFailure(message: error.message, errors: error.errors);
     } else if (error is TimeoutException) {
       return TimeoutFailure(message: error.message);
     } else if (error is FormatException) {
@@ -33,9 +27,7 @@ class ErrorHandler {
     } else if (error is DioException) {
       return _handleDioException(error);
     } else {
-      return UnexpectedFailure(
-        message: error.toString(),
-      );
+      return UnexpectedFailure(message: error.toString());
     }
   }
 
@@ -60,24 +52,16 @@ class ErrorHandler {
         return _handleResponseError(error);
 
       case DioExceptionType.cancel:
-        return const UnexpectedFailure(
-          message: 'Request cancelled',
-        );
+        return const UnexpectedFailure(message: 'Request cancelled');
 
       case DioExceptionType.badCertificate:
-        return const NetworkFailure(
-          message: 'Certificate verification failed',
-        );
+        return const NetworkFailure(message: 'Certificate verification failed');
 
       case DioExceptionType.unknown:
         if (error.message?.contains('SocketException') ?? false) {
-          return const NetworkFailure(
-            message: 'No internet connection',
-          );
+          return const NetworkFailure(message: 'No internet connection');
         }
-        return UnexpectedFailure(
-          message: error.message ?? 'An unexpected error occurred',
-        );
+        return UnexpectedFailure(message: error.message ?? 'An unexpected error occurred');
     }
   }
 
@@ -88,34 +72,19 @@ class ErrorHandler {
 
     switch (statusCode) {
       case 400:
-        return ValidationFailure(
-          message: message ?? 'Invalid request',
-          code: statusCode,
-        );
+        return ValidationFailure(message: message ?? 'Invalid request', code: statusCode);
 
       case 401:
-        return AuthenticationFailure(
-          message: message ?? 'Authentication failed',
-          code: statusCode,
-        );
+        return AuthenticationFailure(message: message ?? 'Authentication failed', code: statusCode);
 
       case 403:
-        return AuthorizationFailure(
-          message: message ?? 'Access denied',
-          code: statusCode,
-        );
+        return AuthorizationFailure(message: message ?? 'Access denied', code: statusCode);
 
       case 404:
-        return NotFoundFailure(
-          message: message ?? 'Resource not found',
-          code: statusCode,
-        );
+        return NotFoundFailure(message: message ?? 'Resource not found', code: statusCode);
 
       case 408:
-        return TimeoutFailure(
-          message: message ?? 'Request timeout',
-          code: statusCode,
-        );
+        return TimeoutFailure(message: message ?? 'Request timeout', code: statusCode);
 
       case 422:
         return ValidationFailure(
@@ -142,10 +111,7 @@ class ErrorHandler {
         );
 
       default:
-        return ServerFailure(
-          message: message ?? 'An error occurred',
-          code: statusCode,
-        );
+        return ServerFailure(message: message ?? 'An error occurred', code: statusCode);
     }
   }
 

@@ -1,4 +1,4 @@
-import '../constants/constants.dart';
+import 'package:flash_mastery/core/constants/constants.dart';
 
 /// Validation utility class for common input validations
 class Validators {
@@ -32,9 +32,7 @@ class Validators {
   /// Validates required field
   static String? required(String? value, {String? fieldName}) {
     if (value == null || value.isEmpty) {
-      return fieldName != null
-          ? '$fieldName is required'
-          : ErrorMessages.fieldRequired;
+      return fieldName != null ? '$fieldName is required' : ErrorMessages.fieldRequired;
     }
     return null;
   }
@@ -53,9 +51,7 @@ class Validators {
   /// Validates minimum length
   static String? minLength(String? value, int minLength, {String? fieldName}) {
     if (value == null || value.isEmpty) {
-      return fieldName != null
-          ? '$fieldName is required'
-          : ErrorMessages.fieldRequired;
+      return fieldName != null ? '$fieldName is required' : ErrorMessages.fieldRequired;
     }
     if (value.length < minLength) {
       return fieldName != null
@@ -89,9 +85,7 @@ class Validators {
   /// Validates that value matches another value (e.g., password confirmation)
   static String? match(String? value, String? otherValue, {String? fieldName}) {
     if (value != otherValue) {
-      return fieldName != null
-          ? '$fieldName does not match'
-          : ErrorMessages.passwordsDoNotMatch;
+      return fieldName != null ? '$fieldName does not match' : ErrorMessages.passwordsDoNotMatch;
     }
     return null;
   }

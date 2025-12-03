@@ -1,6 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/folder.dart';
 import 'package:flash_mastery/domain/usecases/folders/folder_usecases.dart';
@@ -9,6 +6,8 @@ import 'package:flash_mastery/presentation/screens/folders/widgets/folder_card.d
 import 'package:flash_mastery/presentation/screens/folders/widgets/folder_form_dialog.dart';
 import 'package:flash_mastery/presentation/viewmodels/folder_view_model.dart';
 import 'package:flash_mastery/presentation/widgets/common/common_widgets.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class FolderListScreen extends ConsumerStatefulWidget {
   const FolderListScreen({super.key});
@@ -43,12 +42,7 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Folders'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: _showSearchDialog,
-          ),
-        ],
+        actions: [IconButton(icon: const Icon(Icons.search), onPressed: _showSearchDialog)],
       ),
       body: folderState.when(
         initial: () => const LoadingWidget(),
@@ -106,9 +100,11 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
 
     final lower = _searchQuery.toLowerCase();
     return folders
-        .where((folder) =>
-            folder.name.toLowerCase().contains(lower) ||
-            (folder.description?.toLowerCase().contains(lower) ?? false))
+        .where(
+          (folder) =>
+              folder.name.toLowerCase().contains(lower) ||
+              (folder.description?.toLowerCase().contains(lower) ?? false),
+        )
         .toList();
   }
 
@@ -133,10 +129,7 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
           },
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           FilledButton(
             onPressed: () {
               setState(() {
@@ -163,11 +156,7 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
             final notifier = ref.read(folderListViewModelProvider.notifier);
             final errorMessage = folder == null
                 ? await notifier.createFolder(
-                    CreateFolderParams(
-                      name: name,
-                      description: description,
-                      color: color,
-                    ),
+                    CreateFolderParams(name: name, description: description, color: color),
                   )
                 : await notifier.updateFolder(
                     UpdateFolderParams(
@@ -181,9 +170,7 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
             if (!mounted) return;
             navigator.pop();
             if (errorMessage != null) {
-              messenger.showSnackBar(
-                SnackBar(content: Text('Error: $errorMessage')),
-              );
+              messenger.showSnackBar(SnackBar(content: Text('Error: $errorMessage')));
             } else {
               messenger.showSnackBar(
                 SnackBar(
@@ -215,10 +202,7 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(
@@ -235,32 +219,23 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
     if (shouldDelete != true) return;
 
     try {
-      final errorMessage =
-          await ref.read(folderListViewModelProvider.notifier).deleteFolder(folder.id);
+      final errorMessage = await ref
+          .read(folderListViewModelProvider.notifier)
+          .deleteFolder(folder.id);
       if (errorMessage != null) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $errorMessage')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $errorMessage')));
         return;
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Folder deleted')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Folder deleted')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
     }
   }
 
   void _openFolder(Folder folder) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => DeckListScreen(folder: folder),
-      ),
-    );
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => DeckListScreen(folder: folder)));
   }
 }

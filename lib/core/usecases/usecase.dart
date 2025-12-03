@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import '../exceptions/failures.dart';
+import 'package:flash_mastery/core/exceptions/failures.dart';
 
 /// Base class for all use cases.
 ///

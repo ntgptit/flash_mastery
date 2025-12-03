@@ -1,22 +1,19 @@
 import 'package:dartz/dartz.dart';
-import '../../core/constants/config/app_constants.dart';
-import '../../core/constants/validation/error_messages.dart';
-import '../../core/exceptions/exceptions.dart';
-import '../../core/exceptions/failures.dart';
-import '../../domain/entities/deck.dart';
-import '../../domain/repositories/deck_repository.dart';
-import '../datasources/deck_local_data_source.dart';
-import '../datasources/folder_local_data_source.dart';
-import '../models/deck_model.dart';
+import 'package:flash_mastery/core/constants/config/app_constants.dart';
+import 'package:flash_mastery/core/constants/validation/error_messages.dart';
+import 'package:flash_mastery/core/exceptions/exceptions.dart';
+import 'package:flash_mastery/core/exceptions/failures.dart';
+import 'package:flash_mastery/data/datasources/deck_local_data_source.dart';
+import 'package:flash_mastery/data/datasources/folder_local_data_source.dart';
+import 'package:flash_mastery/data/models/deck_model.dart';
+import 'package:flash_mastery/domain/entities/deck.dart';
+import 'package:flash_mastery/domain/repositories/deck_repository.dart';
 
 class DeckRepositoryImpl implements DeckRepository {
   final DeckLocalDataSource deckLocalDataSource;
   final FolderLocalDataSource folderLocalDataSource;
 
-  DeckRepositoryImpl({
-    required this.deckLocalDataSource,
-    required this.folderLocalDataSource,
-  });
+  DeckRepositoryImpl({required this.deckLocalDataSource, required this.folderLocalDataSource});
 
   @override
   Future<Either<Failure, Deck>> createDeck({
@@ -139,15 +136,9 @@ class DeckRepositoryImpl implements DeckRepository {
   }
 
   @override
-  Future<Either<Failure, List<Deck>>> searchDecks(
-    String query, {
-    String? folderId,
-  }) async {
+  Future<Either<Failure, List<Deck>>> searchDecks(String query, {String? folderId}) async {
     try {
-      final decks = await deckLocalDataSource.searchDecks(
-        query,
-        folderId: folderId,
-      );
+      final decks = await deckLocalDataSource.searchDecks(query, folderId: folderId);
       return Right(decks.map((d) => d.toEntity()).toList());
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message));

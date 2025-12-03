@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
-
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/entities/folder.dart';
+import 'package:flutter/material.dart';
 
 class DeckFormDialog extends StatefulWidget {
   final Deck? deck;
@@ -115,11 +114,7 @@ class _DeckFormDialogState extends State<DeckFormDialog> {
                       .map(
                         (folder) => DropdownMenuItem(
                           value: folder.id,
-                          child: Text(
-                            folder.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          child: Text(folder.name, maxLines: 1, overflow: TextOverflow.ellipsis),
                         ),
                       )
                       .toList(),

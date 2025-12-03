@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:flash_mastery/core/network/dio_client.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../network/dio_client.dart';
 
 part 'core_providers.g.dart';
 

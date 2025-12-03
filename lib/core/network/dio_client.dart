@@ -1,12 +1,12 @@
 import 'package:dio/dio.dart';
+import 'package:flash_mastery/core/constants/constants.dart';
+import 'package:flash_mastery/core/network/interceptors/auth_interceptor.dart';
+import 'package:flash_mastery/core/network/interceptors/cache_interceptor.dart';
+import 'package:flash_mastery/core/network/interceptors/connectivity_interceptor.dart';
+import 'package:flash_mastery/core/network/interceptors/error_interceptor.dart';
+import 'package:flash_mastery/core/network/interceptors/logging_interceptor.dart';
+import 'package:flash_mastery/core/network/interceptors/retry_interceptor.dart';
 import 'package:flutter/foundation.dart';
-import '../constants/constants.dart';
-import 'interceptors/auth_interceptor.dart';
-import 'interceptors/cache_interceptor.dart';
-import 'interceptors/connectivity_interceptor.dart';
-import 'interceptors/error_interceptor.dart';
-import 'interceptors/logging_interceptor.dart';
-import 'interceptors/retry_interceptor.dart';
 
 /// Dio client configuration for API calls
 class DioClient {
@@ -27,10 +27,7 @@ class DioClient {
         connectTimeout: Duration(seconds: ApiConstants.connectionTimeout),
         receiveTimeout: Duration(seconds: ApiConstants.receiveTimeout),
         sendTimeout: Duration(seconds: ApiConstants.sendTimeout),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
         validateStatus: (status) {
           return status != null && status < 500;
         },

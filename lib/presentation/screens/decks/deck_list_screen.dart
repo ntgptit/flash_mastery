@@ -1,6 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/entities/folder.dart';
@@ -10,6 +7,8 @@ import 'package:flash_mastery/presentation/screens/flashcards/flashcard_list_scr
 import 'package:flash_mastery/presentation/viewmodels/deck_view_model.dart';
 import 'package:flash_mastery/presentation/viewmodels/folder_view_model.dart';
 import 'package:flash_mastery/presentation/widgets/common/common_widgets.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class DeckListScreen extends ConsumerStatefulWidget {
   final Folder? folder;
@@ -121,8 +120,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
           },
           error: (message) => AppErrorWidget(
             message: message,
-            onRetry: () =>
-                ref.read(deckListViewModelProvider(widget.folder?.id).notifier).load(),
+            onRetry: () => ref.read(deckListViewModelProvider(widget.folder?.id).notifier).load(),
           ),
         ),
       ),
@@ -206,11 +204,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
             final notifier = ref.read(deckListViewModelProvider(widget.folder?.id).notifier);
             final errorMessage = deck == null
                 ? await notifier.createDeck(
-                    CreateDeckParams(
-                      name: name,
-                      description: description,
-                      folderId: folderId,
-                    ),
+                    CreateDeckParams(name: name, description: description, folderId: folderId),
                   )
                 : await notifier.updateDeck(
                     UpdateDeckParams(
@@ -273,33 +267,24 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
     if (shouldDelete != true) return;
 
     try {
-      final errorMessage =
-          await ref.read(deckListViewModelProvider(widget.folder?.id).notifier).deleteDeck(
-                deck.id,
-              );
+      final errorMessage = await ref
+          .read(deckListViewModelProvider(widget.folder?.id).notifier)
+          .deleteDeck(deck.id);
       if (errorMessage != null) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $errorMessage')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $errorMessage')));
         return;
       }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Deck deleted')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
     }
   }
 
   void _openDeck(Deck deck) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => FlashcardListScreen(deck: deck),
-      ),
-    );
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => FlashcardListScreen(deck: deck)));
   }
 }
 
@@ -322,15 +307,10 @@ class _DeckTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor:
-            Theme.of(context).colorScheme.primary.withValues(alpha: AppOpacity.low),
+        backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: AppOpacity.low),
         child: const Icon(Icons.layers, color: Colors.white),
       ),
-      title: Text(
-        deck.name,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
+      title: Text(deck.name, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -355,11 +335,13 @@ class _DeckTile extends StatelessWidget {
         itemBuilder: (context) => [
           PopupMenuItem(
             value: 'edit',
-            child: Row(children: const [
-              Icon(Icons.edit, size: AppSpacing.iconSmallMedium),
-              SizedBox(width: AppSpacing.sm),
-              Text('Edit')
-            ]),
+            child: Row(
+              children: const [
+                Icon(Icons.edit, size: AppSpacing.iconSmallMedium),
+                SizedBox(width: AppSpacing.sm),
+                Text('Edit'),
+              ],
+            ),
           ),
           PopupMenuItem(
             value: 'delete',
@@ -371,10 +353,7 @@ class _DeckTile extends StatelessWidget {
                   color: Theme.of(context).colorScheme.error,
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                Text(
-                  'Delete',
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
+                Text('Delete', style: TextStyle(color: Theme.of(context).colorScheme.error)),
               ],
             ),
           ),

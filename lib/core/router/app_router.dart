@@ -1,6 +1,6 @@
-import 'package:go_router/go_router.dart';
+import 'package:flash_mastery/presentation/screens/dashboard/dashboard_screen.dart';
 import 'package:flutter/material.dart';
-import '../../presentation/screens/dashboard/dashboard_screen.dart';
+import 'package:go_router/go_router.dart';
 
 /// Application router configuration using go_router
 class AppRouter {
@@ -24,36 +24,20 @@ class AppRouter {
     initialLocation: dashboard,
     debugLogDiagnostics: true,
     routes: [
-      GoRoute(
-        path: splash,
-        name: 'splash',
-        builder: (context, state) => const SplashScreen(),
-      ),
+      GoRoute(path: splash, name: 'splash', builder: (context, state) => const SplashScreen()),
       GoRoute(
         path: dashboard,
         name: 'dashboard',
         builder: (context, state) => const DashboardScreen(),
       ),
-      GoRoute(
-        path: home,
-        name: 'home',
-        builder: (context, state) => const HomeScreen(),
-      ),
-      GoRoute(
-        path: login,
-        name: 'login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: home, name: 'home', builder: (context, state) => const HomeScreen()),
+      GoRoute(path: login, name: 'login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: register,
         name: 'register',
         builder: (context, state) => const RegisterScreen(),
       ),
-      GoRoute(
-        path: profile,
-        name: 'profile',
-        builder: (context, state) => const ProfileScreen(),
-      ),
+      GoRoute(path: profile, name: 'profile', builder: (context, state) => const ProfileScreen()),
       GoRoute(
         path: settings,
         name: 'settings',
@@ -102,9 +86,7 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
-    );
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }
 
@@ -231,9 +213,7 @@ class ErrorScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Error')),
-      body: Center(
-        child: Text('Error: ${error?.toString() ?? "Unknown error"}'),
-      ),
+      body: Center(child: Text('Error: ${error?.toString() ?? "Unknown error"}')),
     );
   }
 }

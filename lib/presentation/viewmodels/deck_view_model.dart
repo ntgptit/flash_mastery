@@ -1,10 +1,9 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-
 import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/usecases/decks/deck_usecases.dart';
 import 'package:flash_mastery/presentation/providers/deck_providers.dart';
 import 'package:flash_mastery/presentation/viewmodels/folder_view_model.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'deck_view_model.freezed.dart';
 part 'deck_view_model.g.dart';
@@ -65,10 +64,7 @@ class DeckListViewModel extends _$DeckListViewModel {
   Future<String?> createDeck(CreateDeckParams params) async {
     state = const DeckListState.loading();
     final result = await ref.read(createDeckUseCaseProvider).call(params);
-    final message = result.fold(
-      (failure) => failure.message,
-      (_) => null,
-    );
+    final message = result.fold((failure) => failure.message, (_) => null);
     await load();
     await ref.read(folderListViewModelProvider.notifier).load();
     return message;
@@ -77,10 +73,7 @@ class DeckListViewModel extends _$DeckListViewModel {
   Future<String?> updateDeck(UpdateDeckParams params) async {
     state = const DeckListState.loading();
     final result = await ref.read(updateDeckUseCaseProvider).call(params);
-    final message = result.fold(
-      (failure) => failure.message,
-      (_) => null,
-    );
+    final message = result.fold((failure) => failure.message, (_) => null);
     await load();
     await ref.read(folderListViewModelProvider.notifier).load();
     return message;
@@ -89,10 +82,7 @@ class DeckListViewModel extends _$DeckListViewModel {
   Future<String?> deleteDeck(String id) async {
     state = const DeckListState.loading();
     final result = await ref.read(deleteDeckUseCaseProvider).call(id);
-    final message = result.fold(
-      (failure) => failure.message,
-      (_) => null,
-    );
+    final message = result.fold((failure) => failure.message, (_) => null);
     await load();
     await ref.read(folderListViewModelProvider.notifier).load();
     return message;

@@ -1,13 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
-import 'package:flash_mastery/presentation/screens/flashcards/widgets/flashcard_form_dialog.dart';
 import 'package:flash_mastery/domain/usecases/flashcards/flashcard_usecases.dart';
+import 'package:flash_mastery/presentation/screens/flashcards/widgets/flashcard_form_dialog.dart';
 import 'package:flash_mastery/presentation/viewmodels/flashcard_view_model.dart';
 import 'package:flash_mastery/presentation/widgets/common/common_widgets.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class FlashcardListScreen extends ConsumerStatefulWidget {
   final Deck deck;
@@ -42,17 +41,8 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Cards · ${widget.deck.name}',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: _showSearchDialog,
-          ),
-        ],
+        title: Text('Cards · ${widget.deck.name}', maxLines: 1, overflow: TextOverflow.ellipsis),
+        actions: [IconButton(icon: const Icon(Icons.search), onPressed: _showSearchDialog)],
       ),
       body: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -93,8 +83,7 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
           },
           error: (message) => AppErrorWidget(
             message: message,
-            onRetry: () =>
-                ref.read(flashcardListViewModelProvider(widget.deck.id).notifier).load(),
+            onRetry: () => ref.read(flashcardListViewModelProvider(widget.deck.id).notifier).load(),
           ),
         ),
       ),
@@ -111,10 +100,12 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
     if (_searchQuery.isEmpty) return cards;
     final lower = _searchQuery.toLowerCase();
     return cards
-        .where((c) =>
-            c.question.toLowerCase().contains(lower) ||
-            c.answer.toLowerCase().contains(lower) ||
-            (c.hint?.toLowerCase().contains(lower) ?? false))
+        .where(
+          (c) =>
+              c.question.toLowerCase().contains(lower) ||
+              c.answer.toLowerCase().contains(lower) ||
+              (c.hint?.toLowerCase().contains(lower) ?? false),
+        )
         .toList();
   }
 
@@ -139,10 +130,7 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
           },
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           FilledButton(
             onPressed: () {
               setState(() {
@@ -170,16 +158,11 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
       context: context,
       builder: (context) => FlashcardFormDialog(
         flashcard: card,
-        onSubmit: ({
-          required String question,
-          required String answer,
-          String? hint,
-        }) async {
+        onSubmit: ({required String question, required String answer, String? hint}) async {
           final navigator = Navigator.of(context);
           final messenger = ScaffoldMessenger.of(context);
           try {
-            final notifier =
-                ref.read(flashcardListViewModelProvider(widget.deck.id).notifier);
+            final notifier = ref.read(flashcardListViewModelProvider(widget.deck.id).notifier);
             final errorMessage = card == null
                 ? await notifier.createFlashcard(
                     CreateFlashcardParams(
@@ -204,9 +187,7 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
               messenger.showSnackBar(SnackBar(content: Text('Error: $errorMessage')));
             } else {
               messenger.showSnackBar(
-                SnackBar(
-                  content: Text(card == null ? 'Flashcard created' : 'Flashcard updated'),
-                ),
+                SnackBar(content: Text(card == null ? 'Flashcard created' : 'Flashcard updated')),
               );
             }
           } catch (e) {
@@ -231,10 +212,7 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(
@@ -251,25 +229,21 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
     if (shouldDelete != true) return;
 
     try {
-      final errorMessage =
-          await ref.read(flashcardListViewModelProvider(widget.deck.id).notifier).deleteFlashcard(
-                card.id,
-              );
+      final errorMessage = await ref
+          .read(flashcardListViewModelProvider(widget.deck.id).notifier)
+          .deleteFlashcard(card.id);
       if (errorMessage != null) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $errorMessage')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $errorMessage')));
         return;
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Flashcard deleted')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Flashcard deleted')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
     }
   }
 }
@@ -279,28 +253,16 @@ class _FlashcardTile extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
-  const _FlashcardTile({
-    required this.card,
-    required this.onEdit,
-    required this.onDelete,
-  });
+  const _FlashcardTile({required this.card, required this.onEdit, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      title: Text(
-        card.question,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
+      title: Text(card.question, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            card.answer,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
+          Text(card.answer, maxLines: 2, overflow: TextOverflow.ellipsis),
           if ((card.hint ?? '').isNotEmpty)
             Text(
               'Hint: ${card.hint}',
@@ -339,19 +301,16 @@ class _FlashcardTile extends StatelessWidget {
                   color: Theme.of(context).colorScheme.error,
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                Text(
-                  'Delete',
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
+                Text('Delete', style: TextStyle(color: Theme.of(context).colorScheme.error)),
               ],
             ),
           ),
         ],
       ),
       onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Flashcard detail not implemented yet')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Flashcard detail not implemented yet')));
       },
     );
   }

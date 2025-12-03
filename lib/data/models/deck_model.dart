@@ -1,4 +1,4 @@
-import '../../domain/entities/deck.dart';
+import 'package:flash_mastery/domain/entities/deck.dart';
 
 /// Data model for Deck with mapping helpers.
 class DeckModel {
@@ -41,22 +41,22 @@ class DeckModel {
   }
 
   Deck toEntity() => Deck(
-        id: id,
-        name: name,
-        description: description,
-        folderId: folderId,
-        cardCount: cardCount,
-        createdAt: createdAt,
-        updatedAt: updatedAt,
-      );
+    id: id,
+    name: name,
+    description: description,
+    folderId: folderId,
+    cardCount: cardCount,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+  );
 
   factory DeckModel.fromEntity(Deck deck) => DeckModel(
-        id: deck.id,
-        name: deck.name,
-        description: deck.description,
-        folderId: deck.folderId,
-        cardCount: deck.cardCount,
-        createdAt: deck.createdAt,
-        updatedAt: deck.updatedAt,
-      );
+    id: deck.id,
+    name: deck.name,
+    description: deck.description,
+    folderId: deck.folderId,
+    cardCount: deck.cardCount,
+    createdAt: deck.createdAt,
+    updatedAt: deck.updatedAt,
+  );
 }

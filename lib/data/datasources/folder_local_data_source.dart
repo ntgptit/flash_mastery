@@ -1,4 +1,4 @@
-import '../models/folder_model.dart';
+import 'package:flash_mastery/data/models/folder_model.dart';
 
 /// Local data source for folder operations
 /// Currently using in-memory storage, can be replaced with Hive/SQLite later
@@ -82,10 +82,11 @@ class FolderLocalDataSourceImpl implements FolderLocalDataSource {
     }
 
     return _folders
-        .where((folder) =>
-            folder.name.toLowerCase().contains(query.toLowerCase()) ||
-            (folder.description?.toLowerCase().contains(query.toLowerCase()) ??
-                false))
+        .where(
+          (folder) =>
+              folder.name.toLowerCase().contains(query.toLowerCase()) ||
+              (folder.description?.toLowerCase().contains(query.toLowerCase()) ?? false),
+        )
         .toList();
   }
 }
