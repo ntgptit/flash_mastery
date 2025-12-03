@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
+import '../../presentation/screens/dashboard/dashboard_screen.dart';
 
 /// Application router configuration using go_router
 class AppRouter {
@@ -7,6 +8,7 @@ class AppRouter {
 
   /// Route paths
   static const String splash = '/';
+  static const String dashboard = '/dashboard';
   static const String home = '/home';
   static const String login = '/login';
   static const String register = '/register';
@@ -19,13 +21,18 @@ class AppRouter {
 
   /// Router configuration
   static final GoRouter router = GoRouter(
-    initialLocation: splash,
+    initialLocation: dashboard,
     debugLogDiagnostics: true,
     routes: [
       GoRoute(
         path: splash,
         name: 'splash',
         builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: dashboard,
+        name: 'dashboard',
+        builder: (context, state) => const DashboardScreen(),
       ),
       GoRoute(
         path: home,
