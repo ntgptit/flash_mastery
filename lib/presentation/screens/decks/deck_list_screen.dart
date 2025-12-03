@@ -1,11 +1,10 @@
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/entities/folder.dart';
-import 'package:flash_mastery/domain/usecases/decks/deck_usecases.dart';
+import 'package:flash_mastery/features/decks/providers.dart';
+import 'package:flash_mastery/features/folders/providers.dart';
 import 'package:flash_mastery/presentation/screens/decks/widgets/deck_form_dialog.dart';
 import 'package:flash_mastery/presentation/screens/flashcards/flashcard_list_screen.dart';
-import 'package:flash_mastery/presentation/viewmodels/deck_view_model.dart';
-import 'package:flash_mastery/presentation/viewmodels/folder_view_model.dart';
 import 'package:flash_mastery/presentation/widgets/common/common_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

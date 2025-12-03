@@ -1,13 +1,13 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/folder.dart';
-import 'package:flash_mastery/domain/usecases/folders/folder_usecases.dart';
+import 'package:flash_mastery/features/folders/providers.dart';
 import 'package:flash_mastery/presentation/screens/decks/deck_list_screen.dart';
 import 'package:flash_mastery/presentation/screens/folders/widgets/folder_card.dart';
 import 'package:flash_mastery/presentation/screens/folders/widgets/folder_form_dialog.dart';
-import 'package:flash_mastery/presentation/viewmodels/folder_view_model.dart';
 import 'package:flash_mastery/presentation/widgets/common/common_widgets.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
