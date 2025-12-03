@@ -26,3 +26,15 @@ linter:
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
+    avoid_print: true
+    prefer_final_fields: true
+    prefer_final_locals: true
+    unawaited_futures: false
+    prefer_single_quotes: true
+    avoid_unused_constructor_parameters: true
+    use_super_parameters: true
+    always_use_package_imports: true
+    unnecessary_this: true
+    curly_braces_in_flow_control_structures: false
+    avoid_returning_null_for_future: true
+    directives_ordering: true

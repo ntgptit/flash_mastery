@@ -1,0 +1,55 @@
+{
+  // FORMAT
+  "editor.formatOnSave": true,
+  "editor.formatOnType": true,
+  "dart.lineLength": 100,
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+
+  // REMOVE TRAILING SPACES
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+
+  // CODE ACTIONS (DART)
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": true,
+    "source.fixAll": true
+  },
+
+  // ERROR LENS
+  "errorLens.enabled": true,
+  "errorLens.fontWeight": "600",
+  "errorLens.margin": "20px",
+
+  // INTELLI-SENSE
+  "editor.inlineSuggest.enabled": true,
+  "editor.suggest.snippetsPreventQuickSuggestions": false,
+  "editor.quickSuggestions": {
+    "comments": false,
+    "strings": true,
+    "other": true
+  },
+
+  // AI COMPLETION (Codex / Codeium / Continue)
+  "editor.suggest.showWords": true,
+  "editor.suggest.showSnippets": true,
+  "editor.suggest.showClasses": true,
+  "editor.suggest.showFunctions": true,
+
+  // AUTO IMPORT
+  "dart.previewBazelWorkspaceCustomScripts": true,
+  "dart.allowTestsOutsideTestFolder": true,
+  "dart.showTodos": true,
+
+  // FILE WATCH (fix build_runner)
+  "files.watcherExclude": {
+    "**/build/**": true,
+    "**/.dart_tool/**": true,
+    "**/.idea/**": true,
+    "**/.vscode/**": true
+  },
+
+  // UI SETTINGS
+  "workbench.colorTheme": "GitHub Dark Default",
+  "workbench.iconTheme": "material-icon-theme"
+}
