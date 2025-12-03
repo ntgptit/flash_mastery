@@ -225,22 +225,18 @@ class _CustomTextFieldState extends State<FMTextField> {
 class FMPasswordTextField extends FMTextField {
   FMPasswordTextField({
     super.key,
-    TextEditingController? controller,
+    super.controller,
     String? label,
     String? hint,
-    String? errorText,
-    void Function(String)? onChanged,
-    void Function(String)? onSubmitted,
+    super.errorText,
+    super.onChanged,
+    super.onSubmitted,
   }) : super(
-          controller: controller,
           label: label ?? 'FMPassword',
           hint: hint ?? 'Enter your password',
-          errorText: errorText,
           prefixIcon: Icons.lock_outline,
           keyboardType: TextInputType.visiblePassword,
           textInputAction: TextInputAction.done,
-          onChanged: onChanged,
-          onSubmitted: onSubmitted,
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'FMPassword is required';

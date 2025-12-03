@@ -32,8 +32,8 @@ class FolderCard extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    color.withOpacity(0.7),
-                    color.withOpacity(0.3),
+                    color.withValues(alpha: 0.7),
+                    color.withValues(alpha: 0.3),
                   ],
                 ),
               ),
@@ -108,9 +108,9 @@ class FolderCard extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text(
                             folder.description!,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Colors.white.withOpacity(0.9),
-                                ),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.9),
+                              ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -125,7 +125,7 @@ class FolderCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(

@@ -125,7 +125,7 @@ class _DotsLoadingIndicatorState extends State<_DotsLoadingIndicator>
                   width: widget.size / 6,
                   height: widget.size / 6,
                   decoration: BoxDecoration(
-                    color: widget.color.withOpacity(0.5 + (scale * 0.5)),
+                    color: widget.color.withValues(alpha: 0.5 + (scale * 0.5)),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -161,7 +161,7 @@ class LoadingOverlay extends StatelessWidget {
         if (isLoading)
           Container(
             color: backgroundColor ??
-                Theme.of(context).colorScheme.surface.withOpacity(0.8),
+                Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
             child: LoadingWidget(message: message),
           ),
       ],

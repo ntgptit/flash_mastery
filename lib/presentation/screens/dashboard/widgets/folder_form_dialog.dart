@@ -201,6 +201,7 @@ class _FolderFormDialogState extends State<FolderFormDialog> {
   }
 
   String _colorToString(Color color) {
-    return '#${color.value.toRadixString(16).substring(2).toUpperCase()}';
+    final hex = color.toARGB32().toRadixString(16).padLeft(8, '0');
+    return '#${hex.substring(2).toUpperCase()}';
   }
 }
