@@ -33,6 +33,25 @@ migrate_working_dir/
 .pub/
 /build/
 
+# Code generation
+*.g.dart
+*.freezed.dart
+*.gr.dart
+*.config.dart
+*.mocks.dart
+*.reflectable.dart
+**/generated/
+**/*.gen.dart
+
+# Coverage
+coverage/
+*.lcov
+test/.test_coverage.dart
+
+# L10n
+**/*.arb.json
+**/l10n/generated/
+
 # Symbolication related
 app.*.symbols
 

@@ -4,7 +4,11 @@
       "Bash(git mv:*)",
       "Bash(git add:*)",
       "Bash(tree:*)",
-      "Bash(flutter analyze:*)"
+      "Bash(flutter analyze:*)",
+      "Bash(flutter pub get:*)",
+      "Bash(flutter pub run build_runner build:*)",
+      "Bash(move libcoreerrorexceptions.dart libcoreexceptionsexceptions.dart)",
+      "Bash(move libcoreerrorfailures.dart libcoreexceptionsfailures.dart)"
     ],
     "deny": [],
     "ask": []
