@@ -13,7 +13,13 @@ class GetDecksUseCase extends UseCase<List<Deck>, GetDecksParams> {
 
   @override
   Future<Either<Failure, List<Deck>>> call(GetDecksParams params) {
-    return repository.getDecks(folderId: params.folderId, sort: params.sort);
+    return repository.getDecks(
+      folderId: params.folderId,
+      sort: params.sort,
+      query: params.query,
+      page: params.page,
+      size: params.size,
+    );
   }
 }
 
@@ -132,8 +138,17 @@ class SearchDecksParams {
 class GetDecksParams {
   final String? folderId;
   final String? sort;
+  final String? query;
+  final int page;
+  final int size;
 
-  const GetDecksParams({this.folderId, this.sort});
+  const GetDecksParams({
+    this.folderId,
+    this.sort,
+    this.query,
+    this.page = 0,
+    this.size = 20,
+  });
 }
 
 Failure? _validateDeckFields(

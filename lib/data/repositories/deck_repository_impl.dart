@@ -54,11 +54,17 @@ class DeckRepositoryImpl implements DeckRepository {
   Future<Either<Failure, List<Deck>>> getDecks({
     String? folderId,
     String? sort,
+    String? query,
+    int page = 0,
+    int size = 20,
   }) async {
     return ErrorGuard.run(() async {
       final decks = await remoteDataSource.getDecks(
         folderId: folderId,
         sort: sort,
+        query: query,
+        page: page,
+        size: size,
       );
       return decks.map((d) => d.toEntity()).toList();
     });

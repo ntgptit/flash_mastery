@@ -4,7 +4,13 @@ import 'package:flash_mastery/core/exceptions/exceptions.dart';
 import 'package:flash_mastery/data/models/deck_model.dart';
 
 abstract class DeckRemoteDataSource {
-  Future<List<DeckModel>> getDecks({String? folderId, String? sort});
+  Future<List<DeckModel>> getDecks({
+    String? folderId,
+    String? sort,
+    String? query,
+    int page,
+    int size,
+  });
   Future<DeckModel> getDeckById(String id);
   Future<DeckModel> createDeck(DeckModel deck);
   Future<DeckModel> updateDeck(String id, DeckModel deck);
@@ -18,12 +24,21 @@ class DeckRemoteDataSourceImpl implements DeckRemoteDataSource {
   final Dio dio;
 
   @override
-  Future<List<DeckModel>> getDecks({String? folderId, String? sort}) async {
+  Future<List<DeckModel>> getDecks({
+    String? folderId,
+    String? sort,
+    String? query,
+    int page = 0,
+    int size = 20,
+  }) async {
     final response = await dio.get(
       ApiConstants.decks,
       queryParameters: {
         if (folderId != null) 'folderId': folderId,
         if (sort != null) 'sort': sort,
+        if (query != null && query.isNotEmpty) 'q': query,
+        'page': page,
+        'size': size,
       },
     );
     if (response.statusCode == 200) {
@@ -102,15 +117,6 @@ class DeckRemoteDataSourceImpl implements DeckRemoteDataSource {
 
   @override
   Future<List<DeckModel>> searchDecks(String query, {String? folderId}) async {
-    if (query.isEmpty) return getDecks(folderId: folderId);
-    final all = await getDecks(folderId: folderId);
-    final lower = query.toLowerCase();
-    return all
-        .where(
-          (d) =>
-              d.name.toLowerCase().contains(lower) ||
-              (d.description ?? '').toLowerCase().contains(lower),
-        )
-        .toList();
+    return getDecks(folderId: folderId, query: query, page: 0, size: 50);
   }
 }

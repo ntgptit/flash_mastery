@@ -19,9 +19,9 @@ class DeckListScreen extends ConsumerStatefulWidget {
 }
 
 class _DeckListScreenState extends ConsumerState<DeckListScreen> {
+  static const String _defaultSort = 'latest';
+  String _sort = _defaultSort;
   String _searchQuery = '';
-  String _selectedFilter = 'all';
-  String _sort = 'latest';
   bool _initialized = false;
 
   @override
@@ -31,9 +31,10 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
     _initialized = true;
     Future.microtask(() {
       ref.read(folderListViewModelProvider.notifier).load();
-      ref
-          .read(deckListViewModelProvider(widget.folder?.id).notifier)
-          .load(sort: _sort);
+      ref.read(deckListViewModelProvider(widget.folder?.id).notifier).load(
+            sort: _sort,
+            query: _searchQuery.isEmpty ? null : _searchQuery,
+          );
     });
   }
 
@@ -50,11 +51,6 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
       success: (data) => data,
       error: (_) => <Folder>[],
     );
-    final filteredDecks = deckListState.maybeWhen(
-      success: (data) => _filterDecks(data),
-      orElse: () => null,
-    );
-
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -66,121 +62,136 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: AppErrorWidget(
               message: message,
-              onRetry: () => ref
-                  .read(deckListViewModelProvider(widget.folder?.id).notifier)
-                  .load(sort: _sort),
+              onRetry: _refreshWithDefaults,
             ),
           ),
-          success: (decks) {
-            final visibleDecks = filteredDecks ?? decks;
-
+          success: (decks, isLoadingMore, hasMore) {
             return RefreshIndicator(
               color: colorScheme.primary,
-              onRefresh: () async => ref
-                  .read(deckListViewModelProvider(widget.folder?.id).notifier)
-                  .load(sort: _sort),
-              child: CustomScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.lg,
-                        vertical: AppSpacing.lg,
-                      ),
-                      child: _HeaderSection(
-                        title: widget.folder?.name ?? 'Decks',
-                        description:
-                            widget.folder?.description ??
-                            'Organize and review your decks',
-                        onBack: Navigator.of(context).maybePop,
-                        onSearch: _showSearchDialog,
-                        onMenuSelect: (value) {
-                          if (value == 'refresh') {
-                            ref
-                                .read(
-                                  deckListViewModelProvider(
-                                    widget.folder?.id,
-                                  ).notifier,
-                                )
-                                .load(sort: _sort);
-                          }
-                        },
-                        onFilterChanged: (value) {
-                          setState(() {
-                            _selectedFilter = value;
-                          });
-                        },
-                        selectedFilter: _selectedFilter,
-                        onSortRequested: _showSortSheet,
-                        sortLabel: _sortLabel,
-                      ),
-                    ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.lg,
-                      ),
-                      child: _SortRow(
-                        onTap: _showSortSheet,
-                        sortLabel: _sortLabel,
-                      ),
-                    ),
-                  ),
-                  if (visibleDecks.isEmpty)
+              onRefresh: () async => _refreshWithDefaults(),
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (notification) {
+                  if (notification.metrics.extentAfter < 200 &&
+                      hasMore &&
+                      !isLoadingMore) {
+                    ref
+                        .read(deckListViewModelProvider(widget.folder?.id)
+                            .notifier)
+                        .loadMore();
+                  }
+                  return false;
+                },
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.lg),
-                        child: EmptyStateWidget(
-                          icon: Icons.layers_outlined,
-                          title: 'No decks yet',
-                          message: 'Create a deck to start adding flashcards',
-                          actionButtonText: 'Create Deck',
-                          onAction: () => _openDeckForm(folders: folders),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                          vertical: AppSpacing.lg,
+                        ),
+                        child: _HeaderSection(
+                          title: widget.folder?.name ?? 'Decks',
+                          description:
+                              widget.folder?.description ??
+                              'Organize and review your decks',
+                          onBack: Navigator.of(context).maybePop,
+                          onSearch: _showSearchDialog,
+                          onMenuSelect: (value) {
+                            if (value == 'refresh') {
+                              _refreshWithDefaults();
+                            }
+                          },
+                          onSortRequested: _showSortSheet,
+                          sortLabel: _sortLabel,
                         ),
                       ),
-                    )
-                  else
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.lg,
-                        AppSpacing.md,
-                        AppSpacing.lg,
-                        AppSpacing.lg,
-                      ),
-                      sliver: SliverList.separated(
-                        itemBuilder: (context, index) {
-                          final deck = visibleDecks[index];
-                          final folder = folders.firstWhere(
-                            (f) => f.id == deck.folderId,
-                            orElse: () =>
-                                widget.folder ??
-                                Folder(
-                                  id: 'unknown',
-                                  name: 'Unknown',
-                                  description: null,
-                                  color: null,
-                                  deckCount: 0,
-                                  createdAt: DateTime.now(),
-                                  updatedAt: DateTime.now(),
-                                ),
-                          );
-                          return _DeckCard(
-                            deck: deck,
-                            folder: folder,
-                            onOpen: () => _openDeck(deck),
-                            onEdit: () =>
-                                _openDeckForm(deck: deck, folders: folders),
-                            onDelete: () => _confirmDelete(deck),
-                          );
-                        },
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: AppSpacing.md),
-                        itemCount: visibleDecks.length,
+                    ),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                        ),
+                        child: _SortRow(
+                          onTap: _showSortSheet,
+                          sortLabel: _sortLabel,
+                        ),
                       ),
                     ),
-                ],
+                    if (decks.isEmpty)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          child: EmptyStateWidget(
+                            icon: Icons.layers_outlined,
+                            title: 'No decks yet',
+                            message: 'Create a deck to start adding flashcards',
+                            actionButtonText: 'Create Deck',
+                            onAction: () => _openDeckForm(folders: folders),
+                          ),
+                        ),
+                      )
+                    else
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.lg,
+                          AppSpacing.md,
+                          AppSpacing.lg,
+                          AppSpacing.lg,
+                        ),
+                        sliver: SliverList.separated(
+                          itemBuilder: (context, index) {
+                            final deck = decks[index];
+                            final folder = folders.firstWhere(
+                              (f) => f.id == deck.folderId,
+                              orElse: () =>
+                                  widget.folder ??
+                                  Folder(
+                                    id: 'unknown',
+                                    name: 'Unknown',
+                                    description: null,
+                                    color: null,
+                                    deckCount: 0,
+                                    createdAt: DateTime.now(),
+                                    updatedAt: DateTime.now(),
+                                  ),
+                            );
+                            return _DeckCard(
+                              deck: deck,
+                              folder: folder,
+                              onOpen: () => _openDeck(deck),
+                              onEdit: () =>
+                                  _openDeckForm(deck: deck, folders: folders),
+                              onDelete: () => _confirmDelete(deck),
+                            );
+                          },
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: AppSpacing.md),
+                          itemCount: decks.length,
+                        ),
+                      ),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.md,
+                        ),
+                        child: Center(
+                          child: isLoadingMore
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : hasMore
+                                  ? const SizedBox(height: 24)
+                                  : const SizedBox.shrink(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -192,20 +203,6 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
         label: const Text('New Deck'),
       ),
     );
-  }
-
-  List<Deck>? _filterDecks(List<Deck>? decks) {
-    if (decks == null) return null;
-    if (_searchQuery.isEmpty) return decks;
-
-    final lower = _searchQuery.toLowerCase();
-    return decks
-        .where(
-          (deck) =>
-              deck.name.toLowerCase().contains(lower) ||
-              (deck.description?.toLowerCase().contains(lower) ?? false),
-        )
-        .toList();
   }
 
   void _showSearchDialog() {
@@ -222,9 +219,13 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
           ),
           autofocus: true,
           onSubmitted: (value) {
-            setState(() {
-              _searchQuery = value;
-            });
+            setState(() => _searchQuery = value);
+            ref
+                .read(deckListViewModelProvider(widget.folder?.id).notifier)
+                .load(
+                  sort: _sort,
+                  query: _searchQuery,
+                );
             Navigator.pop(context);
           },
         ),
@@ -235,9 +236,13 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
           ),
           FilledButton(
             onPressed: () {
-              setState(() {
-                _searchQuery = controller.text;
-              });
+              setState(() => _searchQuery = controller.text);
+              ref
+                  .read(deckListViewModelProvider(widget.folder?.id).notifier)
+                  .load(
+                    sort: _sort,
+                    query: _searchQuery,
+                  );
               Navigator.pop(context);
             },
             child: const Text('Search'),
@@ -388,9 +393,16 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
     }
   }
 
+  Future<void> _refreshWithDefaults() async {
+    setState(() => _sort = _defaultSort);
+    await ref
+        .read(deckListViewModelProvider(widget.folder?.id).notifier)
+        .load(sort: _sort, query: _searchQuery.isEmpty ? null : _searchQuery);
+  }
+
   void _showSortSheet() {
     final options = <Map<String, String>>[
-      {'value': 'latest', 'label': 'Latest'},
+      {'value': _defaultSort, 'label': 'Latest'},
       {'value': 'name,asc', 'label': 'Name (A-Z)'},
       {'value': 'name,desc', 'label': 'Name (Z-A)'},
       {'value': 'cardCount,desc', 'label': 'Cards (High-Low)'},
@@ -417,7 +429,10 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                       .read(
                         deckListViewModelProvider(widget.folder?.id).notifier,
                       )
-                      .load(sort: _sort == 'latest' ? null : _sort);
+                      .load(
+                        sort: _sort,
+                        query: _searchQuery.isEmpty ? null : _searchQuery,
+                      );
                   Navigator.pop(context);
                 },
               ),
@@ -442,8 +457,6 @@ class _HeaderSection extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onSearch;
   final void Function(String value) onMenuSelect;
-  final void Function(String value) onFilterChanged;
-  final String selectedFilter;
   final VoidCallback onSortRequested;
   final String sortLabel;
 
@@ -453,8 +466,6 @@ class _HeaderSection extends StatelessWidget {
     required this.onBack,
     required this.onSearch,
     required this.onMenuSelect,
-    required this.onFilterChanged,
-    required this.selectedFilter,
     required this.onSortRequested,
     required this.sortLabel,
   });
@@ -560,52 +571,6 @@ class _SortRow extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onSelected;
-
-  const _FilterChip({
-    required this.label,
-    required this.selected,
-    required this.onSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return ChoiceChip(
-      label: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.xs,
-        ),
-        child: Text(label),
-      ),
-      selected: selected,
-      onSelected: (_) => onSelected(),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-        side: BorderSide(
-          color: selected
-              ? Colors.transparent
-              : colorScheme.outline.withValues(alpha: 0.4),
-        ),
-      ),
-      selectedColor: colorScheme.primary.withValues(alpha: 0.15),
-      backgroundColor: colorScheme.surfaceContainerHighest.withValues(
-        alpha: 0.3,
-      ),
-      labelStyle: TextStyle(
-        color: selected
-            ? colorScheme.onPrimaryContainer
-            : colorScheme.onSurfaceVariant,
-        fontWeight: FontWeight.w600,
-      ),
     );
   }
 }

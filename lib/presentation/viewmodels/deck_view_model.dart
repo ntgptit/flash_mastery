@@ -13,7 +13,11 @@ part 'deck_view_model.g.dart';
 class DeckListState with _$DeckListState {
   const factory DeckListState.initial() = _Initial;
   const factory DeckListState.loading() = _Loading;
-  const factory DeckListState.success(List<Deck> decks) = _Success;
+  const factory DeckListState.success(
+    List<Deck> decks, {
+    @Default(false) bool isLoadingMore,
+    @Default(true) bool hasMore,
+  }) = _Success;
   const factory DeckListState.error(String message) = _Error;
 }
 
@@ -41,6 +45,12 @@ DeleteDeckUseCase deleteDeckUseCase(Ref ref) {
 class DeckListViewModel extends _$DeckListViewModel {
   bool _initialized = false;
   String? _currentSort;
+  String? _currentQuery;
+  int _page = 0;
+  final int _pageSize = 20;
+  List<Deck> _cache = [];
+  bool _hasMore = true;
+  bool _isLoadingMore = false;
 
   @override
   DeckListState build(String? folderId) {
@@ -54,15 +64,79 @@ class DeckListViewModel extends _$DeckListViewModel {
     await load();
   }
 
-  Future<void> load({String? sort}) async {
+  Future<void> load({String? sort, String? query, int? page}) async {
+    if (_isLoadingMore) return;
     _currentSort = sort ?? _currentSort;
+    _currentQuery = query ?? _currentQuery;
+    _page = page ?? 0;
+    _hasMore = true;
+    _cache = [];
+    _isLoadingMore = false;
     state = const DeckListState.loading();
     final result = await ref
         .read(getDecksUseCaseProvider)
-        .call(GetDecksParams(folderId: folderId, sort: _currentSort));
+        .call(
+          GetDecksParams(
+            folderId: folderId,
+            sort: _currentSort,
+            query: _currentQuery,
+            page: _page,
+            size: _pageSize,
+          ),
+        );
     state = result.fold(
       (failure) => DeckListState.error(failure.toDisplayMessage()),
-      (decks) => DeckListState.success(decks),
+      (decks) {
+        _cache = decks;
+        _hasMore = decks.length == _pageSize;
+        return DeckListState.success(
+          _cache,
+          hasMore: _hasMore,
+          isLoadingMore: false,
+        );
+      },
+    );
+  }
+
+  Future<void> loadMore() async {
+    if (_isLoadingMore || !_hasMore) return;
+    _isLoadingMore = true;
+    state = DeckListState.success(
+      _cache,
+      hasMore: _hasMore,
+      isLoadingMore: true,
+    );
+    _page += 1;
+    final result = await ref
+        .read(getDecksUseCaseProvider)
+        .call(
+          GetDecksParams(
+            folderId: folderId,
+            sort: _currentSort,
+            query: _currentQuery,
+            page: _page,
+            size: _pageSize,
+          ),
+        );
+    result.fold(
+      (failure) {
+        _isLoadingMore = false;
+        state = DeckListState.success(
+          _cache,
+          hasMore: _hasMore,
+          isLoadingMore: false,
+        );
+      },
+      (decks) {
+        _cache = [..._cache, ...decks];
+        _hasMore = decks.length == _pageSize;
+        _isLoadingMore = false;
+        state = DeckListState.success(
+          _cache,
+          hasMore: _hasMore,
+          isLoadingMore: false,
+        );
+      },
     );
   }
 
