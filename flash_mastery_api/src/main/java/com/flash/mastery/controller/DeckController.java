@@ -35,8 +35,13 @@ public class DeckController {
 
   @GetMapping
   @Operation(summary = "List decks", description = "Optionally filter by folder", responses = @ApiResponse(responseCode = "200", description = "List of decks"))
-  public List<DeckResponse> list(@RequestParam(value = "folderId", required = false) UUID folderId) {
-    return deckService.getDecks(folderId);
+  public List<DeckResponse> list(
+      @RequestParam(value = "folderId", required = false) UUID folderId,
+      @RequestParam(value = "sort", required = false, defaultValue = "latest") String sort,
+      @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+      @RequestParam(value = "size", required = false, defaultValue = "20") int size,
+      @RequestParam(value = "q", required = false, defaultValue = "") String query) {
+    return deckService.getDecks(folderId, sort, page, size, query);
   }
 
   @GetMapping("/{id}")

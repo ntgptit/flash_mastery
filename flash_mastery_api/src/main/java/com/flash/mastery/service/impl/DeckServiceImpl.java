@@ -12,13 +12,18 @@ import com.flash.mastery.mapper.DeckMapper;
 import com.flash.mastery.repository.DeckRepository;
 import com.flash.mastery.repository.FolderRepository;
 import com.flash.mastery.service.DeckService;
+import com.flash.mastery.util.DeckSortOption;
+import com.flash.mastery.util.SortMapper;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import lombok.RequiredArgsConstructor;
 
 @Service
 @Transactional
@@ -32,9 +37,25 @@ public class DeckServiceImpl implements DeckService {
 
   @Override
   @Transactional(readOnly = true)
-  public List<DeckResponse> getDecks(UUID folderId) {
-    List<Deck> decks = folderId == null ? deckRepository.findAll() : deckRepository.findByFolderId(folderId);
-    return decks.stream().map(deckMapper::toResponse).toList();
+  public List<DeckResponse> getDecks(UUID folderId, String sort, int page, int size, String query) {
+    DeckSortOption sortOption = DeckSortOption.from(sort);
+    Pageable pageable = PageRequest.of(page, size, SortMapper.toSort(sortOption));
+    Page<Deck> deckPage;
+    boolean hasQuery = query != null && !query.isBlank();
+    if (folderId == null) {
+      deckPage = hasQuery
+          ? deckRepository.findByNameContainingIgnoreCase(query, pageable)
+          : deckRepository.findAll(pageable);
+      return deckPage.stream().map(deckMapper::toResponse).toList();
+    }
+
+    if (hasQuery) {
+      deckPage = deckRepository.findByFolderIdAndNameContainingIgnoreCase(folderId, query, pageable);
+      return deckPage.stream().map(deckMapper::toResponse).toList();
+    }
+
+    deckPage = deckRepository.findByFolderId(folderId, pageable);
+    return deckPage.stream().map(deckMapper::toResponse).toList();
   }
 
   @Override

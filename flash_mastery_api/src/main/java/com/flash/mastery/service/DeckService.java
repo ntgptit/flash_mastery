@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface DeckService {
-  List<DeckResponse> getDecks(UUID folderId);
+  List<DeckResponse> getDecks(UUID folderId, String sort, int page, int size, String query);
   DeckResponse getDeck(UUID id);
   DeckResponse create(DeckCreateRequest request);
   DeckResponse update(UUID id, DeckUpdateRequest request);
