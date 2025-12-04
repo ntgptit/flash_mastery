@@ -1,23 +1,15 @@
 import 'package:dartz/dartz.dart';
-
-import 'package:flash_mastery/core/constants/config/app_constants.dart';
-import 'package:flash_mastery/core/constants/validation/error_messages.dart';
 import 'package:flash_mastery/core/error/error_guard.dart';
 import 'package:flash_mastery/core/exceptions/failures.dart';
-import 'package:flash_mastery/data/datasources/local/deck_local_data_source.dart';
-import 'package:flash_mastery/data/datasources/local/flashcard_local_data_source.dart';
+import 'package:flash_mastery/data/datasources/remote/flashcard_remote_data_source.dart';
 import 'package:flash_mastery/data/models/flashcard_model.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
 import 'package:flash_mastery/domain/repositories/flashcard_repository.dart';
 
 class FlashcardRepositoryImpl implements FlashcardRepository {
-  final FlashcardLocalDataSource flashcardLocalDataSource;
-  final DeckLocalDataSource deckLocalDataSource;
+  final FlashcardRemoteDataSource remoteDataSource;
 
-  FlashcardRepositoryImpl({
-    required this.flashcardLocalDataSource,
-    required this.deckLocalDataSource,
-  });
+  FlashcardRepositoryImpl({required this.remoteDataSource});
 
   @override
   Future<Either<Failure, Flashcard>> createFlashcard({
@@ -27,13 +19,6 @@ class FlashcardRepositoryImpl implements FlashcardRepository {
     String? hint,
   }) async {
     return ErrorGuard.run(() async {
-      final deck = await deckLocalDataSource.getDeckById(deckId);
-      if (deck.cardCount >= AppConstants.maxFlashcardsPerDeck) {
-        throw ValidationFailure(
-          message: ErrorMessages.maxCardsReached(AppConstants.maxFlashcardsPerDeck),
-        );
-      }
-
       final card = FlashcardModel(
         id: '',
         deckId: deckId,
@@ -43,8 +28,7 @@ class FlashcardRepositoryImpl implements FlashcardRepository {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      final created = await flashcardLocalDataSource.createFlashcard(card);
-      await _updateDeckCardCount(deckId: deckId, delta: 1);
+      final created = await remoteDataSource.createFlashcard(deckId, card);
       return created.toEntity();
     });
   }
@@ -52,9 +36,7 @@ class FlashcardRepositoryImpl implements FlashcardRepository {
   @override
   Future<Either<Failure, void>> deleteFlashcard(String id) async {
     return ErrorGuard.run(() async {
-      final existing = await flashcardLocalDataSource.getFlashcardById(id);
-      await flashcardLocalDataSource.deleteFlashcard(id);
-      await _updateDeckCardCount(deckId: existing.deckId, delta: -1);
+      await remoteDataSource.deleteFlashcard(id);
       return;
     });
   }
@@ -62,7 +44,7 @@ class FlashcardRepositoryImpl implements FlashcardRepository {
   @override
   Future<Either<Failure, Flashcard>> getFlashcardById(String id) async {
     return ErrorGuard.run(() async {
-      final card = await flashcardLocalDataSource.getFlashcardById(id);
+      final card = await remoteDataSource.getById(id);
       return card.toEntity();
     });
   }
@@ -70,7 +52,7 @@ class FlashcardRepositoryImpl implements FlashcardRepository {
   @override
   Future<Either<Failure, List<Flashcard>>> getFlashcards(String deckId) async {
     return ErrorGuard.run(() async {
-      final cards = await flashcardLocalDataSource.getFlashcards(deckId);
+      final cards = await remoteDataSource.getByDeck(deckId);
       return cards.map((c) => c.toEntity()).toList();
     });
   }
@@ -81,8 +63,16 @@ class FlashcardRepositoryImpl implements FlashcardRepository {
     String query,
   ) async {
     return ErrorGuard.run(() async {
-      final cards = await flashcardLocalDataSource.searchFlashcards(deckId, query);
-      return cards.map((c) => c.toEntity()).toList();
+      final cards = await remoteDataSource.getByDeck(deckId);
+      if (query.isEmpty) return cards.map((c) => c.toEntity()).toList();
+      final lower = query.toLowerCase();
+      final filtered = cards
+          .where((c) =>
+              c.question.toLowerCase().contains(lower) ||
+              c.answer.toLowerCase().contains(lower) ||
+              (c.hint ?? '').toLowerCase().contains(lower))
+          .toList();
+      return filtered.map((c) => c.toEntity()).toList();
     });
   }
 
@@ -94,24 +84,14 @@ class FlashcardRepositoryImpl implements FlashcardRepository {
     String? hint,
   }) async {
     return ErrorGuard.run(() async {
-      final existing = await flashcardLocalDataSource.getFlashcardById(id);
+      final existing = await remoteDataSource.getById(id);
       final updated = existing.copyWith(
         question: question ?? existing.question,
         answer: answer ?? existing.answer,
         hint: hint ?? existing.hint,
       );
-      final saved = await flashcardLocalDataSource.updateFlashcard(updated);
+      final saved = await remoteDataSource.updateFlashcard(id, updated);
       return saved.toEntity();
     });
-  }
-
-  Future<void> _updateDeckCardCount({
-    required String deckId,
-    required int delta,
-  }) async {
-    final deck = await deckLocalDataSource.getDeckById(deckId);
-    final nextCount =
-        (deck.cardCount + delta).clamp(0, AppConstants.maxFlashcardsPerDeck).toInt();
-    await deckLocalDataSource.updateDeck(deck.copyWith(cardCount: nextCount));
   }
 }

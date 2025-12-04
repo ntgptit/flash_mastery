@@ -8,13 +8,7 @@ class ApiConstants {
   // ==================== BASE CONFIGURATION ====================
 
   /// Base URL for the API server.
-  static const String baseUrl = 'https://api.example.com';
-
-  /// API version prefix.
-  static const String apiVersion = '/api/v1';
-
-  /// Full base URL with version.
-  static String get fullBaseUrl => '$baseUrl$apiVersion';
+  static const String baseUrl = 'http://localhost:8080/api/v1';
 
   // ==================== TIMEOUT VALUES ====================
 
@@ -84,22 +78,19 @@ class ApiConstants {
   // ==================== FLASHCARD ENDPOINTS ====================
 
   /// Get all flashcards endpoint.
-  static const String flashcards = '/flashcards';
+  static String deckFlashcards(String deckId) => '/decks/$deckId/cards';
 
   /// Get flashcard by ID endpoint.
-  static String flashcardById(String id) => '/flashcards/$id';
+  static String flashcardById(String id) => '/cards/$id';
 
   /// Create flashcard endpoint.
-  static const String createFlashcard = '/flashcards';
+  static String createFlashcard(String deckId) => '/decks/$deckId/cards';
 
   /// Update flashcard endpoint.
-  static String updateFlashcard(String id) => '/flashcards/$id';
+  static String updateFlashcard(String id) => '/cards/$id';
 
   /// Delete flashcard endpoint.
-  static String deleteFlashcard(String id) => '/flashcards/$id';
-
-  /// Search flashcards endpoint.
-  static const String searchFlashcards = '/flashcards/search';
+  static String deleteFlashcard(String id) => '/cards/$id';
 
   // ==================== DECK ENDPOINTS ====================
 
@@ -117,6 +108,23 @@ class ApiConstants {
 
   /// Delete deck endpoint.
   static String deleteDeck(String id) => '/decks/$id';
+
+  // ==================== FOLDER ENDPOINTS ====================
+
+  /// Get all folders endpoint.
+  static const String folders = '/folders';
+
+  /// Get folder by ID endpoint.
+  static String folderById(String id) => '/folders/$id';
+
+  /// Create folder endpoint.
+  static const String createFolder = '/folders';
+
+  /// Update folder endpoint.
+  static String updateFolder(String id) => '/folders/$id';
+
+  /// Delete folder endpoint.
+  static String deleteFolder(String id) => '/folders/$id';
 
   // ==================== STUDY SESSION ENDPOINTS ====================
 

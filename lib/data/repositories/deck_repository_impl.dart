@@ -2,20 +2,15 @@ import 'package:dartz/dartz.dart';
 
 import 'package:flash_mastery/core/error/error_guard.dart';
 import 'package:flash_mastery/core/exceptions/failures.dart';
-import 'package:flash_mastery/data/datasources/local/deck_local_data_source.dart';
-import 'package:flash_mastery/data/datasources/local/folder_local_data_source.dart';
+import 'package:flash_mastery/data/datasources/remote/deck_remote_data_source.dart';
 import 'package:flash_mastery/data/models/deck_model.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/repositories/deck_repository.dart';
 
 class DeckRepositoryImpl implements DeckRepository {
-  final DeckLocalDataSource deckLocalDataSource;
-  final FolderLocalDataSource folderLocalDataSource;
+  final DeckRemoteDataSource remoteDataSource;
 
-  DeckRepositoryImpl({
-    required this.deckLocalDataSource,
-    required this.folderLocalDataSource,
-  });
+  DeckRepositoryImpl({required this.remoteDataSource});
 
   @override
   Future<Either<Failure, Deck>> createDeck({
@@ -24,10 +19,6 @@ class DeckRepositoryImpl implements DeckRepository {
     String? folderId,
   }) async {
     return ErrorGuard.run(() async {
-      if (folderId != null) {
-        await _ensureFolderExists(folderId);
-      }
-
       final deckModel = DeckModel(
         id: '',
         name: name,
@@ -38,26 +29,15 @@ class DeckRepositoryImpl implements DeckRepository {
         updatedAt: DateTime.now(),
       );
 
-      final createdDeck = await deckLocalDataSource.createDeck(deckModel);
-
-      if (folderId != null) {
-        await _updateFolderDeckCount(folderId, 1);
-      }
-
-      return createdDeck.toEntity();
+      final created = await remoteDataSource.createDeck(deckModel);
+      return created.toEntity();
     });
   }
 
   @override
   Future<Either<Failure, void>> deleteDeck(String id) async {
     return ErrorGuard.run(() async {
-      final deck = await deckLocalDataSource.getDeckById(id);
-      await deckLocalDataSource.deleteDeck(id);
-
-      if (deck.folderId != null) {
-        await _updateFolderDeckCount(deck.folderId!, -1);
-      }
-
+      await remoteDataSource.deleteDeck(id);
       return;
     });
   }
@@ -65,7 +45,7 @@ class DeckRepositoryImpl implements DeckRepository {
   @override
   Future<Either<Failure, Deck>> getDeckById(String id) async {
     return ErrorGuard.run(() async {
-      final deck = await deckLocalDataSource.getDeckById(id);
+      final deck = await remoteDataSource.getDeckById(id);
       return deck.toEntity();
     });
   }
@@ -73,7 +53,7 @@ class DeckRepositoryImpl implements DeckRepository {
   @override
   Future<Either<Failure, List<Deck>>> getDecks({String? folderId}) async {
     return ErrorGuard.run(() async {
-      final decks = await deckLocalDataSource.getDecks(folderId: folderId);
+      final decks = await remoteDataSource.getDecks(folderId: folderId);
       return decks.map((d) => d.toEntity()).toList();
     });
   }
@@ -84,7 +64,7 @@ class DeckRepositoryImpl implements DeckRepository {
     String? folderId,
   }) async {
     return ErrorGuard.run(() async {
-      final decks = await deckLocalDataSource.searchDecks(query, folderId: folderId);
+      final decks = await remoteDataSource.searchDecks(query, folderId: folderId);
       return decks.map((d) => d.toEntity()).toList();
     });
   }
@@ -97,40 +77,15 @@ class DeckRepositoryImpl implements DeckRepository {
     String? folderId,
   }) async {
     return ErrorGuard.run(() async {
-      final existingDeck = await deckLocalDataSource.getDeckById(id);
-      final String? oldFolderId = existingDeck.folderId;
-
-      if (folderId != null && folderId != oldFolderId) {
-        await _ensureFolderExists(folderId);
-      }
-
+      final existingDeck = await remoteDataSource.getDeckById(id);
       final updatedDeck = existingDeck.copyWith(
         name: name ?? existingDeck.name,
         description: description ?? existingDeck.description,
         folderId: folderId ?? existingDeck.folderId,
       );
 
-      final result = await deckLocalDataSource.updateDeck(updatedDeck);
-
-      if (folderId != null && folderId != oldFolderId) {
-        if (oldFolderId != null) {
-          await _updateFolderDeckCount(oldFolderId, -1);
-        }
-        await _updateFolderDeckCount(folderId, 1);
-      }
-
+      final result = await remoteDataSource.updateDeck(id, updatedDeck);
       return result.toEntity();
     });
-  }
-
-  Future<void> _ensureFolderExists(String folderId) async {
-    await folderLocalDataSource.getFolderById(folderId);
-  }
-
-  Future<void> _updateFolderDeckCount(String folderId, int delta) async {
-    final folder = await folderLocalDataSource.getFolderById(folderId);
-    final nextCount = folder.deckCount + delta;
-    final updatedFolder = folder.copyWith(deckCount: nextCount < 0 ? 0 : nextCount);
-    await folderLocalDataSource.updateFolder(updatedFolder);
   }
 }

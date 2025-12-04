@@ -1,5 +1,6 @@
 import 'package:flash_mastery/core/providers/core_providers.dart';
 import 'package:flash_mastery/data/datasources/local/folder_local_data_source.dart';
+import 'package:flash_mastery/data/datasources/remote/folder_remote_data_source.dart';
 import 'package:flash_mastery/data/repositories/folder_repository_impl.dart';
 import 'package:flash_mastery/domain/repositories/folder_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -13,9 +14,14 @@ FolderLocalDataSource folderLocalDataSource(Ref ref) {
   return FolderLocalDataSourceImpl(db: ref.watch(appDatabaseProvider));
 }
 
+@riverpod
+FolderRemoteDataSource folderRemoteDataSource(Ref ref) {
+  return FolderRemoteDataSourceImpl(dio: ref.watch(dioProvider));
+}
+
 // ==================== REPOSITORY PROVIDERS ====================
 
 @riverpod
 FolderRepository folderRepository(Ref ref) {
-  return FolderRepositoryImpl(localDataSource: ref.watch(folderLocalDataSourceProvider));
+  return FolderRepositoryImpl(remoteDataSource: ref.watch(folderRemoteDataSourceProvider));
 }
