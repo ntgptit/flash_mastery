@@ -1,53 +1,97 @@
 import 'package:dartz/dartz.dart';
-
+import 'package:flash_mastery/core/constants/config/app_constants.dart';
+import 'package:flash_mastery/core/constants/validation/error_messages.dart';
 import 'package:flash_mastery/core/exceptions/failures.dart';
+import 'package:flash_mastery/core/usecases/usecase.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/repositories/deck_repository.dart';
 
-class GetDecksUseCase {
+class GetDecksUseCase extends UseCase<List<Deck>, String?> {
   final DeckRepository repository;
 
-  const GetDecksUseCase(this.repository);
+  GetDecksUseCase(this.repository);
 
+  @override
   Future<Either<Failure, List<Deck>>> call(String? folderId) {
     return repository.getDecks(folderId: folderId);
   }
 }
 
-class CreateDeckUseCase {
+class GetDeckByIdUseCase extends UseCase<Deck, String> {
   final DeckRepository repository;
 
-  const CreateDeckUseCase(this.repository);
+  GetDeckByIdUseCase(this.repository);
 
-  Future<Either<Failure, Deck>> call(CreateDeckParams params) {
+  @override
+  Future<Either<Failure, Deck>> call(String id) {
+    return repository.getDeckById(id);
+  }
+}
+
+class SearchDecksUseCase extends UseCase<List<Deck>, SearchDecksParams> {
+  final DeckRepository repository;
+
+  SearchDecksUseCase(this.repository);
+
+  @override
+  Future<Either<Failure, List<Deck>>> call(SearchDecksParams params) {
+    return repository.searchDecks(params.query, folderId: params.folderId);
+  }
+}
+
+class CreateDeckUseCase extends UseCase<Deck, CreateDeckParams> {
+  final DeckRepository repository;
+
+  CreateDeckUseCase(this.repository);
+
+  @override
+  Future<Either<Failure, Deck>> call(CreateDeckParams params) async {
+    final trimmedName = params.name.trim();
+    final trimmedDescription = params.description?.trim();
+
+    final validationFailure = _validateDeckFields(trimmedName, trimmedDescription);
+    if (validationFailure != null) return Left(validationFailure);
+
     return repository.createDeck(
-      name: params.name,
-      description: params.description,
+      name: trimmedName,
+      description: trimmedDescription,
       folderId: params.folderId,
     );
   }
 }
 
-class UpdateDeckUseCase {
+class UpdateDeckUseCase extends UseCase<Deck, UpdateDeckParams> {
   final DeckRepository repository;
 
-  const UpdateDeckUseCase(this.repository);
+  UpdateDeckUseCase(this.repository);
 
-  Future<Either<Failure, Deck>> call(UpdateDeckParams params) {
+  @override
+  Future<Either<Failure, Deck>> call(UpdateDeckParams params) async {
+    final trimmedName = params.name?.trim();
+    final trimmedDescription = params.description?.trim();
+
+    final validationFailure = _validateDeckFields(
+      trimmedName ?? '',
+      trimmedDescription,
+      allowEmptyName: trimmedName == null,
+    );
+    if (validationFailure != null) return Left(validationFailure);
+
     return repository.updateDeck(
       id: params.id,
-      name: params.name,
-      description: params.description,
+      name: trimmedName,
+      description: trimmedDescription,
       folderId: params.folderId,
     );
   }
 }
 
-class DeleteDeckUseCase {
+class DeleteDeckUseCase extends UseCase<void, String> {
   final DeckRepository repository;
 
-  const DeleteDeckUseCase(this.repository);
+  DeleteDeckUseCase(this.repository);
 
+  @override
   Future<Either<Failure, void>> call(String id) {
     return repository.deleteDeck(id);
   }
@@ -77,4 +121,40 @@ class UpdateDeckParams {
     this.description,
     this.folderId,
   });
+}
+
+class SearchDecksParams {
+  final String query;
+  final String? folderId;
+
+  const SearchDecksParams({
+    required this.query,
+    this.folderId,
+  });
+}
+
+Failure? _validateDeckFields(
+  String name,
+  String? description, {
+  bool allowEmptyName = false,
+}) {
+  if (!allowEmptyName && name.isEmpty) {
+    return ValidationFailure(message: ErrorMessages.deckNameRequired);
+  }
+
+  if (name.isNotEmpty && name.length < AppConstants.minDeckNameLength) {
+    return ValidationFailure(message: ErrorMessages.textTooShort(AppConstants.minDeckNameLength));
+  }
+
+  if (name.isNotEmpty && name.length > AppConstants.maxDeckNameLength) {
+    return ValidationFailure(message: ErrorMessages.textTooLong(AppConstants.maxDeckNameLength));
+  }
+
+  if (description != null && description.length > AppConstants.maxDeckDescriptionLength) {
+    return ValidationFailure(
+      message: ErrorMessages.textTooLong(AppConstants.maxDeckDescriptionLength),
+    );
+  }
+
+  return null;
 }

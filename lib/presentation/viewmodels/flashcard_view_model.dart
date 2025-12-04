@@ -1,9 +1,9 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-
 import 'package:flash_mastery/core/error/failure_messages.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
-import 'package:flash_mastery/features/flashcards/providers.dart';
+import 'package:flash_mastery/domain/usecases/flashcards/flashcard_usecases.dart';
+import 'package:flash_mastery/presentation/providers/flashcard_providers.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'flashcard_view_model.freezed.dart';
 part 'flashcard_view_model.g.dart';

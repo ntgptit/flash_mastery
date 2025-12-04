@@ -1,7 +1,8 @@
+import 'package:flash_mastery/core/exceptions/exceptions.dart';
 import 'package:flash_mastery/data/models/folder_model.dart';
 
-/// Local data source for folder operations
-/// Currently using in-memory storage, can be replaced with Hive/SQLite later
+/// Local data source for folder operations.
+/// Currently using in-memory storage, can be replaced with Hive/SQLite later.
 abstract class FolderLocalDataSource {
   Future<List<FolderModel>> getFolders();
   Future<FolderModel> getFolderById(String id);
@@ -17,7 +18,6 @@ class FolderLocalDataSourceImpl implements FolderLocalDataSource {
 
   @override
   Future<List<FolderModel>> getFolders() async {
-    // Simulate network delay
     await Future.delayed(const Duration(milliseconds: 500));
     return List.from(_folders);
   }
@@ -25,12 +25,10 @@ class FolderLocalDataSourceImpl implements FolderLocalDataSource {
   @override
   Future<FolderModel> getFolderById(String id) async {
     await Future.delayed(const Duration(milliseconds: 300));
-
-    try {
-      return _folders.firstWhere((folder) => folder.id == id);
-    } catch (e) {
-      throw Exception('Folder not found');
-    }
+    return _folders.firstWhere(
+      (folder) => folder.id == id,
+      orElse: () => throw const NotFoundException(message: 'Folder not found'),
+    );
   }
 
   @override
@@ -53,7 +51,7 @@ class FolderLocalDataSourceImpl implements FolderLocalDataSource {
 
     final index = _folders.indexWhere((f) => f.id == folder.id);
     if (index == -1) {
-      throw Exception('Folder not found');
+      throw const NotFoundException(message: 'Folder not found');
     }
 
     final updatedFolder = folder.copyWith(updatedAt: DateTime.now());
@@ -67,7 +65,7 @@ class FolderLocalDataSourceImpl implements FolderLocalDataSource {
 
     final index = _folders.indexWhere((f) => f.id == id);
     if (index == -1) {
-      throw Exception('Folder not found');
+      throw const NotFoundException(message: 'Folder not found');
     }
 
     _folders.removeAt(index);
@@ -81,11 +79,12 @@ class FolderLocalDataSourceImpl implements FolderLocalDataSource {
       return List.from(_folders);
     }
 
+    final lower = query.toLowerCase();
     return _folders
         .where(
           (folder) =>
-              folder.name.toLowerCase().contains(query.toLowerCase()) ||
-              (folder.description?.toLowerCase().contains(query.toLowerCase()) ?? false),
+              folder.name.toLowerCase().contains(lower) ||
+              (folder.description?.toLowerCase().contains(lower) ?? false),
         )
         .toList();
   }

@@ -4,8 +4,8 @@ import 'package:flash_mastery/core/constants/config/app_constants.dart';
 import 'package:flash_mastery/core/constants/validation/error_messages.dart';
 import 'package:flash_mastery/core/error/error_guard.dart';
 import 'package:flash_mastery/core/exceptions/failures.dart';
-import 'package:flash_mastery/data/datasources/deck_local_data_source.dart';
-import 'package:flash_mastery/data/datasources/flashcard_local_data_source.dart';
+import 'package:flash_mastery/data/datasources/local/deck_local_data_source.dart';
+import 'package:flash_mastery/data/datasources/local/flashcard_local_data_source.dart';
 import 'package:flash_mastery/data/models/flashcard_model.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
 import 'package:flash_mastery/domain/repositories/flashcard_repository.dart';
@@ -26,13 +26,6 @@ class FlashcardRepositoryImpl implements FlashcardRepository {
     required String answer,
     String? hint,
   }) async {
-    final trimmedQuestion = question.trim();
-    final trimmedAnswer = answer.trim();
-    final trimmedHint = hint?.trim();
-
-    final validationFailure = _validateFlashcard(trimmedQuestion, trimmedAnswer);
-    if (validationFailure != null) return Left(validationFailure);
-
     return ErrorGuard.run(() async {
       final deck = await deckLocalDataSource.getDeckById(deckId);
       if (deck.cardCount >= AppConstants.maxFlashcardsPerDeck) {
@@ -44,9 +37,9 @@ class FlashcardRepositoryImpl implements FlashcardRepository {
       final card = FlashcardModel(
         id: '',
         deckId: deckId,
-        question: trimmedQuestion,
-        answer: trimmedAnswer,
-        hint: trimmedHint,
+        question: question,
+        answer: answer,
+        hint: hint,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -100,53 +93,16 @@ class FlashcardRepositoryImpl implements FlashcardRepository {
     String? answer,
     String? hint,
   }) async {
-    final trimmedQuestion = question?.trim();
-    final trimmedAnswer = answer?.trim();
-    final trimmedHint = hint?.trim();
-
-    final validationFailure = _validateFlashcard(trimmedQuestion, trimmedAnswer, allowNull: true);
-    if (validationFailure != null) return Left(validationFailure);
-
     return ErrorGuard.run(() async {
       final existing = await flashcardLocalDataSource.getFlashcardById(id);
       final updated = existing.copyWith(
-        question: trimmedQuestion ?? existing.question,
-        answer: trimmedAnswer ?? existing.answer,
-        hint: trimmedHint ?? existing.hint,
+        question: question ?? existing.question,
+        answer: answer ?? existing.answer,
+        hint: hint ?? existing.hint,
       );
       final saved = await flashcardLocalDataSource.updateFlashcard(updated);
       return saved.toEntity();
     });
-  }
-
-  Failure? _validateFlashcard(
-    String? question,
-    String? answer, {
-    bool allowNull = false,
-  }) {
-    if (!allowNull && (question == null || question.isEmpty)) {
-      return ValidationFailure(message: ErrorMessages.questionRequired);
-    }
-    if (!allowNull && (answer == null || answer.isEmpty)) {
-      return ValidationFailure(message: ErrorMessages.answerRequired);
-    }
-    if (question != null && question.isEmpty) {
-      return ValidationFailure(message: ErrorMessages.questionRequired);
-    }
-    if (answer != null && answer.isEmpty) {
-      return ValidationFailure(message: ErrorMessages.answerRequired);
-    }
-    if (question != null && question.length > AppConstants.maxQuestionLength) {
-      return ValidationFailure(
-        message: ErrorMessages.textTooLong(AppConstants.maxQuestionLength),
-      );
-    }
-    if (answer != null && answer.length > AppConstants.maxAnswerLength) {
-      return ValidationFailure(
-        message: ErrorMessages.textTooLong(AppConstants.maxAnswerLength),
-      );
-    }
-    return null;
   }
 
   Future<void> _updateDeckCardCount({

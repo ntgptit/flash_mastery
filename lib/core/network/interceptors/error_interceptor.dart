@@ -1,8 +1,7 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
-
 import 'package:flash_mastery/core/error/failure_mapper.dart';
 import 'package:flash_mastery/core/exceptions/exceptions.dart';
+import 'package:flutter/foundation.dart';
 
 /// Interceptor to handle and transform errors
 class ErrorInterceptor extends Interceptor {

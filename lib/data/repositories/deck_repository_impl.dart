@@ -1,11 +1,9 @@
 import 'package:dartz/dartz.dart';
 
-import 'package:flash_mastery/core/constants/config/app_constants.dart';
-import 'package:flash_mastery/core/constants/validation/error_messages.dart';
 import 'package:flash_mastery/core/error/error_guard.dart';
 import 'package:flash_mastery/core/exceptions/failures.dart';
-import 'package:flash_mastery/data/datasources/deck_local_data_source.dart';
-import 'package:flash_mastery/data/datasources/folder_local_data_source.dart';
+import 'package:flash_mastery/data/datasources/local/deck_local_data_source.dart';
+import 'package:flash_mastery/data/datasources/local/folder_local_data_source.dart';
 import 'package:flash_mastery/data/models/deck_model.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/repositories/deck_repository.dart';
@@ -25,15 +23,6 @@ class DeckRepositoryImpl implements DeckRepository {
     String? description,
     String? folderId,
   }) async {
-    final trimmedName = name.trim();
-    final trimmedDescription = description?.trim();
-
-    final validationFailure = _validateNameAndDescription(
-      trimmedName,
-      trimmedDescription,
-    );
-    if (validationFailure != null) return Left(validationFailure);
-
     return ErrorGuard.run(() async {
       if (folderId != null) {
         await _ensureFolderExists(folderId);
@@ -41,8 +30,8 @@ class DeckRepositoryImpl implements DeckRepository {
 
       final deckModel = DeckModel(
         id: '',
-        name: trimmedName,
-        description: trimmedDescription,
+        name: name,
+        description: description,
         folderId: folderId,
         cardCount: 0,
         createdAt: DateTime.now(),
@@ -107,16 +96,6 @@ class DeckRepositoryImpl implements DeckRepository {
     String? description,
     String? folderId,
   }) async {
-    final trimmedName = name?.trim();
-    final trimmedDescription = description?.trim();
-
-    final validationFailure = _validateNameAndDescription(
-      trimmedName ?? '',
-      trimmedDescription,
-      allowEmptyName: trimmedName == null,
-    );
-    if (validationFailure != null) return Left(validationFailure);
-
     return ErrorGuard.run(() async {
       final existingDeck = await deckLocalDataSource.getDeckById(id);
       final String? oldFolderId = existingDeck.folderId;
@@ -126,8 +105,8 @@ class DeckRepositoryImpl implements DeckRepository {
       }
 
       final updatedDeck = existingDeck.copyWith(
-        name: trimmedName ?? existingDeck.name,
-        description: trimmedDescription ?? existingDeck.description,
+        name: name ?? existingDeck.name,
+        description: description ?? existingDeck.description,
         folderId: folderId ?? existingDeck.folderId,
       );
 
@@ -142,32 +121,6 @@ class DeckRepositoryImpl implements DeckRepository {
 
       return result.toEntity();
     });
-  }
-
-  Failure? _validateNameAndDescription(
-    String name,
-    String? description, {
-    bool allowEmptyName = false,
-  }) {
-    if (!allowEmptyName && name.isEmpty) {
-      return ValidationFailure(message: ErrorMessages.deckNameRequired);
-    }
-
-    if (name.isNotEmpty && name.length < AppConstants.minDeckNameLength) {
-      return ValidationFailure(message: ErrorMessages.textTooShort(AppConstants.minDeckNameLength));
-    }
-
-    if (name.isNotEmpty && name.length > AppConstants.maxDeckNameLength) {
-      return ValidationFailure(message: ErrorMessages.textTooLong(AppConstants.maxDeckNameLength));
-    }
-
-    if (description != null && description.length > AppConstants.maxDeckDescriptionLength) {
-      return ValidationFailure(
-        message: ErrorMessages.textTooLong(AppConstants.maxDeckDescriptionLength),
-      );
-    }
-
-    return null;
   }
 
   Future<void> _ensureFolderExists(String folderId) async {

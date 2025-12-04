@@ -1,12 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
 import 'package:flash_mastery/features/flashcards/providers.dart';
 import 'package:flash_mastery/presentation/screens/flashcards/widgets/flashcard_form_dialog.dart';
 import 'package:flash_mastery/presentation/widgets/common/common_widgets.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class FlashcardListScreen extends ConsumerStatefulWidget {
   final Deck deck;
