@@ -8,7 +8,7 @@ class ApiConstants {
   // ==================== BASE CONFIGURATION ====================
 
   /// Base URL for the API server.
-  static const String baseUrl = 'http://localhost:8080/api/v1';
+  static const String baseUrl = 'http://192.168.35.26:8080/api/v1';
 
   // ==================== TIMEOUT VALUES ====================
 
