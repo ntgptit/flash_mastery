@@ -1,3 +1,4 @@
+import 'package:flash_mastery/core/providers/core_providers.dart';
 import 'package:flash_mastery/data/datasources/local/flashcard_local_data_source.dart';
 import 'package:flash_mastery/data/repositories/flashcard_repository_impl.dart';
 import 'package:flash_mastery/domain/repositories/flashcard_repository.dart';
@@ -10,7 +11,7 @@ part 'flashcard_providers.g.dart';
 
 @riverpod
 FlashcardLocalDataSource flashcardLocalDataSource(Ref ref) {
-  return FlashcardLocalDataSourceImpl();
+  return FlashcardLocalDataSourceImpl(db: ref.watch(appDatabaseProvider));
 }
 
 // ==================== REPOSITORY PROVIDER ====================

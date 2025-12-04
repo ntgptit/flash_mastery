@@ -1,7 +1,10 @@
+import 'package:drift/drift.dart';
 import 'package:flash_mastery/core/exceptions/exceptions.dart';
+import 'package:flash_mastery/data/local/app_database.dart';
 import 'package:flash_mastery/data/models/deck_model.dart';
+import 'package:uuid/uuid.dart';
 
-/// Local data source for deck operations (in-memory for now).
+/// Local data source for deck operations (Drift + SQLite).
 abstract class DeckLocalDataSource {
   Future<List<DeckModel>> getDecks({String? folderId});
   Future<DeckModel> getDeckById(String id);
@@ -12,70 +15,97 @@ abstract class DeckLocalDataSource {
 }
 
 class DeckLocalDataSourceImpl implements DeckLocalDataSource {
-  final List<DeckModel> _decks = [];
+  DeckLocalDataSourceImpl({required this.db});
+
+  final AppDatabase db;
+  final _uuid = const Uuid();
 
   @override
   Future<List<DeckModel>> getDecks({String? folderId}) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    if (folderId == null) return List.from(_decks);
-    return _decks.where((deck) => deck.folderId == folderId).toList();
+    final query = db.select(db.decks);
+    if (folderId != null) {
+      query.where((tbl) => tbl.folderId.equals(folderId));
+    }
+    final rows = await query.get();
+    return rows.map(_mapRowToModel).toList();
   }
 
   @override
   Future<DeckModel> getDeckById(String id) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    return _decks.firstWhere(
-      (deck) => deck.id == id,
-      orElse: () => throw const NotFoundException(message: 'Deck not found'),
-    );
+    final row = await (db.select(db.decks)..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
+    if (row == null) throw const NotFoundException(message: 'Deck not found');
+    return _mapRowToModel(row);
   }
 
   @override
   Future<DeckModel> createDeck(DeckModel deck) async {
-    await Future.delayed(const Duration(milliseconds: 400));
+    final now = DateTime.now();
     final newDeck = deck.copyWith(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
+      id: deck.id.isEmpty ? _uuid.v4() : deck.id,
+      createdAt: now,
+      updatedAt: now,
     );
-    _decks.add(newDeck);
+
+    await db.into(db.decks).insert(
+          DecksCompanion.insert(
+            id: newDeck.id,
+            name: newDeck.name,
+            description: Value(newDeck.description),
+            folderId: Value(newDeck.folderId),
+            cardCount: Value(newDeck.cardCount),
+            createdAt: newDeck.createdAt,
+            updatedAt: newDeck.updatedAt,
+          ),
+        );
     return newDeck;
   }
 
   @override
   Future<DeckModel> updateDeck(DeckModel deck) async {
-    await Future.delayed(const Duration(milliseconds: 400));
-    final index = _decks.indexWhere((d) => d.id == deck.id);
-    if (index == -1) {
-      throw const NotFoundException(message: 'Deck not found');
-    }
-    final updatedDeck = deck.copyWith(updatedAt: DateTime.now());
-    _decks[index] = updatedDeck;
-    return updatedDeck;
+    final existing =
+        await (db.select(db.decks)..where((tbl) => tbl.id.equals(deck.id))).getSingleOrNull();
+    if (existing == null) throw const NotFoundException(message: 'Deck not found');
+
+    final updated = deck.copyWith(updatedAt: DateTime.now());
+    await (db.update(db.decks)..where((tbl) => tbl.id.equals(deck.id))).write(
+      DecksCompanion(
+        name: Value(updated.name),
+        description: Value(updated.description),
+        folderId: Value(updated.folderId),
+        cardCount: Value(updated.cardCount),
+        updatedAt: Value(updated.updatedAt),
+      ),
+    );
+    return updated;
   }
 
   @override
   Future<void> deleteDeck(String id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final index = _decks.indexWhere((d) => d.id == id);
-    if (index == -1) {
-      throw const NotFoundException(message: 'Deck not found');
-    }
-    _decks.removeAt(index);
+    final deleted = await (db.delete(db.decks)..where((tbl) => tbl.id.equals(id))).go();
+    if (deleted == 0) throw const NotFoundException(message: 'Deck not found');
   }
 
   @override
   Future<List<DeckModel>> searchDecks(String query, {String? folderId}) async {
-    await Future.delayed(const Duration(milliseconds: 250));
-    final source = await getDecks(folderId: folderId);
-    if (query.isEmpty) return source;
     final lower = query.toLowerCase();
-    return source
-        .where(
-          (deck) =>
-              deck.name.toLowerCase().contains(lower) ||
-              (deck.description?.toLowerCase().contains(lower) ?? false),
-        )
-        .toList();
+    final selection = db.select(db.decks)
+      ..where(
+        (tbl) => tbl.name.lower().like('%$lower%') | tbl.description.lower().like('%$lower%'),
+      );
+    if (folderId != null) {
+      selection.where((tbl) => tbl.folderId.equals(folderId));
+    }
+    final rows = await selection.get();
+    return rows.map(_mapRowToModel).toList();
   }
+
+  DeckModel _mapRowToModel(Deck row) => DeckModel(
+        id: row.id,
+        name: row.name,
+        description: row.description,
+        folderId: row.folderId,
+        cardCount: row.cardCount,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+      );
 }

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flash_mastery/core/network/dio_client.dart';
+import 'package:flash_mastery/data/local/app_database.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'core_providers.g.dart';
@@ -15,4 +16,10 @@ DioClient dioClient(Ref ref) {
 Dio dio(Ref ref) {
   final dioClient = ref.watch(dioClientProvider);
   return dioClient.dio;
+}
+
+/// Provider for Drift AppDatabase (SQLite)
+@Riverpod(keepAlive: true)
+AppDatabase appDatabase(Ref ref) {
+  return AppDatabase();
 }

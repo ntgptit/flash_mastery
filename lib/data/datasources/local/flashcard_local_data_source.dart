@@ -1,7 +1,10 @@
+import 'package:drift/drift.dart';
 import 'package:flash_mastery/core/exceptions/exceptions.dart';
+import 'package:flash_mastery/data/local/app_database.dart';
 import 'package:flash_mastery/data/models/flashcard_model.dart';
+import 'package:uuid/uuid.dart';
 
-/// Local data source for flashcard operations (in-memory for now).
+/// Local data source for flashcard operations (Drift + SQLite).
 abstract class FlashcardLocalDataSource {
   Future<List<FlashcardModel>> getFlashcards(String deckId);
   Future<FlashcardModel> getFlashcardById(String id);
@@ -12,68 +15,95 @@ abstract class FlashcardLocalDataSource {
 }
 
 class FlashcardLocalDataSourceImpl implements FlashcardLocalDataSource {
-  final List<FlashcardModel> _flashcards = [];
+  FlashcardLocalDataSourceImpl({required this.db});
+
+  final AppDatabase db;
+  final _uuid = const Uuid();
 
   @override
   Future<List<FlashcardModel>> getFlashcards(String deckId) async {
-    await Future.delayed(const Duration(milliseconds: 250));
-    return _flashcards.where((card) => card.deckId == deckId).toList();
+    final rows = await (db.select(db.flashcards)..where((tbl) => tbl.deckId.equals(deckId))).get();
+    return rows.map(_mapRowToModel).toList();
   }
 
   @override
   Future<FlashcardModel> getFlashcardById(String id) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    return _flashcards.firstWhere(
-      (card) => card.id == id,
-      orElse: () => throw const NotFoundException(message: 'Flashcard not found'),
-    );
+    final row =
+        await (db.select(db.flashcards)..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
+    if (row == null) throw const NotFoundException(message: 'Flashcard not found');
+    return _mapRowToModel(row);
   }
 
   @override
   Future<FlashcardModel> createFlashcard(FlashcardModel flashcard) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final newCard = flashcard.copyWith(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
-    _flashcards.add(newCard);
-    return newCard;
+    final now = DateTime.now();
+      final card = flashcard.copyWith(
+        id: flashcard.id.isEmpty ? _uuid.v4() : flashcard.id,
+        createdAt: now,
+        updatedAt: now,
+      );
+
+    await db.into(db.flashcards).insert(
+          FlashcardsCompanion.insert(
+            id: card.id,
+            deckId: card.deckId,
+            question: card.question,
+            answer: card.answer,
+            hint: Value(card.hint),
+            createdAt: card.createdAt,
+            updatedAt: card.updatedAt,
+          ),
+        );
+    return card;
   }
 
   @override
   Future<FlashcardModel> updateFlashcard(FlashcardModel flashcard) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final index = _flashcards.indexWhere((c) => c.id == flashcard.id);
-    if (index == -1) {
-      throw const NotFoundException(message: 'Flashcard not found');
-    }
-    final updated = flashcard.copyWith(updatedAt: DateTime.now());
-    _flashcards[index] = updated;
+    final existing =
+        await (db.select(db.flashcards)..where((tbl) => tbl.id.equals(flashcard.id)))
+            .getSingleOrNull();
+    if (existing == null) throw const NotFoundException(message: 'Flashcard not found');
+
+      final updated = flashcard.copyWith(updatedAt: DateTime.now());
+    await (db.update(db.flashcards)..where((tbl) => tbl.id.equals(flashcard.id))).write(
+      FlashcardsCompanion(
+        question: Value(updated.question),
+        answer: Value(updated.answer),
+        hint: Value(updated.hint),
+        updatedAt: Value(updated.updatedAt),
+      ),
+    );
     return updated;
   }
 
   @override
   Future<void> deleteFlashcard(String id) async {
-    await Future.delayed(const Duration(milliseconds: 250));
-    final index = _flashcards.indexWhere((c) => c.id == id);
-    if (index == -1) {
-      throw const NotFoundException(message: 'Flashcard not found');
-    }
-    _flashcards.removeAt(index);
+    final deleted = await (db.delete(db.flashcards)..where((tbl) => tbl.id.equals(id))).go();
+    if (deleted == 0) throw const NotFoundException(message: 'Flashcard not found');
   }
 
   @override
   Future<List<FlashcardModel>> searchFlashcards(String deckId, String query) async {
-    await Future.delayed(const Duration(milliseconds: 250));
-    final source = await getFlashcards(deckId);
-    if (query.isEmpty) return source;
     final lower = query.toLowerCase();
-    return source
-        .where((card) =>
-            card.question.toLowerCase().contains(lower) ||
-            card.answer.toLowerCase().contains(lower) ||
-            (card.hint?.toLowerCase().contains(lower) ?? false))
-        .toList();
+    final rows = await (db.select(db.flashcards)
+          ..where((tbl) => tbl.deckId.equals(deckId))
+          ..where(
+            (tbl) =>
+                tbl.question.lower().like('%$lower%') |
+                tbl.answer.lower().like('%$lower%') |
+                tbl.hint.lower().like('%$lower%'),
+          ))
+        .get();
+    return rows.map(_mapRowToModel).toList();
   }
+
+  FlashcardModel _mapRowToModel(Flashcard row) => FlashcardModel(
+        id: row.id,
+        deckId: row.deckId,
+        question: row.question,
+        answer: row.answer,
+        hint: row.hint,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+      );
 }
