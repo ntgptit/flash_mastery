@@ -48,6 +48,9 @@ public class FlashcardServiceImpl implements FlashcardService {
 
   @Override
   public FlashcardResponse create(FlashcardCreateRequest request) {
+    if (request.getDeckId() == null) {
+      throw new IllegalArgumentException("Deck ID must not be null when creating flashcard");
+    }
     Deck deck = deckRepository.findById(request.getDeckId())
         .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_DECK)));
     Flashcard card = flashcardMapper.fromCreate(request, deck);

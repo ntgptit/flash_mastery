@@ -1,4 +1,6 @@
+import 'package:flash_mastery/domain/entities/folder.dart';
 import 'package:flash_mastery/presentation/screens/dashboard/dashboard_screen.dart';
+import 'package:flash_mastery/presentation/screens/decks/deck_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -8,12 +10,13 @@ class AppRouter {
 
   /// Route paths
   static const String splash = '/';
-  static const String dashboard = '/dashboard';
+  static const String dashboard = '/tabs/dashboard';
+  static const String decks = '/tabs/decks';
+  static const String settings = '/tabs/settings';
   static const String home = '/home';
   static const String login = '/login';
   static const String register = '/register';
   static const String profile = '/profile';
-  static const String settings = '/settings';
   static const String deckDetail = '/deck/:id';
   static const String studySession = '/study/:id';
   static const String createFlashcard = '/create-flashcard';
@@ -24,24 +27,72 @@ class AppRouter {
     initialLocation: dashboard,
     debugLogDiagnostics: true,
     routes: [
-      GoRoute(path: splash, name: 'splash', builder: (context, state) => const SplashScreen()),
       GoRoute(
-        path: dashboard,
-        name: 'dashboard',
-        builder: (context, state) => const DashboardScreen(),
+        path: splash,
+        name: 'splash',
+        builder: (context, state) => const SplashScreen(),
       ),
-      GoRoute(path: home, name: 'home', builder: (context, state) => const HomeScreen()),
-      GoRoute(path: login, name: 'login', builder: (context, state) => const LoginScreen()),
+      // Legacy paths redirect to tabbed routes
+      GoRoute(path: '/dashboard', redirect: (context, state) => dashboard),
+      GoRoute(path: '/decks', redirect: (context, state) => decks),
+      GoRoute(path: '/settings', redirect: (context, state) => settings),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            _RootShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: dashboard,
+                name: 'dashboard',
+                builder: (context, state) => const DashboardScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: decks,
+                name: 'decks',
+                builder: (context, state) {
+                  final folder = state.extra is Folder
+                      ? state.extra as Folder
+                      : null;
+                  return DeckListScreen(folder: folder);
+                },
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: settings,
+                name: 'settings',
+                builder: (context, state) => const SettingsScreen(),
+              ),
+            ],
+          ),
+        ],
+      ),
+      GoRoute(
+        path: home,
+        name: 'home',
+        builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: login,
+        name: 'login',
+        builder: (context, state) => const LoginScreen(),
+      ),
       GoRoute(
         path: register,
         name: 'register',
         builder: (context, state) => const RegisterScreen(),
       ),
-      GoRoute(path: profile, name: 'profile', builder: (context, state) => const ProfileScreen()),
       GoRoute(
-        path: settings,
-        name: 'settings',
-        builder: (context, state) => const SettingsScreen(),
+        path: profile,
+        name: 'profile',
+        builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
         path: deckDetail,
@@ -204,6 +255,46 @@ class EditFlashcardScreen extends StatelessWidget {
   }
 }
 
+class _RootShell extends StatelessWidget {
+  final StatefulNavigationShell navigationShell;
+
+  const _RootShell({required this.navigationShell});
+
+  void _onTap(int index) {
+    navigationShell.goBranch(
+      index,
+      initialLocation: index == navigationShell.currentIndex,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Scaffold(
+      body: navigationShell,
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: navigationShell.currentIndex,
+        onDestinationSelected: _onTap,
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.dashboard_outlined),
+            label: 'Dashboard',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.style_outlined),
+            label: 'Decks',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined),
+            label: 'Settings',
+          ),
+        ],
+        backgroundColor: colorScheme.surface,
+      ),
+    );
+  }
+}
+
 class ErrorScreen extends StatelessWidget {
   final Exception? error;
 
@@ -213,7 +304,9 @@ class ErrorScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Error')),
-      body: Center(child: Text('Error: ${error?.toString() ?? "Unknown error"}')),
+      body: Center(
+        child: Text('Error: ${error?.toString() ?? "Unknown error"}'),
+      ),
     );
   }
 }

@@ -6,14 +6,14 @@ import 'package:flash_mastery/core/usecases/usecase.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/repositories/deck_repository.dart';
 
-class GetDecksUseCase extends UseCase<List<Deck>, String?> {
+class GetDecksUseCase extends UseCase<List<Deck>, GetDecksParams> {
   final DeckRepository repository;
 
   GetDecksUseCase(this.repository);
 
   @override
-  Future<Either<Failure, List<Deck>>> call(String? folderId) {
-    return repository.getDecks(folderId: folderId);
+  Future<Either<Failure, List<Deck>>> call(GetDecksParams params) {
+    return repository.getDecks(folderId: params.folderId, sort: params.sort);
   }
 }
 
@@ -49,7 +49,10 @@ class CreateDeckUseCase extends UseCase<Deck, CreateDeckParams> {
     final trimmedName = params.name.trim();
     final trimmedDescription = params.description?.trim();
 
-    final validationFailure = _validateDeckFields(trimmedName, trimmedDescription);
+    final validationFailure = _validateDeckFields(
+      trimmedName,
+      trimmedDescription,
+    );
     if (validationFailure != null) return Left(validationFailure);
 
     return repository.createDeck(
@@ -102,11 +105,7 @@ class CreateDeckParams {
   final String? description;
   final String? folderId;
 
-  const CreateDeckParams({
-    required this.name,
-    this.description,
-    this.folderId,
-  });
+  const CreateDeckParams({required this.name, this.description, this.folderId});
 }
 
 class UpdateDeckParams {
@@ -127,10 +126,14 @@ class SearchDecksParams {
   final String query;
   final String? folderId;
 
-  const SearchDecksParams({
-    required this.query,
-    this.folderId,
-  });
+  const SearchDecksParams({required this.query, this.folderId});
+}
+
+class GetDecksParams {
+  final String? folderId;
+  final String? sort;
+
+  const GetDecksParams({this.folderId, this.sort});
 }
 
 Failure? _validateDeckFields(
@@ -143,14 +146,19 @@ Failure? _validateDeckFields(
   }
 
   if (name.isNotEmpty && name.length < AppConstants.minDeckNameLength) {
-    return ValidationFailure(message: ErrorMessages.textTooShort(AppConstants.minDeckNameLength));
+    return ValidationFailure(
+      message: ErrorMessages.textTooShort(AppConstants.minDeckNameLength),
+    );
   }
 
   if (name.isNotEmpty && name.length > AppConstants.maxDeckNameLength) {
-    return ValidationFailure(message: ErrorMessages.textTooLong(AppConstants.maxDeckNameLength));
+    return ValidationFailure(
+      message: ErrorMessages.textTooLong(AppConstants.maxDeckNameLength),
+    );
   }
 
-  if (description != null && description.length > AppConstants.maxDeckDescriptionLength) {
+  if (description != null &&
+      description.length > AppConstants.maxDeckDescriptionLength) {
     return ValidationFailure(
       message: ErrorMessages.textTooLong(AppConstants.maxDeckDescriptionLength),
     );

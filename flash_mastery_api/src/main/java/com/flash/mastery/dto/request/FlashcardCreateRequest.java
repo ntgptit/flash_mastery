@@ -1,13 +1,13 @@
 package com.flash.mastery.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 import lombok.Data;
 
 @Data
 public class FlashcardCreateRequest {
-  @NotNull
+  @JsonIgnore
   private UUID deckId;
 
   @NotBlank

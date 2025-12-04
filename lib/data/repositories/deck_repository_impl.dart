@@ -51,9 +51,15 @@ class DeckRepositoryImpl implements DeckRepository {
   }
 
   @override
-  Future<Either<Failure, List<Deck>>> getDecks({String? folderId}) async {
+  Future<Either<Failure, List<Deck>>> getDecks({
+    String? folderId,
+    String? sort,
+  }) async {
     return ErrorGuard.run(() async {
-      final decks = await remoteDataSource.getDecks(folderId: folderId);
+      final decks = await remoteDataSource.getDecks(
+        folderId: folderId,
+        sort: sort,
+      );
       return decks.map((d) => d.toEntity()).toList();
     });
   }
@@ -64,7 +70,10 @@ class DeckRepositoryImpl implements DeckRepository {
     String? folderId,
   }) async {
     return ErrorGuard.run(() async {
-      final decks = await remoteDataSource.searchDecks(query, folderId: folderId);
+      final decks = await remoteDataSource.searchDecks(
+        query,
+        folderId: folderId,
+      );
       return decks.map((d) => d.toEntity()).toList();
     });
   }

@@ -5,6 +5,7 @@ import com.flash.mastery.constant.MessageKeys;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
@@ -16,12 +17,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 @RequiredArgsConstructor
+@Slf4j
 public class GlobalExceptionHandler {
 
   private final MessageSource messageSource;
 
   @ExceptionHandler(NotFoundException.class)
   public ResponseEntity<Map<String, Object>> handleNotFound(NotFoundException ex) {
+    log.warn("NotFoundException: {}", ex.getMessage(), ex);
     Map<String, Object> body = new HashMap<>();
     body.put("code", ErrorCodes.NOT_FOUND);
     body.put("message", ex.getMessage());
@@ -30,6 +33,7 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
+    log.warn("ValidationException: {}", ex.getMessage(), ex);
     Map<String, String> errors = new HashMap<>();
     for (FieldError error : ex.getBindingResult().getFieldErrors()) {
       errors.put(error.getField(), error.getDefaultMessage());
@@ -43,6 +47,7 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(Exception.class)
   public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {
+    log.error("Unhandled exception", ex);
     Map<String, Object> body = new HashMap<>();
     body.put("code", ErrorCodes.INTERNAL_ERROR);
     body.put("message", getMessage(MessageKeys.ERROR_INTERNAL));

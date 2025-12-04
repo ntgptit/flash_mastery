@@ -5,7 +5,7 @@ import 'package:flash_mastery/domain/entities/deck.dart';
 /// Repository interface for deck operations.
 abstract class DeckRepository {
   /// Get all decks, optionally filtered by folder.
-  Future<Either<Failure, List<Deck>>> getDecks({String? folderId});
+  Future<Either<Failure, List<Deck>>> getDecks({String? folderId, String? sort});
 
   /// Get deck by ID.
   Future<Either<Failure, Deck>> getDeckById(String id);

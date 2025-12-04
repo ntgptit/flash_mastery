@@ -21,6 +21,7 @@ class DeckListScreen extends ConsumerStatefulWidget {
 class _DeckListScreenState extends ConsumerState<DeckListScreen> {
   String _searchQuery = '';
   String _selectedFilter = 'all';
+  String _sort = 'latest';
   bool _initialized = false;
 
   @override
@@ -30,14 +31,18 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
     _initialized = true;
     Future.microtask(() {
       ref.read(folderListViewModelProvider.notifier).load();
-      ref.read(deckListViewModelProvider(widget.folder?.id).notifier).load();
+      ref
+          .read(deckListViewModelProvider(widget.folder?.id).notifier)
+          .load(sort: _sort);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final folderState = ref.watch(folderListViewModelProvider);
-    final deckListState = ref.watch(deckListViewModelProvider(widget.folder?.id));
+    final deckListState = ref.watch(
+      deckListViewModelProvider(widget.folder?.id),
+    );
 
     final folders = folderState.when(
       initial: () => <Folder>[],
@@ -61,8 +66,9 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: AppErrorWidget(
               message: message,
-              onRetry: () =>
-                  ref.read(deckListViewModelProvider(widget.folder?.id).notifier).load(),
+              onRetry: () => ref
+                  .read(deckListViewModelProvider(widget.folder?.id).notifier)
+                  .load(sort: _sort),
             ),
           ),
           success: (decks) {
@@ -70,8 +76,9 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
 
             return RefreshIndicator(
               color: colorScheme.primary,
-              onRefresh: () async =>
-                  ref.read(deckListViewModelProvider(widget.folder?.id).notifier).load(),
+              onRefresh: () async => ref
+                  .read(deckListViewModelProvider(widget.folder?.id).notifier)
+                  .load(sort: _sort),
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
@@ -84,13 +91,19 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                       child: _HeaderSection(
                         title: widget.folder?.name ?? 'Decks',
                         description:
-                            widget.folder?.description ?? 'Organize and review your decks',
+                            widget.folder?.description ??
+                            'Organize and review your decks',
                         onBack: Navigator.of(context).maybePop,
-                        onAdd: () => _openDeckForm(folders: folders),
                         onSearch: _showSearchDialog,
                         onMenuSelect: (value) {
                           if (value == 'refresh') {
-                            ref.read(deckListViewModelProvider(widget.folder?.id).notifier).load();
+                            ref
+                                .read(
+                                  deckListViewModelProvider(
+                                    widget.folder?.id,
+                                  ).notifier,
+                                )
+                                .load(sort: _sort);
                           }
                         },
                         onFilterChanged: (value) {
@@ -99,13 +112,20 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                           });
                         },
                         selectedFilter: _selectedFilter,
+                        onSortRequested: _showSortSheet,
+                        sortLabel: _sortLabel,
                       ),
                     ),
                   ),
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                      child: _SortRow(onTap: () {}),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                      ),
+                      child: _SortRow(
+                        onTap: _showSortSheet,
+                        sortLabel: _sortLabel,
+                      ),
                     ),
                   ),
                   if (visibleDecks.isEmpty)
@@ -150,11 +170,13 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                             deck: deck,
                             folder: folder,
                             onOpen: () => _openDeck(deck),
-                            onEdit: () => _openDeckForm(deck: deck, folders: folders),
+                            onEdit: () =>
+                                _openDeckForm(deck: deck, folders: folders),
                             onDelete: () => _confirmDelete(deck),
                           );
                         },
-                        separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
+                        separatorBuilder: (_, __) =>
+                            const SizedBox(height: AppSpacing.md),
                         itemCount: visibleDecks.length,
                       ),
                     ),
@@ -163,6 +185,11 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
             );
           },
         ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _openDeckForm(folders: folders),
+        icon: const Icon(Icons.add),
+        label: const Text('New Deck'),
       ),
     );
   }
@@ -202,7 +229,10 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
           },
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
             onPressed: () {
               setState(() {
@@ -217,12 +247,15 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
     );
   }
 
-  Future<void> _openDeckForm({Deck? deck, required List<Folder> folders}) async {
+  Future<void> _openDeckForm({
+    Deck? deck,
+    required List<Folder> folders,
+  }) async {
     if (folders.isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Create a folder before adding decks')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Create a folder before adding decks')),
+      );
       return;
     }
 
@@ -231,15 +264,22 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
       builder: (context) => DeckFormDialog(
         deck: deck,
         folders: folders,
-        initialFolderId: deck?.folderId ?? widget.folder?.id ?? folders.first.id,
+        initialFolderId:
+            deck?.folderId ?? widget.folder?.id ?? folders.first.id,
         onSubmit: (name, description, folderId) async {
           final navigator = Navigator.of(context);
           final messenger = ScaffoldMessenger.of(context);
           try {
-            final notifier = ref.read(deckListViewModelProvider(widget.folder?.id).notifier);
+            final notifier = ref.read(
+              deckListViewModelProvider(widget.folder?.id).notifier,
+            );
             final errorMessage = deck == null
                 ? await notifier.createDeck(
-                    CreateDeckParams(name: name, description: description, folderId: folderId),
+                    CreateDeckParams(
+                      name: name,
+                      description: description,
+                      folderId: folderId,
+                    ),
                   )
                 : await notifier.updateDeck(
                     UpdateDeckParams(
@@ -253,19 +293,25 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
             if (!mounted) return;
             navigator.pop();
             if (errorMessage != null) {
-              messenger.showSnackBar(SnackBar(content: Text('Error: $errorMessage')));
+              messenger.showSnackBar(
+                SnackBar(content: Text('Error: $errorMessage')),
+              );
             } else {
               messenger.showSnackBar(
                 SnackBar(
                   content: Text(
-                    deck == null ? 'Deck created successfully' : 'Deck updated successfully',
+                    deck == null
+                        ? 'Deck created successfully'
+                        : 'Deck updated successfully',
                   ),
                 ),
               );
             }
           } catch (e) {
             if (!mounted) return;
-            messenger.showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+            messenger.showSnackBar(
+              SnackBar(content: Text('Error: ${e.toString()}')),
+            );
           }
         },
       ),
@@ -285,7 +331,10 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(
@@ -307,19 +356,83 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
           .deleteDeck(deck.id);
       if (errorMessage != null) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $errorMessage')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $errorMessage')));
         return;
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Deck deleted')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Deck deleted')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
     }
   }
 
+  String get _sortLabel {
+    switch (_sort) {
+      case 'name,asc':
+        return 'Name (A-Z)';
+      case 'name,desc':
+        return 'Name (Z-A)';
+      case 'cardCount,desc':
+        return 'Cards (High-Low)';
+      case 'cardCount,asc':
+        return 'Cards (Low-High)';
+      default:
+        return 'Latest';
+    }
+  }
+
+  void _showSortSheet() {
+    final options = <Map<String, String>>[
+      {'value': 'latest', 'label': 'Latest'},
+      {'value': 'name,asc', 'label': 'Name (A-Z)'},
+      {'value': 'name,desc', 'label': 'Name (Z-A)'},
+      {'value': 'cardCount,desc', 'label': 'Cards (High-Low)'},
+      {'value': 'cardCount,asc', 'label': 'Cards (Low-High)'},
+    ];
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: AppSpacing.md),
+            Text('Sort decks', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: AppSpacing.md),
+            ...options.map(
+              (opt) => ListTile(
+                title: Text(opt['label']!),
+                trailing: _sort == opt['value']
+                    ? const Icon(Icons.check)
+                    : null,
+                onTap: () {
+                  setState(() => _sort = opt['value']!);
+                  ref
+                      .read(
+                        deckListViewModelProvider(widget.folder?.id).notifier,
+                      )
+                      .load(sort: _sort == 'latest' ? null : _sort);
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _openDeck(Deck deck) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => FlashcardListScreen(deck: deck)));
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => FlashcardListScreen(deck: deck)));
   }
 }
 
@@ -327,21 +440,23 @@ class _HeaderSection extends StatelessWidget {
   final String title;
   final String description;
   final VoidCallback onBack;
-  final VoidCallback onAdd;
   final VoidCallback onSearch;
   final void Function(String value) onMenuSelect;
   final void Function(String value) onFilterChanged;
   final String selectedFilter;
+  final VoidCallback onSortRequested;
+  final String sortLabel;
 
   const _HeaderSection({
     required this.title,
     required this.description,
     required this.onBack,
-    required this.onAdd,
     required this.onSearch,
     required this.onMenuSelect,
     required this.onFilterChanged,
     required this.selectedFilter,
+    required this.onSortRequested,
+    required this.sortLabel,
   });
 
   @override
@@ -360,11 +475,6 @@ class _HeaderSection extends StatelessWidget {
               tooltip: 'Back',
             ),
             const Spacer(),
-            IconButton(
-              onPressed: onAdd,
-              icon: const Icon(Icons.add),
-              tooltip: 'Create deck',
-            ),
             IconButton(
               onPressed: onSearch,
               icon: const Icon(Icons.search),
@@ -388,41 +498,37 @@ class _HeaderSection extends StatelessWidget {
               color: colorScheme.primary.withValues(alpha: AppOpacity.low),
               borderRadius: BorderRadius.circular(AppSpacing.radiusExtraLarge),
             ),
-            child: Icon(Icons.folder, color: colorScheme.onPrimary, size: AppSpacing.iconLarge),
+            child: Icon(
+              Icons.folder,
+              color: colorScheme.onPrimary,
+              size: AppSpacing.iconLarge,
+            ),
           ),
         ),
         const SizedBox(height: AppSpacing.md),
         Center(
           child: Text(
             title,
-            style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+            style: textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
         Center(
           child: Text(
             description,
-            style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+            style: textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
             textAlign: TextAlign.center,
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
-        Wrap(
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.sm,
-          alignment: WrapAlignment.center,
-          children: [
-            _FilterChip(
-              label: '모두',
-              selected: selectedFilter == 'all',
-              onSelected: () => onFilterChanged('all'),
-            ),
-            _FilterChip(
-              label: '+ 새 태그',
-              selected: selectedFilter == 'tag',
-              onSelected: () => onFilterChanged('tag'),
-            ),
-          ],
+        OutlinedButton.icon(
+          onPressed: onSortRequested,
+          icon: const Icon(Icons.sort),
+          label: Text(sortLabel),
         ),
         const SizedBox(height: AppSpacing.lg),
       ],
@@ -432,8 +538,9 @@ class _HeaderSection extends StatelessWidget {
 
 class _SortRow extends StatelessWidget {
   final VoidCallback onTap;
+  final String sortLabel;
 
-  const _SortRow({required this.onTap});
+  const _SortRow({required this.onTap, required this.sortLabel});
 
   @override
   Widget build(BuildContext context) {
@@ -441,10 +548,16 @@ class _SortRow extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Text('Latest', style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+        Text(
+          sortLabel,
+          style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+        ),
         IconButton(
           onPressed: onTap,
-          icon: Icon(Icons.arrow_drop_down, color: colorScheme.onSurfaceVariant),
+          icon: Icon(
+            Icons.arrow_drop_down,
+            color: colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );
@@ -467,7 +580,10 @@ class _FilterChip extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return ChoiceChip(
       label: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
         child: Text(label),
       ),
       selected: selected,
@@ -475,13 +591,19 @@ class _FilterChip extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
         side: BorderSide(
-          color: selected ? Colors.transparent : colorScheme.outline.withValues(alpha: 0.4),
+          color: selected
+              ? Colors.transparent
+              : colorScheme.outline.withValues(alpha: 0.4),
         ),
       ),
       selectedColor: colorScheme.primary.withValues(alpha: 0.15),
-      backgroundColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+      backgroundColor: colorScheme.surfaceContainerHighest.withValues(
+        alpha: 0.3,
+      ),
       labelStyle: TextStyle(
-        color: selected ? colorScheme.onPrimaryContainer : colorScheme.onSurfaceVariant,
+        color: selected
+            ? colorScheme.onPrimaryContainer
+            : colorScheme.onSurfaceVariant,
         fontWeight: FontWeight.w600,
       ),
     );
@@ -527,7 +649,11 @@ class _DeckCard extends StatelessWidget {
                 color: colorScheme.primary.withValues(alpha: AppOpacity.low),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
               ),
-              child: Icon(Icons.style, color: colorScheme.onPrimary, size: AppSpacing.iconMedium),
+              child: Icon(
+                Icons.style,
+                color: colorScheme.onPrimary,
+                size: AppSpacing.iconMedium,
+              ),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -536,21 +662,27 @@ class _DeckCard extends StatelessWidget {
                 children: [
                   Text(
                     deck.name,
-                    style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
                     (deck.description ?? 'No description'),
-                    style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    '${folder.name} · ${deck.cardCount} cards',
-                    style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                    '${folder.name} - ${deck.cardCount} cards',
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),

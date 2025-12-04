@@ -4,7 +4,7 @@ import 'package:flash_mastery/core/exceptions/exceptions.dart';
 import 'package:flash_mastery/data/models/deck_model.dart';
 
 abstract class DeckRemoteDataSource {
-  Future<List<DeckModel>> getDecks({String? folderId});
+  Future<List<DeckModel>> getDecks({String? folderId, String? sort});
   Future<DeckModel> getDeckById(String id);
   Future<DeckModel> createDeck(DeckModel deck);
   Future<DeckModel> updateDeck(String id, DeckModel deck);
@@ -18,16 +18,21 @@ class DeckRemoteDataSourceImpl implements DeckRemoteDataSource {
   final Dio dio;
 
   @override
-  Future<List<DeckModel>> getDecks({String? folderId}) async {
+  Future<List<DeckModel>> getDecks({String? folderId, String? sort}) async {
     final response = await dio.get(
       ApiConstants.decks,
-      queryParameters: folderId != null ? {'folderId': folderId} : null,
+      queryParameters: {
+        if (folderId != null) 'folderId': folderId,
+        if (sort != null) 'sort': sort,
+      },
     );
     if (response.statusCode == 200) {
       final data = (response.data as List).cast<Map<String, dynamic>>();
       return data.map(DeckModel.fromJson).toList();
     }
-    throw ServerException(message: response.statusMessage ?? 'Failed to load decks');
+    throw ServerException(
+      message: response.statusMessage ?? 'Failed to load decks',
+    );
   }
 
   @override
@@ -39,7 +44,9 @@ class DeckRemoteDataSourceImpl implements DeckRemoteDataSource {
     if (response.statusCode == 404) {
       throw const NotFoundException(message: 'Deck not found');
     }
-    throw ServerException(message: response.statusMessage ?? 'Failed to load deck');
+    throw ServerException(
+      message: response.statusMessage ?? 'Failed to load deck',
+    );
   }
 
   @override
@@ -55,7 +62,9 @@ class DeckRemoteDataSourceImpl implements DeckRemoteDataSource {
     if (response.statusCode == 201 || response.statusCode == 200) {
       return DeckModel.fromJson(response.data as Map<String, dynamic>);
     }
-    throw ServerException(message: response.statusMessage ?? 'Failed to create deck');
+    throw ServerException(
+      message: response.statusMessage ?? 'Failed to create deck',
+    );
   }
 
   @override
@@ -74,7 +83,9 @@ class DeckRemoteDataSourceImpl implements DeckRemoteDataSource {
     if (response.statusCode == 404) {
       throw const NotFoundException(message: 'Deck not found');
     }
-    throw ServerException(message: response.statusMessage ?? 'Failed to update deck');
+    throw ServerException(
+      message: response.statusMessage ?? 'Failed to update deck',
+    );
   }
 
   @override
@@ -84,7 +95,9 @@ class DeckRemoteDataSourceImpl implements DeckRemoteDataSource {
     if (response.statusCode == 404) {
       throw const NotFoundException(message: 'Deck not found');
     }
-    throw ServerException(message: response.statusMessage ?? 'Failed to delete deck');
+    throw ServerException(
+      message: response.statusMessage ?? 'Failed to delete deck',
+    );
   }
 
   @override
@@ -93,9 +106,11 @@ class DeckRemoteDataSourceImpl implements DeckRemoteDataSource {
     final all = await getDecks(folderId: folderId);
     final lower = query.toLowerCase();
     return all
-        .where((d) =>
-            d.name.toLowerCase().contains(lower) ||
-            (d.description ?? '').toLowerCase().contains(lower))
+        .where(
+          (d) =>
+              d.name.toLowerCase().contains(lower) ||
+              (d.description ?? '').toLowerCase().contains(lower),
+        )
         .toList();
   }
 }

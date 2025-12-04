@@ -40,6 +40,7 @@ DeleteDeckUseCase deleteDeckUseCase(Ref ref) {
 @riverpod
 class DeckListViewModel extends _$DeckListViewModel {
   bool _initialized = false;
+  String? _currentSort;
 
   @override
   DeckListState build(String? folderId) {
@@ -53,9 +54,12 @@ class DeckListViewModel extends _$DeckListViewModel {
     await load();
   }
 
-  Future<void> load() async {
+  Future<void> load({String? sort}) async {
+    _currentSort = sort ?? _currentSort;
     state = const DeckListState.loading();
-    final result = await ref.read(getDecksUseCaseProvider).call(folderId);
+    final result = await ref
+        .read(getDecksUseCaseProvider)
+        .call(GetDecksParams(folderId: folderId, sort: _currentSort));
     state = result.fold(
       (failure) => DeckListState.error(failure.toDisplayMessage()),
       (decks) => DeckListState.success(decks),
@@ -65,7 +69,10 @@ class DeckListViewModel extends _$DeckListViewModel {
   Future<String?> createDeck(CreateDeckParams params) async {
     state = const DeckListState.loading();
     final result = await ref.read(createDeckUseCaseProvider).call(params);
-    final message = result.fold((failure) => failure.toDisplayMessage(), (_) => null);
+    final message = result.fold(
+      (failure) => failure.toDisplayMessage(),
+      (_) => null,
+    );
     await load();
     await ref.read(folderListViewModelProvider.notifier).load();
     return message;
@@ -74,7 +81,10 @@ class DeckListViewModel extends _$DeckListViewModel {
   Future<String?> updateDeck(UpdateDeckParams params) async {
     state = const DeckListState.loading();
     final result = await ref.read(updateDeckUseCaseProvider).call(params);
-    final message = result.fold((failure) => failure.toDisplayMessage(), (_) => null);
+    final message = result.fold(
+      (failure) => failure.toDisplayMessage(),
+      (_) => null,
+    );
     await load();
     await ref.read(folderListViewModelProvider.notifier).load();
     return message;
@@ -83,7 +93,10 @@ class DeckListViewModel extends _$DeckListViewModel {
   Future<String?> deleteDeck(String id) async {
     state = const DeckListState.loading();
     final result = await ref.read(deleteDeckUseCaseProvider).call(id);
-    final message = result.fold((failure) => failure.toDisplayMessage(), (_) => null);
+    final message = result.fold(
+      (failure) => failure.toDisplayMessage(),
+      (_) => null,
+    );
     await load();
     await ref.read(folderListViewModelProvider.notifier).load();
     return message;

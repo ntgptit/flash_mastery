@@ -1,12 +1,12 @@
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/folder.dart';
 import 'package:flash_mastery/features/folders/providers.dart';
-import 'package:flash_mastery/presentation/screens/decks/deck_list_screen.dart';
 import 'package:flash_mastery/presentation/screens/folders/widgets/folder_card.dart';
 import 'package:flash_mastery/presentation/screens/folders/widgets/folder_form_dialog.dart';
 import 'package:flash_mastery/presentation/widgets/common/common_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -311,10 +311,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   void _openFolder(Folder folder) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => DeckListScreen(folder: folder)));
+    context.goNamed('decks', extra: folder);
   }
 
   void _openAllDecks() {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DeckListScreen()));
+    context.goNamed('decks');
   }
 }
