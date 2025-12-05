@@ -45,6 +45,7 @@ class FolderBreadcrumb extends StatelessWidget {
             icon: Icons.folder_open_outlined,
             onTap: onRootTap,
             color: colorScheme.primary,
+            isActive: false,
           ),
           for (final folder in path) ...[
             Padding(
@@ -56,6 +57,7 @@ class FolderBreadcrumb extends StatelessWidget {
               icon: Icons.folder,
               onTap: () => onFolderTap(folder),
               color: colorScheme.secondary,
+              isActive: folder.id == current.id,
             ),
           ],
         ],
@@ -81,21 +83,31 @@ class _BreadcrumbChip extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
   final Color color;
+  final bool isActive;
 
   const _BreadcrumbChip({
     required this.label,
     required this.icon,
     this.onTap,
     required this.color,
+    required this.isActive,
   });
 
   @override
   Widget build(BuildContext context) {
-    final effectiveColor = color.withValues(alpha: AppOpacity.mediumLow);
+    final baseColor = color.withValues(alpha: AppOpacity.mediumLow);
+    final effectiveColor = isActive ? color.withValues(alpha: 0.7) : baseColor;
+    final textStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: Colors.white,
+          fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+        );
     final chip = Container(
       decoration: BoxDecoration(
         color: effectiveColor,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+        border: isActive
+            ? Border.all(color: Colors.white.withValues(alpha: AppOpacity.low), width: 1)
+            : null,
       ),
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
       child: Row(
@@ -105,10 +117,7 @@ class _BreadcrumbChip extends StatelessWidget {
           const SizedBox(width: AppSpacing.xs),
           Text(
             label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
+            style: textStyle,
           ),
         ],
       ),
