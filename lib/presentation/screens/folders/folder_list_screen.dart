@@ -185,10 +185,12 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
   }
 
   Future<void> _openFolderForm({Folder? folder, Folder? parent}) async {
+    await ref.read(folderListViewModelProvider.notifier).load();
+    if (!mounted) return;
     final allFolders = ref.read(folderListViewModelProvider).maybeWhen(
-          success: (folders) => folders,
-          orElse: () => <Folder>[],
-        );
+      success: (folders) => folders,
+      orElse: () => <Folder>[],
+    );
     await showDialog(
       context: context,
       builder: (context) => FolderFormDialog(

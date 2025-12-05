@@ -173,6 +173,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                                     description: null,
                                     color: null,
                                     deckCount: 0,
+                                    level: 0,
                                     path: const [],
                                     createdAt: DateTime.now(),
                                     updatedAt: DateTime.now(),
@@ -317,12 +318,18 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
   Future<void> _openSubfolderForm({Folder? folder, Folder? parent, List<Folder> allFolders = const []}) async {
     final parentFolder = parent ?? widget.folder;
     if (parentFolder == null) return;
+    await ref.read(folderListViewModelProvider.notifier).load();
+    if (!mounted) return;
+    final folders = ref.read(folderListViewModelProvider).maybeWhen(
+          success: (items) => items,
+          orElse: () => allFolders,
+        );
     await showDialog(
       context: context,
       builder: (context) => FolderFormDialog(
         folder: folder,
         parentFolder: parentFolder,
-        allFolders: allFolders,
+        allFolders: folders,
         onSubmit: (name, description, color, parentId) async {
           final navigator = Navigator.of(context);
           final messenger = ScaffoldMessenger.of(context);

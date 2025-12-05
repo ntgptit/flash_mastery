@@ -96,6 +96,18 @@ class _FolderFormDialogState extends State<FolderFormDialog> {
                       },
                     ),
                   ),
+                if (_selectedParentId != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                    child: Text(
+                      'Path: ${_buildPathLabel(_selectedParentId!)}',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(
@@ -254,7 +266,7 @@ class _FolderFormDialogState extends State<FolderFormDialog> {
       ...options.map(
         (folder) => DropdownMenuItem<String?>(
           value: folder.id,
-          child: Text(_buildPath(folder)),
+          child: Text(_indentLabel(folder)),
         ),
       ),
     ];
@@ -274,6 +286,23 @@ class _FolderFormDialogState extends State<FolderFormDialog> {
       guard++;
     }
     return names.reversed.join(' / ');
+  }
+
+  String _buildPathLabel(String parentId) {
+    final parent = _folderById[parentId];
+    if (parent == null) return 'Unknown folder';
+    return _buildPath(parent);
+  }
+
+  String _indentLabel(Folder folder) {
+    final level = folder.level > 0 ? folder.level : _safeLevelFromPath(folder);
+    final indent = level > 0 ? List.filled(level, '   ').join() : '';
+    return '$indent${folder.name}';
+  }
+
+  int _safeLevelFromPath(Folder folder) {
+    final safePath = _safePath(folder);
+    return safePath.isEmpty ? 0 : safePath.length - 1;
   }
 
   Set<String> _computeBlockedIds() {

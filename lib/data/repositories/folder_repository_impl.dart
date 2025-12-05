@@ -45,6 +45,7 @@ class FolderRepositoryImpl implements FolderRepository {
           deckCount: 0,
           parentId: parentId,
           subFolderCount: 0,
+          level: 0,
           path: const [],
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),

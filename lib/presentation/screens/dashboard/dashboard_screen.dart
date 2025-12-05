@@ -163,13 +163,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          final allFolders = ref.read(folderListViewModelProvider).maybeWhen(
-                success: (folders) => folders,
-                orElse: () => <Folder>[],
-              );
-          _showAddFolderDialog(context, allFolders: allFolders);
-        },
+        onPressed: () => _showAddFolderDialog(context),
         icon: const Icon(Icons.add),
         label: const Text('New Folder'),
       ),
@@ -211,12 +205,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  void _showAddFolderDialog(BuildContext context, {Folder? parent, List<Folder> allFolders = const []}) {
+  Future<void> _showAddFolderDialog(BuildContext context, {Folder? parent, List<Folder> allFolders = const []}) async {
+    await ref.read(folderListViewModelProvider.notifier).load();
+    if (!context.mounted) return;
+    final folders = ref.read(folderListViewModelProvider).maybeWhen(
+          success: (items) => items,
+          orElse: () => allFolders,
+        );
     showDialog(
       context: context,
       builder: (context) => FolderFormDialog(
         parentFolder: parent,
-        allFolders: allFolders,
+        allFolders: folders,
         onSubmit: (name, description, color, parentId) async {
           try {
             final errorMessage = await ref
@@ -253,11 +253,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  void _showEditFolderDialog(BuildContext context, Folder folder, {List<Folder> allFolders = const []}) {
+  Future<void> _showEditFolderDialog(BuildContext context, Folder folder, {List<Folder> allFolders = const []}) async {
+    await ref.read(folderListViewModelProvider.notifier).load();
+    if (!context.mounted) return;
+    final folders = ref.read(folderListViewModelProvider).maybeWhen(
+          success: (items) => items,
+          orElse: () => allFolders,
+        );
     final parentFromState = folder.parentId != null
         ? ref.read(folderListViewModelProvider).maybeWhen(
-              success: (folders) {
-                final matches = folders.where((f) => f.id == folder.parentId).toList();
+              success: (items) {
+                final matches = items.where((f) => f.id == folder.parentId).toList();
                 return matches.isNotEmpty ? matches.first : null;
               },
               orElse: () => null,
@@ -267,7 +273,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       context: context,
       builder: (context) => FolderFormDialog(
         folder: folder,
-        allFolders: allFolders,
+        allFolders: folders,
         parentFolder: parentFromState,
         onSubmit: (name, description, color, parentId) async {
           try {

@@ -112,7 +112,9 @@ public class FolderServiceImpl implements FolderService {
 
     private FolderResponse toResponseWithPath(Folder folder) {
         final var base = this.folderMapper.toResponse(folder);
-        return base.toBuilder().path(buildPath(folder)).build();
+        final var path = buildPath(folder);
+        final int level = Math.max(0, path.size() - 1);
+        return base.toBuilder().path(path).level(level).build();
     }
 
     private List<String> buildPath(Folder folder) {

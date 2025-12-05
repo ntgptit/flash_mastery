@@ -129,22 +129,22 @@ class FolderCard extends StatelessWidget {
                     ),
                   ],
                   const SizedBox(height: AppSpacing.sm),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: AppSpacing.xs,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: AppOpacity.low),
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                    ),
-                    child: Text(
-                      '${folder.deckCount} deck${folder.deckCount != 1 ? 's' : ''}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
+                  Wrap(
+                    spacing: AppSpacing.sm,
+                    runSpacing: AppSpacing.xs,
+                    children: [
+                      _BadgeChip(
+                        label: '${folder.deckCount} deck${folder.deckCount != 1 ? 's' : ''}',
+                        color: Colors.white.withValues(alpha: AppOpacity.low),
+                        textColor: Colors.white,
+                      ),
+                      _BadgeChip(
+                        label:
+                            '${folder.subFolderCount} subfolder${folder.subFolderCount == 1 ? '' : 's'}',
+                        color: Colors.white.withValues(alpha: AppOpacity.low),
+                        textColor: Colors.white,
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -302,11 +302,55 @@ class FolderTile extends StatelessWidget {
                   const SizedBox(width: AppSpacing.xs),
                   Text('${folder.deckCount} deck${folder.deckCount == 1 ? '' : 's'}',
                       style: Theme.of(context).textTheme.bodySmall),
+                  const SizedBox(width: AppSpacing.sm),
+                  Icon(
+                    Icons.create_new_folder_outlined,
+                    size: AppSpacing.iconSmallMedium,
+                    color: fixedColor ?? Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    '${folder.subFolderCount}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                 ],
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _BadgeChip extends StatelessWidget {
+  final String label;
+  final Color color;
+  final Color textColor;
+
+  const _BadgeChip({
+    required this.label,
+    required this.color,
+    required this.textColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: textColor,
+              fontWeight: FontWeight.w600,
+            ),
       ),
     );
   }

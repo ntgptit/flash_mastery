@@ -21,6 +21,7 @@ public class FolderResponse {
   int deckCount;
   UUID parentId;
   int subFolderCount;
+  int level;
   List<String> path;
   LocalDateTime createdAt;
   LocalDateTime updatedAt;

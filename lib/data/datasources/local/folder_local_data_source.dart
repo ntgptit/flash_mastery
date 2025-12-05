@@ -112,6 +112,7 @@ class FolderLocalDataSourceImpl implements FolderLocalDataSource {
         deckCount: row.deckCount,
         parentId: row.parentId,
         subFolderCount: row.subFolderCount,
+        level: 0,
         path: const [],
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
