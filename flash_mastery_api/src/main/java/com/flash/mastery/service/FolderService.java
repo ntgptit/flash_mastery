@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface FolderService {
-  List<FolderResponse> getFolders();
+  List<FolderResponse> getFolders(UUID parentId);
   FolderResponse getFolder(UUID id);
   FolderResponse create(FolderCreateRequest request);
   FolderResponse update(UUID id, FolderUpdateRequest request);

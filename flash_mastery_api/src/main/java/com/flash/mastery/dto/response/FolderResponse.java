@@ -18,6 +18,8 @@ public class FolderResponse {
   String description;
   String color;
   int deckCount;
+  UUID parentId;
+  int subFolderCount;
   LocalDateTime createdAt;
   LocalDateTime updatedAt;
 }

@@ -4,6 +4,8 @@ import com.flash.mastery.constant.ValidationConstants;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.HashSet;
@@ -36,8 +38,19 @@ public class Folder extends BaseAuditEntity {
 
   @Column(name = "deck_count", nullable = false)
   private int deckCount;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "parent_id")
+  @ToString.Exclude
+  private Folder parent;
+
   @OneToMany(mappedBy = "folder", fetch = FetchType.LAZY)
   @ToString.Exclude
   @Default
   private Set<Deck> decks = new HashSet<>();
+
+  @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
+  @ToString.Exclude
+  @Default
+  private Set<Folder> children = new HashSet<>();
 }

@@ -3,6 +3,7 @@ package com.flash.mastery.dto.request;
 import com.flash.mastery.constant.ValidationConstants;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.util.UUID;
 import lombok.Data;
 
 @Data
@@ -13,4 +14,5 @@ public class FolderCreateRequest {
   private String description;
   @Size(max = ValidationConstants.COLOR_MAX_LENGTH)
   private String color;
+  private UUID parentId;
 }

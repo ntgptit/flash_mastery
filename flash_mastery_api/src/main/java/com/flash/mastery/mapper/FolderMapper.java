@@ -15,6 +15,8 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 @Mapper(componentModel = "spring", builder = @Builder(disableBuilder = true), imports = NumberConstants.class)
 public interface FolderMapper {
 
+  @Mapping(target = "parentId", expression = "java(entity.getParent() != null ? entity.getParent().getId() : null)")
+  @Mapping(target = "subFolderCount", expression = "java(entity.getChildren() != null ? entity.getChildren().size() : NumberConstants.ZERO)")
   FolderResponse toResponse(Folder entity);
 
   @Mapping(target = "id", ignore = true)
@@ -22,7 +24,9 @@ public interface FolderMapper {
   @Mapping(target = "description", source = "request.description")
   @Mapping(target = "color", source = "request.color")
   @Mapping(target = "deckCount", expression = "java(NumberConstants.ZERO)")
+  @Mapping(target = "parent", ignore = true)
   @Mapping(target = "decks", ignore = true)
+  @Mapping(target = "children", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   Folder fromCreate(FolderCreateRequest request);
@@ -32,6 +36,8 @@ public interface FolderMapper {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "deckCount", ignore = true)
+  @Mapping(target = "parent", ignore = true)
   @Mapping(target = "decks", ignore = true)
+  @Mapping(target = "children", ignore = true)
   void update(@MappingTarget Folder folder, FolderUpdateRequest request);
 }
