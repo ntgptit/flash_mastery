@@ -7,6 +7,7 @@ class FolderCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final Color? colorOverride;
 
   const FolderCard({
     super.key,
@@ -14,12 +15,13 @@ class FolderCard extends StatelessWidget {
     required this.onTap,
     required this.onEdit,
     required this.onDelete,
+    this.colorOverride,
   });
 
   @override
   Widget build(BuildContext context) {
     final fallbackColor = Theme.of(context).colorScheme.primary;
-    final color = _parseColor(folder.color, fallbackColor);
+    final color = colorOverride ?? _parseColor(folder.color, fallbackColor);
 
     return Card(
       elevation: AppSpacing.elevationLow,
@@ -41,14 +43,15 @@ class FolderCard extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
+              padding: const EdgeInsets.all(AppSpacing.md),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Icon(Icons.folder, color: Colors.white, size: AppSpacing.iconLarge),
+                      const Icon(Icons.folder, color: Colors.white, size: AppSpacing.iconSmallMedium),
                       PopupMenuButton<String>(
                         icon: const Icon(Icons.more_vert, color: Colors.white),
                         onSelected: (value) {
@@ -59,12 +62,12 @@ class FolderCard extends StatelessWidget {
                           }
                         },
                         itemBuilder: (context) => [
-                          PopupMenuItem(
+                          const PopupMenuItem(
                             value: 'edit',
                             child: Row(
                               children: [
-                                const Icon(Icons.edit, size: AppSpacing.iconSmallMedium),
-                                const SizedBox(width: AppSpacing.sm),
+                                Icon(Icons.edit, size: AppSpacing.iconSmall),
+                                SizedBox(width: AppSpacing.xs),
                                 Text('Edit'),
                               ],
                             ),
@@ -75,10 +78,10 @@ class FolderCard extends StatelessWidget {
                               children: [
                                 Icon(
                                   Icons.delete,
-                                  size: AppSpacing.iconSmallMedium,
+                                  size: AppSpacing.iconSmall,
                                   color: Theme.of(context).colorScheme.error,
                                 ),
-                                const SizedBox(width: AppSpacing.sm),
+                                const SizedBox(width: AppSpacing.xs),
                                 Text(
                                   'Delete',
                                   style: TextStyle(color: Theme.of(context).colorScheme.error),
@@ -90,35 +93,27 @@ class FolderCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          folder.name,
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    folder.name,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
                         ),
-                        if ((folder.description ?? '').isNotEmpty) ...[
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            folder.description!,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.white.withValues(alpha: AppOpacity.veryHigh),
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ],
-                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
+                  if ((folder.description ?? '').isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      folder.description!,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.white.withValues(alpha: AppOpacity.veryHigh),
+                          ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                   const SizedBox(height: AppSpacing.sm),
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -132,9 +127,9 @@ class FolderCard extends StatelessWidget {
                     child: Text(
                       '${folder.deckCount} deck${folder.deckCount != 1 ? 's' : ''}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                      ),
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
                     ),
                   ),
                 ],
@@ -163,5 +158,129 @@ class FolderCard extends StatelessWidget {
     }
 
     return fallback;
+  }
+}
+
+class FolderTile extends StatelessWidget {
+  final Folder folder;
+  final VoidCallback onTap;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final bool isGrid;
+  final Color? fixedColor;
+
+  const FolderTile({
+    super.key,
+    required this.folder,
+    required this.onTap,
+    required this.onEdit,
+    required this.onDelete,
+    required this.isGrid,
+    this.fixedColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (isGrid) {
+      return FolderCard(
+        folder: folder,
+        onTap: onTap,
+        onEdit: onEdit,
+        onDelete: onDelete,
+        colorOverride: fixedColor,
+      );
+    }
+
+    return Card(
+      elevation: AppSpacing.elevationLow,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          folder.name,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          (folder.description?.isNotEmpty ?? false) ? folder.description! : 'No description',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'edit') onEdit();
+                      if (value == 'delete') onDelete();
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: ListTile(
+                          leading: Icon(Icons.edit),
+                          title: Text('Edit'),
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: ListTile(
+                          leading: Icon(
+                            Icons.delete,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                          title: Text(
+                            'Delete',
+                            style: TextStyle(color: Theme.of(context).colorScheme.error),
+                          ),
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                children: [
+                  Icon(
+                    Icons.folder_open,
+                    size: AppSpacing.iconSmallMedium,
+                    color: fixedColor ?? Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text('${folder.deckCount} deck${folder.deckCount == 1 ? '' : 's'}',
+                      style: Theme.of(context).textTheme.bodySmall),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

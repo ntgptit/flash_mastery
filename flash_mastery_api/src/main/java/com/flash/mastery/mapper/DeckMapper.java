@@ -21,6 +21,7 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 public interface DeckMapper {
 
   @Mapping(target = "folderId", source = "folder.id")
+  @Mapping(target = "cardCount", source = "cardCount")
   DeckResponse toResponse(Deck entity);
 
   @Mapping(target = "id", ignore = true)
@@ -34,8 +35,13 @@ public interface DeckMapper {
   Deck fromCreate(DeckCreateRequest request, Folder folder);
 
   @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+  @Mapping(target = "id", ignore = true)
   @Mapping(target = "name", source = "request.name")
   @Mapping(target = "description", source = "request.description")
   @Mapping(target = "folder", source = "folder")
+  @Mapping(target = "cardCount", ignore = true)
+  @Mapping(target = "flashcards", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
   void update(@MappingTarget Deck deck, DeckUpdateRequest request, Folder folder);
 }

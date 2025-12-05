@@ -28,5 +28,10 @@ public interface FolderMapper {
   Folder fromCreate(FolderCreateRequest request);
 
   @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "deckCount", ignore = true)
+  @Mapping(target = "decks", ignore = true)
   void update(@MappingTarget Folder folder, FolderUpdateRequest request);
 }

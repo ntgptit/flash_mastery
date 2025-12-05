@@ -1,4 +1,5 @@
 import 'package:flash_mastery/core/constants/constants.dart';
+import 'package:flash_mastery/core/router/app_router.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/entities/folder.dart';
 import 'package:flash_mastery/features/decks/providers.dart';
@@ -8,6 +9,7 @@ import 'package:flash_mastery/presentation/screens/flashcards/flashcard_list_scr
 import 'package:flash_mastery/presentation/widgets/common/common_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class DeckListScreen extends ConsumerStatefulWidget {
   final Folder? folder;
@@ -31,19 +33,16 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
     _initialized = true;
     Future.microtask(() {
       ref.read(folderListViewModelProvider.notifier).load();
-      ref.read(deckListViewModelProvider(widget.folder?.id).notifier).load(
-            sort: _sort,
-            query: _searchQuery.isEmpty ? null : _searchQuery,
-          );
+      ref
+          .read(deckListViewModelProvider(widget.folder?.id).notifier)
+          .load(sort: _sort, query: _searchQuery.isEmpty ? null : _searchQuery);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final folderState = ref.watch(folderListViewModelProvider);
-    final deckListState = ref.watch(
-      deckListViewModelProvider(widget.folder?.id),
-    );
+    final deckListState = ref.watch(deckListViewModelProvider(widget.folder?.id));
 
     final folders = folderState.when(
       initial: () => <Folder>[],
@@ -60,10 +59,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
           loading: () => const Center(child: LoadingWidget()),
           error: (message) => Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
-            child: AppErrorWidget(
-              message: message,
-              onRetry: _refreshWithDefaults,
-            ),
+            child: AppErrorWidget(message: message, onRetry: _refreshWithDefaults),
           ),
           success: (decks, isLoadingMore, hasMore) {
             return RefreshIndicator(
@@ -71,13 +67,8 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
               onRefresh: () async => _refreshWithDefaults(),
               child: NotificationListener<ScrollNotification>(
                 onNotification: (notification) {
-                  if (notification.metrics.extentAfter < 200 &&
-                      hasMore &&
-                      !isLoadingMore) {
-                    ref
-                        .read(deckListViewModelProvider(widget.folder?.id)
-                            .notifier)
-                        .loadMore();
+                  if (notification.metrics.extentAfter < 200 && hasMore && !isLoadingMore) {
+                    ref.read(deckListViewModelProvider(widget.folder?.id).notifier).loadMore();
                   }
                   return false;
                 },
@@ -93,29 +84,21 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                         child: _HeaderSection(
                           title: widget.folder?.name ?? 'Decks',
                           description:
-                              widget.folder?.description ??
-                              'Organize and review your decks',
-                          onBack: Navigator.of(context).maybePop,
+                              widget.folder?.description ?? 'Organize and review your decks',
+                          onBack: _handleBack,
                           onSearch: _showSearchDialog,
                           onMenuSelect: (value) {
                             if (value == 'refresh') {
                               _refreshWithDefaults();
                             }
                           },
-                          onSortRequested: _showSortSheet,
-                          sortLabel: _sortLabel,
                         ),
                       ),
                     ),
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.lg,
-                        ),
-                        child: _SortRow(
-                          onTap: _showSortSheet,
-                          sortLabel: _sortLabel,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                        child: _SortRow(onTap: _showSortSheet, sortLabel: _sortLabel),
                       ),
                     ),
                     if (decks.isEmpty)
@@ -160,33 +143,27 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                               deck: deck,
                               folder: folder,
                               onOpen: () => _openDeck(deck),
-                              onEdit: () =>
-                                  _openDeckForm(deck: deck, folders: folders),
+                              onEdit: () => _openDeckForm(deck: deck, folders: folders),
                               onDelete: () => _confirmDelete(deck),
                             );
                           },
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: AppSpacing.md),
+                          separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
                           itemCount: decks.length,
                         ),
                       ),
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: AppSpacing.md,
-                        ),
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                         child: Center(
                           child: isLoadingMore
                               ? const SizedBox(
                                   width: 24,
                                   height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
+                                  child: CircularProgressIndicator(strokeWidth: 2),
                                 )
                               : hasMore
-                                  ? const SizedBox(height: 24)
-                                  : const SizedBox.shrink(),
+                              ? const SizedBox(height: 24)
+                              : const SizedBox.shrink(),
                         ),
                       ),
                     ),
@@ -222,27 +199,18 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
             setState(() => _searchQuery = value);
             ref
                 .read(deckListViewModelProvider(widget.folder?.id).notifier)
-                .load(
-                  sort: _sort,
-                  query: _searchQuery,
-                );
+                .load(sort: _sort, query: _searchQuery);
             Navigator.pop(context);
           },
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           FilledButton(
             onPressed: () {
               setState(() => _searchQuery = controller.text);
               ref
                   .read(deckListViewModelProvider(widget.folder?.id).notifier)
-                  .load(
-                    sort: _sort,
-                    query: _searchQuery,
-                  );
+                  .load(sort: _sort, query: _searchQuery);
               Navigator.pop(context);
             },
             child: const Text('Search'),
@@ -252,15 +220,12 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
     );
   }
 
-  Future<void> _openDeckForm({
-    Deck? deck,
-    required List<Folder> folders,
-  }) async {
+  Future<void> _openDeckForm({Deck? deck, required List<Folder> folders}) async {
     if (folders.isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Create a folder before adding decks')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Create a folder before adding decks')));
       return;
     }
 
@@ -269,22 +234,15 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
       builder: (context) => DeckFormDialog(
         deck: deck,
         folders: folders,
-        initialFolderId:
-            deck?.folderId ?? widget.folder?.id ?? folders.first.id,
+        initialFolderId: deck?.folderId ?? widget.folder?.id ?? folders.first.id,
         onSubmit: (name, description, folderId) async {
           final navigator = Navigator.of(context);
           final messenger = ScaffoldMessenger.of(context);
           try {
-            final notifier = ref.read(
-              deckListViewModelProvider(widget.folder?.id).notifier,
-            );
+            final notifier = ref.read(deckListViewModelProvider(widget.folder?.id).notifier);
             final errorMessage = deck == null
                 ? await notifier.createDeck(
-                    CreateDeckParams(
-                      name: name,
-                      description: description,
-                      folderId: folderId,
-                    ),
+                    CreateDeckParams(name: name, description: description, folderId: folderId),
                   )
                 : await notifier.updateDeck(
                     UpdateDeckParams(
@@ -298,25 +256,19 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
             if (!mounted) return;
             navigator.pop();
             if (errorMessage != null) {
-              messenger.showSnackBar(
-                SnackBar(content: Text('Error: $errorMessage')),
-              );
+              messenger.showSnackBar(SnackBar(content: Text('Error: $errorMessage')));
             } else {
               messenger.showSnackBar(
                 SnackBar(
                   content: Text(
-                    deck == null
-                        ? 'Deck created successfully'
-                        : 'Deck updated successfully',
+                    deck == null ? 'Deck created successfully' : 'Deck updated successfully',
                   ),
                 ),
               );
             }
           } catch (e) {
             if (!mounted) return;
-            messenger.showSnackBar(
-              SnackBar(content: Text('Error: ${e.toString()}')),
-            );
+            messenger.showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
           }
         },
       ),
@@ -336,10 +288,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(
@@ -361,20 +310,14 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
           .deleteDeck(deck.id);
       if (errorMessage != null) {
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $errorMessage')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $errorMessage')));
         return;
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Deck deleted')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Deck deleted')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
     }
   }
 
@@ -420,19 +363,12 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
             ...options.map(
               (opt) => ListTile(
                 title: Text(opt['label']!),
-                trailing: _sort == opt['value']
-                    ? const Icon(Icons.check)
-                    : null,
+                trailing: _sort == opt['value'] ? const Icon(Icons.check) : null,
                 onTap: () {
                   setState(() => _sort = opt['value']!);
                   ref
-                      .read(
-                        deckListViewModelProvider(widget.folder?.id).notifier,
-                      )
-                      .load(
-                        sort: _sort,
-                        query: _searchQuery.isEmpty ? null : _searchQuery,
-                      );
+                      .read(deckListViewModelProvider(widget.folder?.id).notifier)
+                      .load(sort: _sort, query: _searchQuery.isEmpty ? null : _searchQuery);
                   Navigator.pop(context);
                 },
               ),
@@ -445,9 +381,16 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
   }
 
   void _openDeck(Deck deck) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => FlashcardListScreen(deck: deck)));
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => FlashcardListScreen(deck: deck)));
+  }
+
+  void _handleBack() {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+      return;
+    }
+    context.go(AppRouter.dashboard);
   }
 }
 
@@ -457,8 +400,6 @@ class _HeaderSection extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onSearch;
   final void Function(String value) onMenuSelect;
-  final VoidCallback onSortRequested;
-  final String sortLabel;
 
   const _HeaderSection({
     required this.title,
@@ -466,8 +407,6 @@ class _HeaderSection extends StatelessWidget {
     required this.onBack,
     required this.onSearch,
     required this.onMenuSelect,
-    required this.onSortRequested,
-    required this.sortLabel,
   });
 
   @override
@@ -480,17 +419,9 @@ class _HeaderSection extends StatelessWidget {
       children: [
         Row(
           children: [
-            IconButton(
-              onPressed: onBack,
-              icon: const Icon(Icons.arrow_back),
-              tooltip: 'Back',
-            ),
+            IconButton(onPressed: onBack, icon: const Icon(Icons.arrow_back), tooltip: 'Back'),
             const Spacer(),
-            IconButton(
-              onPressed: onSearch,
-              icon: const Icon(Icons.search),
-              tooltip: 'Search',
-            ),
+            IconButton(onPressed: onSearch, icon: const Icon(Icons.search), tooltip: 'Search'),
             PopupMenuButton<String>(
               onSelected: onMenuSelect,
               itemBuilder: (context) => const [
@@ -509,37 +440,20 @@ class _HeaderSection extends StatelessWidget {
               color: colorScheme.primary.withValues(alpha: AppOpacity.low),
               borderRadius: BorderRadius.circular(AppSpacing.radiusExtraLarge),
             ),
-            child: Icon(
-              Icons.folder,
-              color: colorScheme.onPrimary,
-              size: AppSpacing.iconLarge,
-            ),
+            child: Icon(Icons.folder, color: colorScheme.onPrimary, size: AppSpacing.iconLarge),
           ),
         ),
         const SizedBox(height: AppSpacing.md),
         Center(
-          child: Text(
-            title,
-            style: textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+          child: Text(title, style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
         ),
         const SizedBox(height: AppSpacing.sm),
         Center(
           child: Text(
             description,
-            style: textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
+            style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        OutlinedButton.icon(
-          onPressed: onSortRequested,
-          icon: const Icon(Icons.sort),
-          label: Text(sortLabel),
         ),
         const SizedBox(height: AppSpacing.lg),
       ],
@@ -559,16 +473,10 @@ class _SortRow extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Text(
-          sortLabel,
-          style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-        ),
+        Text(sortLabel, style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
         IconButton(
           onPressed: onTap,
-          icon: Icon(
-            Icons.arrow_drop_down,
-            color: colorScheme.onSurfaceVariant,
-          ),
+          icon: Icon(Icons.arrow_drop_down, color: colorScheme.onSurfaceVariant),
         ),
       ],
     );
@@ -614,11 +522,7 @@ class _DeckCard extends StatelessWidget {
                 color: colorScheme.primary.withValues(alpha: AppOpacity.low),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
               ),
-              child: Icon(
-                Icons.style,
-                color: colorScheme.onPrimary,
-                size: AppSpacing.iconMedium,
-              ),
+              child: Icon(Icons.style, color: colorScheme.onPrimary, size: AppSpacing.iconMedium),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -627,27 +531,21 @@ class _DeckCard extends StatelessWidget {
                 children: [
                   Text(
                     deck.name,
-                    style: textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
                     (deck.description ?? 'No description'),
-                    style: textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
+                    style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
                     '${folder.name} - ${deck.cardCount} cards',
-                    style: textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
+                    style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -669,10 +567,7 @@ class _DeckCard extends StatelessWidget {
                 const PopupMenuItem(value: 'edit', child: Text('Edit')),
                 PopupMenuItem(
                   value: 'delete',
-                  child: Text(
-                    'Delete',
-                    style: TextStyle(color: colorScheme.error),
-                  ),
+                  child: Text('Delete', style: TextStyle(color: colorScheme.error)),
                 ),
               ],
               icon: const Icon(Icons.more_vert),

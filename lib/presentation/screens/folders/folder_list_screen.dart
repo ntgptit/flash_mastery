@@ -3,6 +3,7 @@ import 'package:flash_mastery/domain/entities/folder.dart';
 import 'package:flash_mastery/features/folders/providers.dart';
 import 'package:flash_mastery/presentation/screens/folders/widgets/folder_card.dart';
 import 'package:flash_mastery/presentation/screens/folders/widgets/folder_form_dialog.dart';
+import 'package:flash_mastery/presentation/viewmodels/folder_view_mode.dart';
 import 'package:flash_mastery/presentation/widgets/common/common_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,24 +31,30 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
   @override
   Widget build(BuildContext context) {
     final folderState = ref.watch(folderListViewModelProvider);
-    final folders = folderState.when(
-      initial: () => <Folder>[],
-      loading: () => <Folder>[],
-      success: (data) => data,
-      error: (_) => <Folder>[],
-    );
-    final visibleFolders = _filterFolders(folders);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Folders'),
-        actions: [IconButton(icon: const Icon(Icons.search), onPressed: _showSearchDialog)],
+        actions: [
+          Consumer(
+            builder: (context, ref, _) {
+              final mode = ref.watch(folderViewModeProvider);
+              return IconButton(
+                icon: Icon(mode == FolderViewMode.grid ? Icons.view_list_outlined : Icons.grid_view_outlined),
+                tooltip: mode == FolderViewMode.grid ? 'Switch to list view' : 'Switch to grid view',
+                onPressed: () => ref.read(folderViewModeProvider.notifier).toggle(),
+              );
+            },
+          ),
+          IconButton(icon: const Icon(Icons.search), onPressed: _showSearchDialog),
+        ],
       ),
       body: folderState.when(
         initial: () => const LoadingWidget(),
         loading: () => const LoadingWidget(),
         success: (data) {
-          final displayFolders = visibleFolders ?? data;
+          final mode = ref.watch(folderViewModeProvider);
+          final displayFolders = _filterFolders(data);
           if (displayFolders.isEmpty) {
             return EmptyStateWidget(
               icon: Icons.folder_outlined,
@@ -60,24 +67,56 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
 
           return RefreshIndicator(
             onRefresh: () async => ref.read(folderListViewModelProvider.notifier).load(),
-            child: GridView.builder(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: AppConstants.defaultGridCrossAxisCount,
-                crossAxisSpacing: AppSpacing.lg,
-                mainAxisSpacing: AppSpacing.lg,
-                childAspectRatio: AppConstants.folderGridAspectRatio,
-              ),
-              itemCount: displayFolders.length,
-              itemBuilder: (context, index) {
-                final folder = displayFolders[index];
-                return FolderCard(
-                  folder: folder,
-                  onTap: () => _openFolder(folder),
-                  onEdit: () => _openFolderForm(folder: folder),
-                  onDelete: () => _confirmDelete(folder),
-                );
-              },
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              transitionBuilder: (child, animation) =>
+                  FadeTransition(opacity: animation, child: child),
+              layoutBuilder: (currentChild, previousChildren) =>
+                  currentChild ?? const SizedBox.shrink(),
+              child: mode == FolderViewMode.grid
+                  ? GridView.builder(
+                      key: const ValueKey('grid'),
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: AppConstants.defaultGridCrossAxisCount,
+                        crossAxisSpacing: AppSpacing.lg,
+                        mainAxisSpacing: AppSpacing.lg,
+                        childAspectRatio: AppConstants.folderGridAspectRatio,
+                      ),
+                      itemCount: displayFolders.length,
+                      itemBuilder: (context, index) {
+                        final folder = displayFolders[index];
+                        return FolderTile(
+                          key: ValueKey(folder.id),
+                          folder: folder,
+                          onTap: () => _openFolder(folder),
+                          onEdit: () => _openFolderForm(folder: folder),
+                          onDelete: () => _confirmDelete(folder),
+                          isGrid: true,
+                          fixedColor: Theme.of(context).colorScheme.primary,
+                        );
+                      },
+                    )
+                  : ListView.separated(
+                    key: const ValueKey('list'),
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        itemCount: displayFolders.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
+                        itemBuilder: (context, index) {
+                          final folder = displayFolders[index];
+                          return FolderTile(
+                            key: ValueKey(folder.id),
+                            folder: folder,
+                          onTap: () => _openFolder(folder),
+                          onEdit: () => _openFolderForm(folder: folder),
+                          onDelete: () => _confirmDelete(folder),
+                          isGrid: false,
+                          fixedColor: Theme.of(context).colorScheme.primary,
+                        );
+                      },
+                    ),
             ),
           );
         },
@@ -94,7 +133,7 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
     );
   }
 
-  List<Folder>? _filterFolders(List<Folder> folders) {
+  List<Folder> _filterFolders(List<Folder> folders) {
     if (_searchQuery.isEmpty) return folders;
 
     final lower = _searchQuery.toLowerCase();

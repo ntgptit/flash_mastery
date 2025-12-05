@@ -18,6 +18,7 @@ class DashboardScreen extends ConsumerStatefulWidget {
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  bool _useGrid = true;
 
   @override
   void dispose() {
@@ -34,6 +35,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         title: const Text('Dashboard'),
         elevation: AppSpacing.elevationNone,
         actions: [
+          IconButton(
+            icon: Icon(_useGrid ? Icons.view_list_outlined : Icons.grid_view_outlined),
+            tooltip: _useGrid ? 'Switch to list view' : 'Switch to grid view',
+            onPressed: () => setState(() => _useGrid = !_useGrid),
+          ),
           IconButton(icon: const Icon(Icons.search), onPressed: _showSearchDialog),
           IconButton(
             icon: const Icon(Icons.layers),
@@ -110,25 +116,40 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   onRefresh: () async {
                     await ref.read(folderListViewModelProvider.notifier).load();
                   },
-                  child: GridView.builder(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: AppConstants.defaultGridCrossAxisCount,
-                      crossAxisSpacing: AppSpacing.lg,
-                      mainAxisSpacing: AppSpacing.lg,
-                      childAspectRatio: AppConstants.folderGridAspectRatio,
-                    ),
-                    itemCount: filteredFolders.length,
-                    itemBuilder: (context, index) {
-                      final folder = filteredFolders[index];
-                      return FolderCard(
-                        folder: folder,
-                        onTap: () => _openFolder(folder),
-                        onEdit: () => _showEditFolderDialog(context, folder),
-                        onDelete: () => _showDeleteConfirmation(context, folder),
-                      );
-                    },
-                  ),
+                  child: _useGrid
+                      ? GridView.builder(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: AppConstants.defaultGridCrossAxisCount,
+                            crossAxisSpacing: AppSpacing.lg,
+                            mainAxisSpacing: AppSpacing.lg,
+                            childAspectRatio: AppConstants.folderGridAspectRatio,
+                          ),
+                          itemCount: filteredFolders.length,
+                          itemBuilder: (context, index) {
+                            final folder = filteredFolders[index];
+                            return FolderCard(
+                              folder: folder,
+                              onTap: () => _openFolder(folder),
+                              onEdit: () => _showEditFolderDialog(context, folder),
+                              onDelete: () => _showDeleteConfirmation(context, folder),
+                            );
+                          },
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          itemCount: filteredFolders.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
+                          itemBuilder: (context, index) {
+                            final folder = filteredFolders[index];
+                            return FolderCard(
+                              folder: folder,
+                              onTap: () => _openFolder(folder),
+                              onEdit: () => _showEditFolderDialog(context, folder),
+                              onDelete: () => _showDeleteConfirmation(context, folder),
+                            );
+                          },
+                        ),
                 );
               },
               error: (message) => AppErrorWidget(

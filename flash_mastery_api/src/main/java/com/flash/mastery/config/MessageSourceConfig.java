@@ -11,7 +11,7 @@ import com.flash.mastery.constant.MessageSourceConstants;
 public class MessageSourceConfig {
 
     @Bean
-    public MessageSource messageSource() {
+    MessageSource messageSource() {
         final var messageSource = new ReloadableResourceBundleMessageSource();
         messageSource.setBasename(MessageSourceConstants.BASENAME);
         messageSource.setDefaultEncoding(MessageSourceConstants.DEFAULT_ENCODING);

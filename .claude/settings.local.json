@@ -10,7 +10,8 @@
       "Bash(move libcoreerrorexceptions.dart libcoreexceptionsexceptions.dart)",
       "Bash(move libcoreerrorfailures.dart libcoreexceptionsfailures.dart)",
       "Bash(grep:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(mvn clean compile:*)"
     ],
     "deny": [],
     "ask": []
