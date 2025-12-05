@@ -1,6 +1,7 @@
 import 'package:flash_mastery/domain/entities/folder.dart';
 import 'package:flash_mastery/presentation/screens/dashboard/dashboard_screen.dart';
 import 'package:flash_mastery/presentation/screens/decks/deck_list_screen.dart';
+import 'package:flash_mastery/presentation/screens/folders/folder_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -11,6 +12,7 @@ class AppRouter {
   /// Route paths
   static const String splash = '/';
   static const String dashboard = '/tabs/dashboard';
+  static const String folders = '/tabs/folders';
   static const String decks = '/tabs/decks';
   static const String settings = '/tabs/settings';
   static const String home = '/home';
@@ -46,6 +48,15 @@ class AppRouter {
                 path: dashboard,
                 name: 'dashboard',
                 builder: (context, state) => const DashboardScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: folders,
+                name: 'folders',
+                builder: (context, state) => const FolderListScreen(),
               ),
             ],
           ),
@@ -279,6 +290,10 @@ class _RootShell extends StatelessWidget {
           NavigationDestination(
             icon: Icon(Icons.dashboard_outlined),
             label: 'Dashboard',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.folder_open_outlined),
+            label: 'Folders',
           ),
           NavigationDestination(
             icon: Icon(Icons.style_outlined),
