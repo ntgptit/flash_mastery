@@ -18,7 +18,7 @@ class DashboardScreen extends ConsumerStatefulWidget {
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  bool _useGrid = true;
+  bool _useGrid = false;
 
   @override
   void dispose() {
