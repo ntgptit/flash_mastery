@@ -17,6 +17,7 @@ public interface FolderMapper {
 
   @Mapping(target = "parentId", expression = "java(entity.getParent() != null ? entity.getParent().getId() : null)")
   @Mapping(target = "subFolderCount", expression = "java(entity.getChildren() != null ? entity.getChildren().size() : NumberConstants.ZERO)")
+  @Mapping(target = "path", ignore = true)
   FolderResponse toResponse(Folder entity);
 
   @Mapping(target = "id", ignore = true)

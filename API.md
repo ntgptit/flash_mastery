@@ -21,7 +21,7 @@ Spec for the Spring Boot backend used by the app. Base URL: `/api/v1`. JSON UTF-
 
 ## Entities
 
-- `Folder`: `{id, name, description?, color?, deckCount, parentId?, subFolderCount, createdAt, updatedAt}`
+- `Folder`: `{id, name, description?, color?, deckCount, parentId?, subFolderCount, path[], createdAt, updatedAt}`
 - `Deck`: `{id, name, description?, folderId?, cardCount, createdAt, updatedAt}`
 - `Flashcard`: `{id, deckId, question, answer, hint?, createdAt, updatedAt}`
 

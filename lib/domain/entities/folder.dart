@@ -9,6 +9,7 @@ class Folder extends Equatable {
   final int deckCount;
   final String? parentId;
   final int subFolderCount;
+  final List<String> path;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -20,6 +21,7 @@ class Folder extends Equatable {
     required this.deckCount,
     this.parentId,
     this.subFolderCount = 0,
+    this.path = const [],
     required this.createdAt,
     required this.updatedAt,
   });
@@ -32,6 +34,7 @@ class Folder extends Equatable {
     int? deckCount,
     String? parentId,
     int? subFolderCount,
+    List<String>? path,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -43,6 +46,7 @@ class Folder extends Equatable {
       deckCount: deckCount ?? this.deckCount,
       parentId: parentId ?? this.parentId,
       subFolderCount: subFolderCount ?? this.subFolderCount,
+      path: path ?? this.path,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -57,6 +61,7 @@ class Folder extends Equatable {
         deckCount,
         parentId,
         subFolderCount,
+        path,
         createdAt,
         updatedAt,
       ];

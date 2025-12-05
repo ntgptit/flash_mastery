@@ -87,7 +87,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     title: 'No folders yet',
                     message: 'Create your first folder to organize your decks',
                     actionButtonText: 'Create Folder',
-                    onAction: () => _showAddFolderDialog(context),
+                    onAction: () => _showAddFolderDialog(context, allFolders: folders),
                   );
                 }
 
@@ -131,7 +131,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             return FolderCard(
                               folder: folder,
                               onTap: () => _openFolder(folder),
-                              onEdit: () => _showEditFolderDialog(context, folder),
+                              onEdit: () => _showEditFolderDialog(context, folder, allFolders: folders),
+                              onAddSubfolder: () => _showAddFolderDialog(context, parent: folder, allFolders: folders),
                               onDelete: () => _showDeleteConfirmation(context, folder),
                             );
                           },
@@ -145,7 +146,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             return FolderCard(
                               folder: folder,
                               onTap: () => _openFolder(folder),
-                              onEdit: () => _showEditFolderDialog(context, folder),
+                              onEdit: () => _showEditFolderDialog(context, folder, allFolders: folders),
+                              onAddSubfolder: () => _showAddFolderDialog(context, parent: folder, allFolders: folders),
                               onDelete: () => _showDeleteConfirmation(context, folder),
                             );
                           },
@@ -161,7 +163,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddFolderDialog(context),
+        onPressed: () {
+          final allFolders = ref.read(folderListViewModelProvider).maybeWhen(
+                success: (folders) => folders,
+                orElse: () => <Folder>[],
+              );
+          _showAddFolderDialog(context, allFolders: allFolders);
+        },
         icon: const Icon(Icons.add),
         label: const Text('New Folder'),
       ),
@@ -203,10 +211,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  void _showAddFolderDialog(BuildContext context) {
+  void _showAddFolderDialog(BuildContext context, {Folder? parent, List<Folder> allFolders = const []}) {
     showDialog(
       context: context,
       builder: (context) => FolderFormDialog(
+        parentFolder: parent,
+        allFolders: allFolders,
         onSubmit: (name, description, color, parentId) async {
           try {
             final errorMessage = await ref
@@ -216,7 +226,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     name: name,
                     description: description,
                     color: color,
-                    parentId: parentId,
+                    parentId: parent?.id ?? parentId,
                   ),
                 );
             if (context.mounted) {
@@ -243,11 +253,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  void _showEditFolderDialog(BuildContext context, Folder folder) {
+  void _showEditFolderDialog(BuildContext context, Folder folder, {List<Folder> allFolders = const []}) {
+    final parentFromState = folder.parentId != null
+        ? ref.read(folderListViewModelProvider).maybeWhen(
+              success: (folders) {
+                final matches = folders.where((f) => f.id == folder.parentId).toList();
+                return matches.isNotEmpty ? matches.first : null;
+              },
+              orElse: () => null,
+            )
+        : null;
     showDialog(
       context: context,
       builder: (context) => FolderFormDialog(
         folder: folder,
+        allFolders: allFolders,
+        parentFolder: parentFromState,
         onSubmit: (name, description, color, parentId) async {
           try {
             final errorMessage = await ref
@@ -258,7 +279,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     name: name,
                     description: description,
                     color: color,
-                    parentId: parentId ?? folder.parentId,
+                    parentId: parentFromState?.id ?? parentId ?? folder.parentId,
                   ),
                 );
             if (context.mounted) {

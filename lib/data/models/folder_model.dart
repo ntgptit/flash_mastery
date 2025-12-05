@@ -16,6 +16,7 @@ abstract class FolderModel with _$FolderModel {
     @Default(0) int deckCount,
     String? parentId,
     @Default(0) int subFolderCount,
+    @Default(<String>[]) List<String> path,
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _FolderModel;
@@ -32,6 +33,7 @@ abstract class FolderModel with _$FolderModel {
       deckCount: deckCount,
       parentId: parentId,
       subFolderCount: subFolderCount,
+      path: path,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
@@ -47,6 +49,7 @@ abstract class FolderModel with _$FolderModel {
       deckCount: folder.deckCount,
       parentId: folder.parentId,
       subFolderCount: folder.subFolderCount,
+      path: folder.path,
       createdAt: folder.createdAt,
       updatedAt: folder.updatedAt,
     );

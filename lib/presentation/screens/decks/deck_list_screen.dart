@@ -131,11 +131,11 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                           ),
                           child: _SubfolderSection(
                             subfolders: subFolders,
-                            onCreate: () => _openSubfolderForm(),
+                            onCreate: () => _openSubfolderForm(allFolders: folders),
                             onOpen: (folder) => context.goNamed('decks', extra: folder),
-                            onEdit: (folder) => _openSubfolderForm(folder: folder),
+                            onEdit: (folder) => _openSubfolderForm(folder: folder, allFolders: folders),
                             onDelete: _confirmDeleteFolder,
-                            onAddSubfolder: (folder) => _openSubfolderForm(parent: folder),
+                            onAddSubfolder: (folder) => _openSubfolderForm(parent: folder, allFolders: folders),
                           ),
                         ),
                       ),
@@ -173,6 +173,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                                     description: null,
                                     color: null,
                                     deckCount: 0,
+                                    path: const [],
                                     createdAt: DateTime.now(),
                                     updatedAt: DateTime.now(),
                                   ),
@@ -313,7 +314,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
     );
   }
 
-  Future<void> _openSubfolderForm({Folder? folder, Folder? parent}) async {
+  Future<void> _openSubfolderForm({Folder? folder, Folder? parent, List<Folder> allFolders = const []}) async {
     final parentFolder = parent ?? widget.folder;
     if (parentFolder == null) return;
     await showDialog(
@@ -321,6 +322,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
       builder: (context) => FolderFormDialog(
         folder: folder,
         parentFolder: parentFolder,
+        allFolders: allFolders,
         onSubmit: (name, description, color, parentId) async {
           final navigator = Navigator.of(context);
           final messenger = ScaffoldMessenger.of(context);

@@ -185,11 +185,16 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
   }
 
   Future<void> _openFolderForm({Folder? folder, Folder? parent}) async {
+    final allFolders = ref.read(folderListViewModelProvider).maybeWhen(
+          success: (folders) => folders,
+          orElse: () => <Folder>[],
+        );
     await showDialog(
       context: context,
       builder: (context) => FolderFormDialog(
         folder: folder,
         parentFolder: parent,
+        allFolders: allFolders,
         onSubmit: (name, description, color, parentId) async {
           final navigator = Navigator.of(context);
           final messenger = ScaffoldMessenger.of(context);
@@ -210,7 +215,7 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
                       name: name,
                       description: description,
                       color: color,
-                      parentId: parent?.id ?? folder.parentId,
+                      parentId: parent?.id ?? parentId ?? folder.parentId,
                     ),
                   );
 

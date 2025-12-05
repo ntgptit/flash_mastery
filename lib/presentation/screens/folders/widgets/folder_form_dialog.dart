@@ -5,9 +5,16 @@ import 'package:flutter/material.dart';
 class FolderFormDialog extends StatefulWidget {
   final Folder? folder;
   final Folder? parentFolder;
+  final List<Folder> allFolders;
   final Function(String name, String? description, String? color, String? parentId) onSubmit;
 
-  const FolderFormDialog({super.key, this.folder, this.parentFolder, required this.onSubmit});
+  const FolderFormDialog({
+    super.key,
+    this.folder,
+    this.parentFolder,
+    required this.onSubmit,
+    this.allFolders = const [],
+  });
 
   @override
   State<FolderFormDialog> createState() => _FolderFormDialogState();
@@ -18,6 +25,9 @@ class _FolderFormDialogState extends State<FolderFormDialog> {
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
   String? _selectedColor;
+  String? _selectedParentId;
+  late final Map<String, Folder> _folderById;
+  late final Set<String> _blockedFolderIds;
 
   final List<Color> _availableColors = [
     Colors.blue,
@@ -38,6 +48,9 @@ class _FolderFormDialogState extends State<FolderFormDialog> {
     _nameController = TextEditingController(text: widget.folder?.name ?? '');
     _descriptionController = TextEditingController(text: widget.folder?.description ?? '');
     _selectedColor = widget.folder?.color;
+    _selectedParentId = widget.parentFolder?.id ?? widget.folder?.parentId;
+    _folderById = {for (final f in widget.allFolders) f.id: f};
+    _blockedFolderIds = _computeBlockedIds();
   }
 
   @override
@@ -67,29 +80,20 @@ class _FolderFormDialogState extends State<FolderFormDialog> {
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                if (widget.parentFolder != null)
+                if (widget.allFolders.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.subdirectory_arrow_right, size: AppSpacing.iconSmallMedium),
-                        const SizedBox(width: AppSpacing.sm),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Parent folder', style: Theme.of(context).textTheme.labelSmall),
-                              Text(
-                                widget.parentFolder!.name,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleSmall
-                                    ?.copyWith(fontWeight: FontWeight.w600),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                    child: DropdownButtonFormField<String?>(
+                      initialValue: _selectedParentId,
+                      decoration: const InputDecoration(
+                        labelText: 'Parent folder',
+                        prefixIcon: Icon(Icons.account_tree_outlined),
+                        border: OutlineInputBorder(),
+                      ),
+                      items: _buildParentOptions(),
+                      onChanged: (value) {
+                        setState(() => _selectedParentId = value);
+                      },
                     ),
                   ),
                 TextFormField(
@@ -218,7 +222,7 @@ class _FolderFormDialogState extends State<FolderFormDialog> {
         name,
         description.isEmpty ? null : description,
         color,
-        widget.parentFolder?.id,
+        _selectedParentId,
       );
     }
   }
@@ -226,5 +230,66 @@ class _FolderFormDialogState extends State<FolderFormDialog> {
   String _colorToString(Color color) {
     final hex = color.toARGB32().toRadixString(16).padLeft(8, '0');
     return '#${hex.substring(2).toUpperCase()}';
+  }
+
+  List<String> _safePath(Folder folder) {
+    try {
+      return List<String>.from(folder.path);
+    } catch (_) {
+      return const <String>[];
+    }
+  }
+
+  List<DropdownMenuItem<String?>> _buildParentOptions() {
+    final options = widget.allFolders
+        .where((folder) => !_blockedFolderIds.contains(folder.id))
+        .toList()
+      ..sort((a, b) => _buildPath(a).compareTo(_buildPath(b)));
+
+    return [
+      const DropdownMenuItem<String?>(
+        value: null,
+        child: Text('No parent (root)'),
+      ),
+      ...options.map(
+        (folder) => DropdownMenuItem<String?>(
+          value: folder.id,
+          child: Text(_buildPath(folder)),
+        ),
+      ),
+    ];
+  }
+
+  String _buildPath(Folder folder) {
+    final safePath = _safePath(folder);
+    if (safePath.isNotEmpty) {
+      return safePath.join(' / ');
+    }
+    final names = <String>[];
+    Folder? current = folder;
+    int guard = 0;
+    while (current != null && guard < 100) {
+      names.add(current.name);
+      current = current.parentId != null ? _folderById[current.parentId!] : null;
+      guard++;
+    }
+    return names.reversed.join(' / ');
+  }
+
+  Set<String> _computeBlockedIds() {
+    final blocked = <String>{};
+    final currentId = widget.folder?.id;
+    if (currentId == null) return blocked;
+    blocked.add(currentId);
+    final queue = <String>[currentId];
+    while (queue.isNotEmpty) {
+      final id = queue.removeAt(0);
+      for (final child in widget.allFolders.where((f) => f.parentId == id)) {
+        if (blocked.add(child.id)) {
+          queue.add(child.id);
+        }
+      }
+    }
+    return blocked;
   }
 }
