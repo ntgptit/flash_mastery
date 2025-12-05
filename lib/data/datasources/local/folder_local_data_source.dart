@@ -6,7 +6,7 @@ import 'package:uuid/uuid.dart';
 
 /// Local data source for folder operations (Drift + SQLite).
 abstract class FolderLocalDataSource {
-  Future<List<FolderModel>> getFolders();
+  Future<List<FolderModel>> getFolders({String? parentId});
   Future<FolderModel> getFolderById(String id);
   Future<FolderModel> createFolder(FolderModel folder);
   Future<FolderModel> updateFolder(FolderModel folder);
@@ -21,8 +21,12 @@ class FolderLocalDataSourceImpl implements FolderLocalDataSource {
   final _uuid = const Uuid();
 
   @override
-  Future<List<FolderModel>> getFolders() async {
-    final rows = await db.select(db.folders).get();
+  Future<List<FolderModel>> getFolders({String? parentId}) async {
+    final query = db.select(db.folders);
+    if (parentId != null) {
+      query.where((tbl) => tbl.parentId.equals(parentId));
+    }
+    final rows = await query.get();
     return rows.map(_mapRowToModel).toList();
   }
 
@@ -50,6 +54,8 @@ class FolderLocalDataSourceImpl implements FolderLocalDataSource {
             description: Value(newFolder.description),
             color: Value(newFolder.color),
             deckCount: Value(newFolder.deckCount),
+            parentId: Value(newFolder.parentId),
+            subFolderCount: Value(newFolder.subFolderCount),
             createdAt: newFolder.createdAt,
             updatedAt: newFolder.updatedAt,
           ),
@@ -71,6 +77,8 @@ class FolderLocalDataSourceImpl implements FolderLocalDataSource {
         description: Value(updated.description),
         color: Value(updated.color),
         deckCount: Value(updated.deckCount),
+        parentId: Value(updated.parentId),
+        subFolderCount: Value(updated.subFolderCount),
         updatedAt: Value(updated.updatedAt),
       ),
     );
@@ -102,6 +110,8 @@ class FolderLocalDataSourceImpl implements FolderLocalDataSource {
         description: row.description,
         color: row.color,
         deckCount: row.deckCount,
+        parentId: row.parentId,
+        subFolderCount: row.subFolderCount,
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
       );

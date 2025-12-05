@@ -7,6 +7,8 @@ class Folder extends Equatable {
   final String? description;
   final String? color;
   final int deckCount;
+  final String? parentId;
+  final int subFolderCount;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -16,6 +18,8 @@ class Folder extends Equatable {
     this.description,
     this.color,
     required this.deckCount,
+    this.parentId,
+    this.subFolderCount = 0,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -26,6 +30,8 @@ class Folder extends Equatable {
     String? description,
     String? color,
     int? deckCount,
+    String? parentId,
+    int? subFolderCount,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -35,6 +41,8 @@ class Folder extends Equatable {
       description: description ?? this.description,
       color: color ?? this.color,
       deckCount: deckCount ?? this.deckCount,
+      parentId: parentId ?? this.parentId,
+      subFolderCount: subFolderCount ?? this.subFolderCount,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -47,6 +55,8 @@ class Folder extends Equatable {
         description,
         color,
         deckCount,
+        parentId,
+        subFolderCount,
         createdAt,
         updatedAt,
       ];

@@ -5,7 +5,7 @@ import 'package:flash_mastery/domain/entities/folder.dart';
 /// Repository interface for folder operations
 abstract class FolderRepository {
   /// Get all folders
-  Future<Either<Failure, List<Folder>>> getFolders();
+  Future<Either<Failure, List<Folder>>> getFolders({String? parentId});
 
   /// Get folder by ID
   Future<Either<Failure, Folder>> getFolderById(String id);
@@ -15,6 +15,7 @@ abstract class FolderRepository {
     required String name,
     String? description,
     String? color,
+    String? parentId,
   });
 
   /// Update existing folder
@@ -23,6 +24,7 @@ abstract class FolderRepository {
     String? name,
     String? description,
     String? color,
+    String? parentId,
   });
 
   /// Delete folder

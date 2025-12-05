@@ -8,6 +8,7 @@ class FolderCard extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final Color? colorOverride;
+  final VoidCallback? onAddSubfolder;
 
   const FolderCard({
     super.key,
@@ -16,6 +17,7 @@ class FolderCard extends StatelessWidget {
     required this.onEdit,
     required this.onDelete,
     this.colorOverride,
+    this.onAddSubfolder,
   });
 
   @override
@@ -59,9 +61,21 @@ class FolderCard extends StatelessWidget {
                             onEdit();
                           } else if (value == 'delete') {
                             onDelete();
+                          } else if (value == 'subfolder') {
+                            onAddSubfolder?.call();
                           }
                         },
                         itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'subfolder',
+                            child: Row(
+                              children: [
+                                Icon(Icons.create_new_folder, size: AppSpacing.iconSmall),
+                                SizedBox(width: AppSpacing.xs),
+                                Text('Add subfolder'),
+                              ],
+                            ),
+                          ),
                           const PopupMenuItem(
                             value: 'edit',
                             child: Row(
@@ -168,6 +182,7 @@ class FolderTile extends StatelessWidget {
   final VoidCallback onDelete;
   final bool isGrid;
   final Color? fixedColor;
+  final VoidCallback? onAddSubfolder;
 
   const FolderTile({
     super.key,
@@ -177,6 +192,7 @@ class FolderTile extends StatelessWidget {
     required this.onDelete,
     required this.isGrid,
     this.fixedColor,
+    this.onAddSubfolder,
   });
 
   @override
@@ -188,6 +204,7 @@ class FolderTile extends StatelessWidget {
         onEdit: onEdit,
         onDelete: onDelete,
         colorOverride: fixedColor,
+        onAddSubfolder: onAddSubfolder,
       );
     }
 
@@ -234,8 +251,18 @@ class FolderTile extends StatelessWidget {
                     onSelected: (value) {
                       if (value == 'edit') onEdit();
                       if (value == 'delete') onDelete();
+                      if (value == 'subfolder') onAddSubfolder?.call();
                     },
                     itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'subfolder',
+                        child: ListTile(
+                          leading: Icon(Icons.create_new_folder),
+                          title: Text('Add subfolder'),
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
                       const PopupMenuItem(
                         value: 'edit',
                         child: ListTile(

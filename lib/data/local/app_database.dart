@@ -9,6 +9,8 @@ class Folders extends Table {
   TextColumn get description => text().nullable()();
   TextColumn get color => text().nullable()();
   IntColumn get deckCount => integer().withDefault(const Constant(0))();
+  TextColumn get parentId => text().nullable().references(Folders, #id, onDelete: KeyAction.cascade)();
+  IntColumn get subFolderCount => integer().withDefault(const Constant(0))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -44,7 +46,7 @@ class Flashcards extends Table {
 
 @DriftDatabase(tables: [Folders, Decks, Flashcards])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase._(QueryExecutor executor) : super(executor);
+  AppDatabase._(super.executor);
 
   /// Singleton instance to avoid multiple DB openings (especially on web).
   static final AppDatabase instance = AppDatabase._(openConnection());
@@ -52,5 +54,16 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase() => instance;
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.addColumn(folders, folders.parentId);
+            await m.addColumn(folders, folders.subFolderCount);
+          }
+        },
+      );
 }

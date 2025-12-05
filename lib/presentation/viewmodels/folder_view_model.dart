@@ -1,5 +1,4 @@
 import 'package:flash_mastery/core/error/failure_messages.dart';
-import 'package:flash_mastery/core/usecases/usecase.dart';
 import 'package:flash_mastery/domain/entities/folder.dart';
 import 'package:flash_mastery/domain/usecases/folders/folder_usecases.dart';
 import 'package:flash_mastery/presentation/providers/folder_providers.dart';
@@ -55,7 +54,7 @@ class FolderListViewModel extends _$FolderListViewModel {
 
   Future<void> load() async {
     state = const FolderListState.loading();
-    final result = await ref.read(getFoldersUseCaseProvider).call(const NoParams());
+    final result = await ref.read(getFoldersUseCaseProvider).call(const GetFoldersParams());
     state = result.fold(
       (failure) => FolderListState.error(failure.toDisplayMessage()),
       (folders) => FolderListState.success(folders),

@@ -13,9 +13,9 @@ class FolderRepositoryImpl implements FolderRepository {
   FolderRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, List<Folder>>> getFolders() async {
+  Future<Either<Failure, List<Folder>>> getFolders({String? parentId}) async {
     return ErrorGuard.run(() async {
-      final folders = await remoteDataSource.getFolders();
+      final folders = await remoteDataSource.getFolders(parentId: parentId);
       return folders.map((model) => model.toEntity()).toList();
     });
   }
@@ -33,6 +33,7 @@ class FolderRepositoryImpl implements FolderRepository {
     required String name,
     String? description,
     String? color,
+    String? parentId,
   }) async {
     return ErrorGuard.run(() async {
       final createdFolder = await remoteDataSource.createFolder(
@@ -42,6 +43,8 @@ class FolderRepositoryImpl implements FolderRepository {
           description: description,
           color: color,
           deckCount: 0,
+          parentId: parentId,
+          subFolderCount: 0,
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         ),
@@ -56,6 +59,7 @@ class FolderRepositoryImpl implements FolderRepository {
     String? name,
     String? description,
     String? color,
+    String? parentId,
   }) async {
     return ErrorGuard.run(() async {
       final existingFolder = await remoteDataSource.getFolderById(id);
@@ -63,6 +67,7 @@ class FolderRepositoryImpl implements FolderRepository {
         name: name ?? existingFolder.name,
         description: description ?? existingFolder.description,
         color: color ?? existingFolder.color,
+        parentId: parentId ?? existingFolder.parentId,
       );
 
       final result = await remoteDataSource.updateFolder(id, updatedFolder);

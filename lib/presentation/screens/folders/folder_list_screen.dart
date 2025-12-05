@@ -92,6 +92,7 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
                           folder: folder,
                           onTap: () => _openFolder(folder),
                           onEdit: () => _openFolderForm(folder: folder),
+                          onAddSubfolder: () => _openFolderForm(parent: folder),
                           onDelete: () => _confirmDelete(folder),
                           isGrid: true,
                           fixedColor: Theme.of(context).colorScheme.primary,
@@ -109,12 +110,13 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
                           return FolderTile(
                             key: ValueKey(folder.id),
                             folder: folder,
-                          onTap: () => _openFolder(folder),
-                          onEdit: () => _openFolderForm(folder: folder),
-                          onDelete: () => _confirmDelete(folder),
-                          isGrid: false,
-                          fixedColor: Theme.of(context).colorScheme.primary,
-                        );
+                            onTap: () => _openFolder(folder),
+                            onEdit: () => _openFolderForm(folder: folder),
+                            onAddSubfolder: () => _openFolderForm(parent: folder),
+                            onDelete: () => _confirmDelete(folder),
+                            isGrid: false,
+                            fixedColor: Theme.of(context).colorScheme.primary,
+                          );
                       },
                     ),
             ),
@@ -182,19 +184,25 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
     );
   }
 
-  Future<void> _openFolderForm({Folder? folder}) async {
+  Future<void> _openFolderForm({Folder? folder, Folder? parent}) async {
     await showDialog(
       context: context,
       builder: (context) => FolderFormDialog(
         folder: folder,
-        onSubmit: (name, description, color) async {
+        parentFolder: parent,
+        onSubmit: (name, description, color, parentId) async {
           final navigator = Navigator.of(context);
           final messenger = ScaffoldMessenger.of(context);
           try {
             final notifier = ref.read(folderListViewModelProvider.notifier);
             final errorMessage = folder == null
                 ? await notifier.createFolder(
-                    CreateFolderParams(name: name, description: description, color: color),
+                    CreateFolderParams(
+                      name: name,
+                      description: description,
+                      color: color,
+                      parentId: parent?.id ?? parentId,
+                    ),
                   )
                 : await notifier.updateFolder(
                     UpdateFolderParams(
@@ -202,6 +210,7 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
                       name: name,
                       description: description,
                       color: color,
+                      parentId: parent?.id ?? folder.parentId,
                     ),
                   );
 

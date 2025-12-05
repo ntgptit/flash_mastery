@@ -14,6 +14,8 @@ abstract class FolderModel with _$FolderModel {
     String? description,
     String? color,
     @Default(0) int deckCount,
+    String? parentId,
+    @Default(0) int subFolderCount,
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _FolderModel;
@@ -28,6 +30,8 @@ abstract class FolderModel with _$FolderModel {
       description: description,
       color: color,
       deckCount: deckCount,
+      parentId: parentId,
+      subFolderCount: subFolderCount,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
@@ -41,6 +45,8 @@ abstract class FolderModel with _$FolderModel {
       description: folder.description,
       color: folder.color,
       deckCount: folder.deckCount,
+      parentId: folder.parentId,
+      subFolderCount: folder.subFolderCount,
       createdAt: folder.createdAt,
       updatedAt: folder.updatedAt,
     );

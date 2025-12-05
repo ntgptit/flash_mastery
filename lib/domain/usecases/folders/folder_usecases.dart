@@ -6,14 +6,14 @@ import 'package:flash_mastery/core/usecases/usecase.dart';
 import 'package:flash_mastery/domain/entities/folder.dart';
 import 'package:flash_mastery/domain/repositories/folder_repository.dart';
 
-class GetFoldersUseCase extends UseCase<List<Folder>, NoParams> {
+class GetFoldersUseCase extends UseCase<List<Folder>, GetFoldersParams> {
   final FolderRepository repository;
 
   GetFoldersUseCase(this.repository);
 
   @override
-  Future<Either<Failure, List<Folder>>> call(NoParams params) {
-    return repository.getFolders();
+  Future<Either<Failure, List<Folder>>> call(GetFoldersParams params) {
+    return repository.getFolders(parentId: params.parentId);
   }
 }
 
@@ -49,16 +49,14 @@ class CreateFolderUseCase extends UseCase<Folder, CreateFolderParams> {
     final trimmedName = params.name.trim();
     final trimmedDescription = params.description?.trim();
 
-    final validationFailure = _validateFolder(
-      trimmedName,
-      trimmedDescription,
-    );
+    final validationFailure = _validateFolder(trimmedName, trimmedDescription);
     if (validationFailure != null) return Left(validationFailure);
 
     return repository.createFolder(
       name: trimmedName,
       description: trimmedDescription,
       color: params.color,
+      parentId: params.parentId,
     );
   }
 }
@@ -72,11 +70,8 @@ class UpdateFolderUseCase extends UseCase<Folder, UpdateFolderParams> {
   Future<Either<Failure, Folder>> call(UpdateFolderParams params) async {
     final trimmedName = params.name?.trim();
     final trimmedDescription = params.description?.trim();
-    final validationFailure = _validateFolder(
-      trimmedName ?? '',
-      trimmedDescription,
-      allowEmptyName: trimmedName == null,
-    );
+    final validationFailure =
+        _validateFolder(trimmedName ?? '', trimmedDescription, allowEmptyName: trimmedName == null);
     if (validationFailure != null) return Left(validationFailure);
 
     return repository.updateFolder(
@@ -84,6 +79,7 @@ class UpdateFolderUseCase extends UseCase<Folder, UpdateFolderParams> {
       name: trimmedName,
       description: trimmedDescription,
       color: params.color,
+      parentId: params.parentId,
     );
   }
 }
@@ -103,11 +99,13 @@ class CreateFolderParams {
   final String name;
   final String? description;
   final String? color;
+  final String? parentId;
 
   const CreateFolderParams({
     required this.name,
     this.description,
     this.color,
+    this.parentId,
   });
 }
 
@@ -116,13 +114,21 @@ class UpdateFolderParams {
   final String? name;
   final String? description;
   final String? color;
+  final String? parentId;
 
   const UpdateFolderParams({
     required this.id,
     this.name,
     this.description,
     this.color,
+    this.parentId,
   });
+}
+
+class GetFoldersParams {
+  final String? parentId;
+
+  const GetFoldersParams({this.parentId});
 }
 
 Failure? _validateFolder(

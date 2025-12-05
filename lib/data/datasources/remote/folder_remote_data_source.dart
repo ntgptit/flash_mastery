@@ -4,7 +4,7 @@ import 'package:flash_mastery/core/exceptions/exceptions.dart';
 import 'package:flash_mastery/data/models/folder_model.dart';
 
 abstract class FolderRemoteDataSource {
-  Future<List<FolderModel>> getFolders();
+  Future<List<FolderModel>> getFolders({String? parentId});
   Future<FolderModel> getFolderById(String id);
   Future<FolderModel> createFolder(FolderModel folder);
   Future<FolderModel> updateFolder(String id, FolderModel folder);
@@ -18,8 +18,11 @@ class FolderRemoteDataSourceImpl implements FolderRemoteDataSource {
   final Dio dio;
 
   @override
-  Future<List<FolderModel>> getFolders() async {
-    final response = await dio.get(ApiConstants.folders);
+  Future<List<FolderModel>> getFolders({String? parentId}) async {
+    final response = await dio.get(
+      ApiConstants.folders,
+      queryParameters: parentId != null ? {'parentId': parentId} : null,
+    );
     if (response.statusCode == 200) {
       final data = (response.data as List).cast<Map<String, dynamic>>();
       return data.map(FolderModel.fromJson).toList();
@@ -47,6 +50,7 @@ class FolderRemoteDataSourceImpl implements FolderRemoteDataSource {
         'name': folder.name,
         'description': folder.description,
         'color': folder.color,
+        'parentId': folder.parentId,
       },
     );
     if (response.statusCode == 201 || response.statusCode == 200) {
@@ -63,6 +67,7 @@ class FolderRemoteDataSourceImpl implements FolderRemoteDataSource {
         'name': folder.name,
         'description': folder.description,
         'color': folder.color,
+        'parentId': folder.parentId,
       },
     );
     if (response.statusCode == 200) {

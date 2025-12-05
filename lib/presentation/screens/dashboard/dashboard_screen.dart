@@ -207,12 +207,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     showDialog(
       context: context,
       builder: (context) => FolderFormDialog(
-        onSubmit: (name, description, color) async {
+        onSubmit: (name, description, color, parentId) async {
           try {
             final errorMessage = await ref
                 .read(folderListViewModelProvider.notifier)
                 .createFolder(
-                  CreateFolderParams(name: name, description: description, color: color),
+                  CreateFolderParams(
+                    name: name,
+                    description: description,
+                    color: color,
+                    parentId: parentId,
+                  ),
                 );
             if (context.mounted) {
               Navigator.pop(context);
@@ -243,7 +248,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       context: context,
       builder: (context) => FolderFormDialog(
         folder: folder,
-        onSubmit: (name, description, color) async {
+        onSubmit: (name, description, color, parentId) async {
           try {
             final errorMessage = await ref
                 .read(folderListViewModelProvider.notifier)
@@ -253,6 +258,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     name: name,
                     description: description,
                     color: color,
+                    parentId: parentId ?? folder.parentId,
                   ),
                 );
             if (context.mounted) {

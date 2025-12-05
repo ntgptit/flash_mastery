@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 
 class FolderFormDialog extends StatefulWidget {
   final Folder? folder;
-  final Function(String name, String? description, String? color) onSubmit;
+  final Folder? parentFolder;
+  final Function(String name, String? description, String? color, String? parentId) onSubmit;
 
-  const FolderFormDialog({super.key, this.folder, required this.onSubmit});
+  const FolderFormDialog({super.key, this.folder, this.parentFolder, required this.onSubmit});
 
   @override
   State<FolderFormDialog> createState() => _FolderFormDialogState();
@@ -66,6 +67,31 @@ class _FolderFormDialogState extends State<FolderFormDialog> {
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: AppSpacing.xl),
+                if (widget.parentFolder != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.subdirectory_arrow_right, size: AppSpacing.iconSmallMedium),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Parent folder', style: Theme.of(context).textTheme.labelSmall),
+                              Text(
+                                widget.parentFolder!.name,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(
@@ -188,7 +214,12 @@ class _FolderFormDialogState extends State<FolderFormDialog> {
       final description = _descriptionController.text.trim();
       final color = _selectedColor;
 
-      widget.onSubmit(name, description.isEmpty ? null : description, color);
+      widget.onSubmit(
+        name,
+        description.isEmpty ? null : description,
+        color,
+        widget.parentFolder?.id,
+      );
     }
   }
 
