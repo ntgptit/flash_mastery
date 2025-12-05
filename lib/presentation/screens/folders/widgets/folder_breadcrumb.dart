@@ -6,43 +6,60 @@ import 'package:flutter/material.dart';
 class FolderBreadcrumb extends StatelessWidget {
   final List<Folder> allFolders;
   final Folder current;
-  final VoidCallback onRootTap;
+  final VoidCallback? onRootTap;
   final void Function(Folder folder) onFolderTap;
 
   const FolderBreadcrumb({
     super.key,
     required this.allFolders,
     required this.current,
-    required this.onRootTap,
+    this.onRootTap,
     required this.onFolderTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final scrollController = ScrollController();
+    // Scroll to end after build to ensure deepest folder is visible.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (scrollController.hasClients) {
+        scrollController.animateTo(
+          scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+
     final path = _buildPath();
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Wrap(
-      crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: AppSpacing.xs,
-      runSpacing: AppSpacing.xs,
-      children: [
-        _BreadcrumbChip(
-          label: 'Folders',
-          icon: Icons.folder_open_outlined,
-          onTap: onRootTap,
-          color: colorScheme.primary,
-        ),
-        for (final folder in path) ...[
-          Icon(Icons.chevron_right, size: AppSpacing.iconSmall, color: colorScheme.onSurfaceVariant),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      controller: scrollController,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
           _BreadcrumbChip(
-            label: folder.name,
-            icon: Icons.folder,
-            onTap: () => onFolderTap(folder),
-            color: colorScheme.secondary,
+            label: 'Folders',
+            icon: Icons.folder_open_outlined,
+            onTap: onRootTap,
+            color: colorScheme.primary,
           ),
+          for (final folder in path) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+              child: Icon(Icons.chevron_right, size: AppSpacing.iconSmall, color: colorScheme.onSurfaceVariant),
+            ),
+            _BreadcrumbChip(
+              label: folder.name,
+              icon: Icons.folder,
+              onTap: () => onFolderTap(folder),
+              color: colorScheme.secondary,
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 
@@ -62,30 +79,46 @@ class FolderBreadcrumb extends StatelessWidget {
 class _BreadcrumbChip extends StatelessWidget {
   final String label;
   final IconData icon;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final Color color;
 
   const _BreadcrumbChip({
     required this.label,
     required this.icon,
-    required this.onTap,
+    this.onTap,
     required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ActionChip(
-      avatar: Icon(icon, size: AppSpacing.iconSmall, color: Colors.white),
-      backgroundColor: color.withValues(alpha: AppOpacity.mediumLow),
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-      label: Text(
-        label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-            ),
+    final effectiveColor = color.withValues(alpha: AppOpacity.mediumLow);
+    final chip = Container(
+      decoration: BoxDecoration(
+        color: effectiveColor,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
       ),
-      onPressed: onTap,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: AppSpacing.iconSmall, color: Colors.white),
+          const SizedBox(width: AppSpacing.xs),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+        ],
+      ),
+    );
+
+    if (onTap == null) return chip;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+      child: chip,
     );
   }
 }

@@ -96,7 +96,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                                 child: FolderBreadcrumb(
                                   allFolders: folders,
                                   current: widget.folder!,
-                                  onRootTap: () => context.goNamed('decks'),
+                                  onRootTap: null,
                                   onFolderTap: (folder) => context.goNamed('decks', extra: folder),
                                 ),
                               ),

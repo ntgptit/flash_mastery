@@ -27,6 +27,7 @@ class _DeckFormDialogState extends State<DeckFormDialog> {
   late final TextEditingController _descriptionController;
   String? _selectedFolderId;
   bool _isSubmitting = false;
+  late final Map<String, Folder> _folderById;
 
   @override
   void initState() {
@@ -34,6 +35,7 @@ class _DeckFormDialogState extends State<DeckFormDialog> {
     _nameController = TextEditingController(text: widget.deck?.name ?? '');
     _descriptionController = TextEditingController(text: widget.deck?.description ?? '');
     _selectedFolderId = widget.deck?.folderId ?? widget.initialFolderId;
+    _folderById = {for (final f in widget.folders) f.id: f};
   }
 
   @override
@@ -110,14 +112,7 @@ class _DeckFormDialogState extends State<DeckFormDialog> {
                     prefixIcon: Icon(Icons.folder_open_rounded),
                     border: OutlineInputBorder(),
                   ),
-                  items: widget.folders
-                      .map(
-                        (folder) => DropdownMenuItem(
-                          value: folder.id,
-                          child: Text(folder.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-                        ),
-                      )
-                      .toList(),
+                  items: _buildFolderOptions(),
                   onChanged: (value) {
                     setState(() {
                       _selectedFolderId = value;
@@ -181,5 +176,54 @@ class _DeckFormDialogState extends State<DeckFormDialog> {
         });
       }
     }
+  }
+
+  List<DropdownMenuItem<String>> _buildFolderOptions() {
+    final sorted = [...widget.folders]..sort((a, b) => _pathLabel(a).compareTo(_pathLabel(b)));
+    return sorted
+        .map(
+          (folder) => DropdownMenuItem<String>(
+            value: folder.id,
+            child: Text(
+              _indentLabel(folder),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        )
+        .toList();
+  }
+
+  String _indentLabel(Folder folder) {
+    final level = folder.level > 0 ? folder.level : _safeLevelFromPath(folder);
+    final indent = level > 0 ? List.filled(level, '   ').join() : '';
+    return '$indent${folder.name}';
+  }
+
+  int _safeLevelFromPath(Folder folder) {
+    final safePath = _safePath(folder);
+    return safePath.isEmpty ? 0 : safePath.length - 1;
+  }
+
+  List<String> _safePath(Folder folder) {
+    try {
+      return List<String>.from(folder.path);
+    } catch (_) {
+      return const <String>[];
+    }
+  }
+
+  String _pathLabel(Folder folder) {
+    final safePath = _safePath(folder);
+    if (safePath.isNotEmpty) return safePath.join(' / ');
+    final names = <String>[];
+    Folder? current = folder;
+    var guard = 0;
+    while (current != null && guard < 100) {
+      names.add(current.name);
+      current = current.parentId != null ? _folderById[current.parentId!] : null;
+      guard++;
+    }
+    return names.reversed.join(' / ');
   }
 }
