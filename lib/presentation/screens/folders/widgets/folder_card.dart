@@ -292,29 +292,31 @@ class FolderTile extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: AppSpacing.sm),
-              Row(
-                children: [
-                  Icon(
-                    Icons.folder_open,
-                    size: AppSpacing.iconSmallMedium,
-                    color: fixedColor ?? Theme.of(context).colorScheme.primary,
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.folder_open,
+                        size: AppSpacing.iconSmallMedium,
+                        color: fixedColor ?? Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      Text(
+                        '${folder.deckCount} deck${folder.deckCount == 1 ? '' : 's'}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Icon(
+                        Icons.create_new_folder_outlined,
+                        size: AppSpacing.iconSmallMedium,
+                        color: fixedColor ?? Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      Text(
+                        '${folder.subFolderCount} subfolder${folder.subFolderCount == 1 ? '' : 's'}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text('${folder.deckCount} deck${folder.deckCount == 1 ? '' : 's'}',
-                      style: Theme.of(context).textTheme.bodySmall),
-                  const SizedBox(width: AppSpacing.sm),
-                  Icon(
-                    Icons.create_new_folder_outlined,
-                    size: AppSpacing.iconSmallMedium,
-                    color: fixedColor ?? Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    '${folder.subFolderCount}',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              ),
             ],
           ),
         ),
