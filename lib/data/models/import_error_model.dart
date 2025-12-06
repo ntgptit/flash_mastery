@@ -8,10 +8,19 @@ part 'import_error_model.g.dart';
 abstract class ImportErrorModel with _$ImportErrorModel {
   const ImportErrorModel._();
 
-  const factory ImportErrorModel({@Default(0) int rowIndex, @Default('') String message}) =
-      _ImportErrorModel;
+  const factory ImportErrorModel({
+    @Default(0) int rowIndex,
+    @Default('') String message,
+    String? deckName,
+    String? term,
+  }) = _ImportErrorModel;
 
   factory ImportErrorModel.fromJson(Map<String, dynamic> json) => _$ImportErrorModelFromJson(json);
 
-  ImportError toEntity() => ImportError(rowIndex: rowIndex, message: message);
+  ImportError toEntity() => ImportError(
+        rowIndex: rowIndex,
+        message: message,
+        deckName: deckName,
+        term: term,
+      );
 }

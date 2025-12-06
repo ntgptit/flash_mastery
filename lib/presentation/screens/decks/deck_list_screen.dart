@@ -4,6 +4,7 @@ import 'package:flash_mastery/core/router/app_router.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/entities/flashcard_type.dart';
 import 'package:flash_mastery/domain/entities/folder.dart';
+import 'package:flash_mastery/domain/entities/import_error.dart';
 import 'package:flash_mastery/domain/entities/import_summary.dart';
 import 'package:flash_mastery/features/decks/providers.dart';
 import 'package:flash_mastery/features/folders/providers.dart';
@@ -671,41 +672,44 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
           width: 420,
           child: SingleChildScrollView(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Decks created: ${summary.decksCreated}'),
-                Text('Decks skipped (duplicate): ${summary.decksSkipped}'),
-                if (summary.skippedDeckNames.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: AppSpacing.xs),
-                    child: Text(
-                      'Skipped decks: ${summary.skippedDeckNames.join(', ')}',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ),
+                _buildExpandableSection(
+                  title: 'Success',
+                  subtitle: '${summary.decksCreated} decks, ${summary.cardsImported} cards',
+                  initiallyExpanded: true,
+                  children: [
+                    Text('Decks created: ${summary.decksCreated}'),
+                    Text('Flashcards imported: ${summary.cardsImported}'),
+                  ],
+                ),
                 const SizedBox(height: AppSpacing.sm),
-                Text('Flashcards imported: ${summary.cardsImported}'),
-                Text('Flashcards skipped (duplicate term): ${summary.cardsSkippedDuplicate}'),
-                Text('Invalid rows: ${summary.invalidRows}'),
+                _buildExpandableSection(
+                  title: 'Skipped',
+                  subtitle:
+                      '${summary.decksSkipped} decks, ${summary.cardsSkippedDuplicate} cards',
+                  children: [
+                    Text('Decks skipped (duplicate): ${summary.decksSkipped}'),
+                    if (summary.skippedDeckNames.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.xs),
+                        child: _buildSkippedDeckList(summary.skippedDeckNames),
+                      ),
+                    Text('Flashcards skipped (duplicate term): ${summary.cardsSkippedDuplicate}'),
+                  ],
+                ),
                 const SizedBox(height: AppSpacing.sm),
-                if (summary.errors.isNotEmpty)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Errors:'),
-                      const SizedBox(height: AppSpacing.xs),
-                      ...summary.errors
-                          .map(
-                            (e) => Text(
-                              'Row ${e.rowIndex}: ${e.message}',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(color: Theme.of(context).colorScheme.error),
-                            ),
-                          ),
-                    ],
-                  ),
+                _buildExpandableSection(
+                  title: 'Errors',
+                  subtitle: '${summary.invalidRows} invalid rows',
+                  children: summary.errors.isEmpty
+                      ? [const Text('No errors')]
+                      : [
+                          Text('Invalid rows: ${summary.invalidRows}'),
+                          const SizedBox(height: AppSpacing.xs),
+                          ..._buildErrorTree(summary),
+                        ],
+                ),
               ],
             ),
           ),
@@ -715,6 +719,75 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildExpandableSection({
+    required String title,
+    required String subtitle,
+    required List<Widget> children,
+    bool initiallyExpanded = false,
+  }) {
+    return ExpansionTile(
+      initiallyExpanded: initiallyExpanded,
+      title: Text(title, style: Theme.of(context).textTheme.titleMedium),
+      subtitle: Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+      childrenPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+      children: children,
+    );
+  }
+
+  Widget _buildSkippedDeckList(List<String> deckNames) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: deckNames
+          .map(
+            (name) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+              child: Text('• $name', style: Theme.of(context).textTheme.bodySmall),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  List<Widget> _buildErrorTree(ImportSummary summary) {
+    final Map<String, List<ImportError>> grouped = {};
+    for (final error in summary.errors) {
+      final key = (error.deckName?.isNotEmpty ?? false) ? error.deckName! : 'General';
+      grouped.putIfAbsent(key, () => []).add(error);
+    }
+    return grouped.entries
+        .map(
+          (entry) => Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  entry.key,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.primary),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                ...entry.value.map(
+                  (e) => Padding(
+                    padding: const EdgeInsets.only(left: AppSpacing.md, bottom: AppSpacing.xs),
+                    child: Text(
+                      'Row ${e.rowIndex}: ${e.message}',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(color: Theme.of(context).colorScheme.error),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        )
+        .toList();
   }
 
   Widget _buildDecksSliver(List<Deck> decks, List<Folder> folders) {

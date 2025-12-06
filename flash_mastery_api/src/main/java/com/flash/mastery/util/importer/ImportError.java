@@ -10,4 +10,6 @@ import lombok.Data;
 public class ImportError {
     private int rowIndex;
     private String message;
+    private String deckName;
+    private String term;
 }

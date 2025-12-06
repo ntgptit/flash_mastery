@@ -33,7 +33,11 @@ public class ImportResult<T> {
     }
 
     public void addError(int rowIndex, String message) {
-        errors.add(ImportError.builder().rowIndex(rowIndex).message(message).build());
+        addError(rowIndex, message, null, null);
+    }
+
+    public void addError(int rowIndex, String message, String deckName, String term) {
+        errors.add(ImportError.builder().rowIndex(rowIndex).message(message).deckName(deckName).term(term).build());
         invalidRows++;
     }
 
@@ -46,7 +50,7 @@ public class ImportResult<T> {
         if (name != null) {
             skippedDeckNames.add(name);
         }
-        addError(rowIndex, "Duplicate deck name: " + name);
+        addError(rowIndex, "Duplicate deck name: " + name, name, null);
     }
 
     public void addCardImported() {
@@ -55,10 +59,10 @@ public class ImportResult<T> {
 
     public void addCardDuplicate(int rowIndex, String term, String deckName) {
         cardsSkippedDuplicate++;
-        addError(rowIndex, "Duplicate term '" + term + "' in deck '" + deckName + "'");
+        addError(rowIndex, "Duplicate term '" + term + "' in deck '" + deckName + "'", deckName, term);
     }
 
-    public void addInvalidRow(int rowIndex, String message) {
-        addError(rowIndex, message);
+    public void addInvalidRow(int rowIndex, String message, String deckName) {
+        addError(rowIndex, message, deckName, null);
     }
 }
