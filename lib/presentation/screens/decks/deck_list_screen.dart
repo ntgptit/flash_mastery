@@ -142,58 +142,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                           ),
                         ),
                       ),
-                    if (decks.isEmpty)
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.all(AppSpacing.lg),
-                          child: EmptyStateWidget(
-                            icon: Icons.layers_outlined,
-                            title: 'No decks yet',
-                            message: 'Create a deck to start adding flashcards',
-                            actionButtonText: 'Create Deck',
-                            onAction: () => _openDeckForm(folders: folders),
-                          ),
-                        ),
-                      )
-                    else
-                      SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppSpacing.lg,
-                          AppSpacing.md,
-                          AppSpacing.lg,
-                          AppSpacing.lg,
-                        ),
-                        sliver: SliverList.separated(
-                          itemBuilder: (context, index) {
-                            final deck = decks[index];
-                            final folder = folders.firstWhere(
-                              (f) => f.id == deck.folderId,
-                              orElse: () =>
-                                  widget.folder ??
-                                  Folder(
-                                    id: 'unknown',
-                                    name: 'Unknown',
-                                    description: null,
-                                    color: null,
-                                    deckCount: 0,
-                                    level: 0,
-                                    path: const [],
-                                    createdAt: DateTime.now(),
-                                    updatedAt: DateTime.now(),
-                                  ),
-                            );
-                            return DeckCard(
-                              deck: deck,
-                              folder: folder,
-                              onOpen: () => _openDeck(deck),
-                              onEdit: () => _openDeckForm(deck: deck, folders: folders),
-                              onDelete: () => _confirmDelete(deck),
-                            );
-                          },
-                          separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
-                          itemCount: decks.length,
-                        ),
-                      ),
+                    _buildDecksSliver(decks, folders),
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
@@ -306,15 +255,15 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
             navigator.pop();
             if (errorMessage != null) {
               messenger.showSnackBar(SnackBar(content: Text('Error: $errorMessage')));
-            } else {
-              messenger.showSnackBar(
-                SnackBar(
-                  content: Text(
-                    deck == null ? 'Deck created successfully' : 'Deck updated successfully',
-                  ),
-                ),
-              );
+              return;
             }
+            messenger.showSnackBar(
+              SnackBar(
+                content: Text(
+                  deck == null ? 'Deck created successfully' : 'Deck updated successfully',
+                ),
+              ),
+            );
           } catch (e) {
             if (!mounted) return;
             messenger.showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
@@ -366,15 +315,15 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
             navigator.pop();
             if (errorMessage != null) {
               messenger.showSnackBar(SnackBar(content: Text('Error: $errorMessage')));
-            } else {
-              messenger.showSnackBar(
-                SnackBar(
-                  content: Text(
-                    folder == null ? 'Subfolder created successfully' : 'Subfolder updated',
-                  ),
-                ),
-              );
+              return;
             }
+            messenger.showSnackBar(
+              SnackBar(
+                content: Text(
+                  folder == null ? 'Subfolder created successfully' : 'Subfolder updated',
+                ),
+              ),
+            );
           } catch (e) {
             if (!mounted) return;
             messenger.showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
@@ -544,5 +493,63 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
       return;
     }
     context.go(AppRouter.dashboard);
+  }
+
+  Widget _buildDecksSliver(List<Deck> decks, List<Folder> folders) {
+    Widget sliver = SliverPadding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.lg,
+        AppSpacing.lg,
+      ),
+      sliver: SliverList.separated(
+        itemBuilder: (context, index) {
+          final deck = decks[index];
+          final folder = folders.firstWhere(
+            (f) => f.id == deck.folderId,
+            orElse: () =>
+                widget.folder ??
+                Folder(
+                  id: 'unknown',
+                  name: 'Unknown',
+                  description: null,
+                  color: null,
+                  deckCount: 0,
+                  level: 0,
+                  path: const [],
+                  createdAt: DateTime.now(),
+                  updatedAt: DateTime.now(),
+                ),
+          );
+          return DeckCard(
+            deck: deck,
+            folder: folder,
+            onOpen: () => _openDeck(deck),
+            onEdit: () => _openDeckForm(deck: deck, folders: folders),
+            onDelete: () => _confirmDelete(deck),
+          );
+        },
+        separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
+        itemCount: decks.length,
+      ),
+    );
+
+    if (decks.isEmpty) {
+      sliver = SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: EmptyStateWidget(
+            icon: Icons.layers_outlined,
+            title: 'No decks yet',
+            message: 'Create a deck to start adding flashcards',
+            actionButtonText: 'Create Deck',
+            onAction: () => _openDeckForm(folders: folders),
+          ),
+        ),
+      );
+    }
+
+    return sliver;
   }
 }
