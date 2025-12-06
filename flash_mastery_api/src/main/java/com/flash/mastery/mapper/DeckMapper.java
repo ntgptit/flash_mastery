@@ -22,12 +22,14 @@ public interface DeckMapper {
 
   @Mapping(target = "folderId", source = "folder.id")
   @Mapping(target = "cardCount", source = "cardCount")
+  @Mapping(target = "type", expression = "java(entity.getType() != null ? entity.getType() : com.flash.mastery.entity.FlashcardType.VOCABULARY)")
   DeckResponse toResponse(Deck entity);
 
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "name", source = "request.name")
   @Mapping(target = "description", source = "request.description")
   @Mapping(target = "cardCount", expression = "java(NumberConstants.ZERO)")
+  @Mapping(target = "type", expression = "java(request.getType() != null ? request.getType() : com.flash.mastery.entity.FlashcardType.VOCABULARY)")
   @Mapping(target = "folder", source = "folder")
   @Mapping(target = "flashcards", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
@@ -40,6 +42,7 @@ public interface DeckMapper {
   @Mapping(target = "description", source = "request.description")
   @Mapping(target = "folder", source = "folder")
   @Mapping(target = "cardCount", ignore = true)
+  @Mapping(target = "type", ignore = true)
   @Mapping(target = "flashcards", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)

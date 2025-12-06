@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flash_mastery/domain/entities/flashcard_type.dart';
 
 /// Deck entity representing a collection of flashcards under a folder.
 class Deck extends Equatable {
@@ -7,8 +8,12 @@ class Deck extends Equatable {
   final String? description;
   final String? folderId;
   final int cardCount;
+  final FlashcardType? _type;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  /// Returns the deck type, defaulting to vocabulary if null
+  FlashcardType get type => _type ?? FlashcardType.vocabulary;
 
   const Deck({
     required this.id,
@@ -16,9 +21,10 @@ class Deck extends Equatable {
     this.description,
     this.folderId,
     this.cardCount = 0,
+    FlashcardType? type,
     required this.createdAt,
     required this.updatedAt,
-  });
+  }) : _type = type;
 
   Deck copyWith({
     String? id,
@@ -26,6 +32,7 @@ class Deck extends Equatable {
     String? description,
     String? folderId,
     int? cardCount,
+    FlashcardType? type,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -35,6 +42,7 @@ class Deck extends Equatable {
       description: description ?? this.description,
       folderId: folderId ?? this.folderId,
       cardCount: cardCount ?? this.cardCount,
+      type: type ?? _type,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -47,6 +55,7 @@ class Deck extends Equatable {
         description,
         folderId,
         cardCount,
+        _type,
         createdAt,
         updatedAt,
       ];

@@ -1,5 +1,6 @@
 package com.flash.mastery.dto.request;
 
+import com.flash.mastery.entity.FlashcardType;
 import com.flash.mastery.constant.ValidationConstants;
 import jakarta.validation.constraints.Size;
 import java.util.UUID;
@@ -11,4 +12,5 @@ public class DeckUpdateRequest {
   private String name;
   private String description;
   private UUID folderId;
+  private FlashcardType type;
 }

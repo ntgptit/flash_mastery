@@ -1,4 +1,7 @@
+// ignore_for_file: invalid_annotation_target
+
 import 'package:flash_mastery/domain/entities/deck.dart';
+import 'package:flash_mastery/domain/entities/flashcard_type.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'deck_model.freezed.dart';
@@ -14,6 +17,11 @@ abstract class DeckModel with _$DeckModel {
     String? description,
     String? folderId,
     @Default(0) int cardCount,
+    @JsonKey(
+      fromJson: flashcardTypeFromJsonNullable,
+      toJson: flashcardTypeToJsonNullable,
+    )
+    FlashcardType? type,
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _DeckModel;
@@ -26,6 +34,7 @@ abstract class DeckModel with _$DeckModel {
     description: description,
     folderId: folderId,
     cardCount: cardCount,
+    type: type,
     createdAt: createdAt,
     updatedAt: updatedAt,
   );
@@ -36,6 +45,7 @@ abstract class DeckModel with _$DeckModel {
     description: deck.description,
     folderId: deck.folderId,
     cardCount: deck.cardCount,
+    type: deck.type,
     createdAt: deck.createdAt,
     updatedAt: deck.updatedAt,
   );

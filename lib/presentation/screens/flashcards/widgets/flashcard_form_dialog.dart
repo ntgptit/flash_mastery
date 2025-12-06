@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 class FlashcardFormDialog extends StatefulWidget {
   final Flashcard? flashcard;
+  final FlashcardType? deckType;
   final Future<void> Function(
       {required String question,
       required String answer,
@@ -12,7 +13,7 @@ class FlashcardFormDialog extends StatefulWidget {
       required FlashcardType type})
   onSubmit;
 
-  const FlashcardFormDialog({super.key, this.flashcard, required this.onSubmit});
+  const FlashcardFormDialog({super.key, this.flashcard, this.deckType, required this.onSubmit});
 
   @override
   State<FlashcardFormDialog> createState() => _FlashcardFormDialogState();
@@ -32,7 +33,7 @@ class _FlashcardFormDialogState extends State<FlashcardFormDialog> {
     _questionController = TextEditingController(text: widget.flashcard?.question ?? '');
     _answerController = TextEditingController(text: widget.flashcard?.answer ?? '');
     _hintController = TextEditingController(text: widget.flashcard?.hint ?? '');
-    _type = widget.flashcard?.type ?? FlashcardType.vocabulary;
+    _type = widget.deckType ?? widget.flashcard?.type ?? FlashcardType.vocabulary;
   }
 
   @override
@@ -70,17 +71,12 @@ class _FlashcardFormDialogState extends State<FlashcardFormDialog> {
                     prefixIcon: Icon(Icons.category_outlined),
                     border: OutlineInputBorder(),
                   ),
-                  items: FlashcardType.values
-                      .map(
-                        (t) => DropdownMenuItem(
-                          value: t,
-                          child: Text(t == FlashcardType.vocabulary ? 'Vocabulary' : 'Grammar'),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    if (value != null) setState(() => _type = value);
-                  },
+                  items: _typeOptions(),
+                  onChanged: widget.deckType != null
+                      ? null
+                      : (value) {
+                          if (value != null) setState(() => _type = value);
+                        },
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 TextFormField(
@@ -184,5 +180,24 @@ class _FlashcardFormDialogState extends State<FlashcardFormDialog> {
         });
       }
     }
+  }
+
+  List<DropdownMenuItem<FlashcardType>> _typeOptions() {
+    if (widget.deckType != null) {
+      return [
+        DropdownMenuItem(
+          value: widget.deckType,
+          child: Text(widget.deckType == FlashcardType.vocabulary ? 'Vocabulary' : 'Grammar'),
+        ),
+      ];
+    }
+    return FlashcardType.values
+        .map(
+          (t) => DropdownMenuItem(
+            value: t,
+            child: Text(t == FlashcardType.vocabulary ? 'Vocabulary' : 'Grammar'),
+          ),
+        )
+        .toList();
   }
 }

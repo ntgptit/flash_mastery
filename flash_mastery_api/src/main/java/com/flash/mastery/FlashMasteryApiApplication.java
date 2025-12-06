@@ -6,8 +6,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class FlashMasteryApiApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(FlashMasteryApiApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(FlashMasteryApiApplication.class, args);
+    }
 
 }

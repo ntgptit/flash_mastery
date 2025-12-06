@@ -87,6 +87,9 @@ public class DeckServiceImpl implements DeckService {
           .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FOLDER)));
     }
     deckMapper.update(deck, request, folder);
+    if (request.getType() != null) {
+      deck.setType(request.getType());
+    }
     Deck saved = deckRepository.save(deck);
     return deckMapper.toResponse(saved);
   }

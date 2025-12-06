@@ -72,6 +72,7 @@ class DeckRemoteDataSourceImpl implements DeckRemoteDataSource {
         'name': deck.name,
         'description': deck.description,
         'folderId': deck.folderId,
+        'type': deck.type?.name.toUpperCase() ?? 'VOCABULARY',
       },
     );
     if (response.statusCode == 201 || response.statusCode == 200) {
@@ -90,6 +91,7 @@ class DeckRemoteDataSourceImpl implements DeckRemoteDataSource {
         'name': deck.name,
         'description': deck.description,
         'folderId': deck.folderId,
+        'type': deck.type?.name.toUpperCase() ?? 'VOCABULARY',
       },
     );
     if (response.statusCode == 200) {

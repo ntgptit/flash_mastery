@@ -4,6 +4,7 @@ import 'package:flash_mastery/core/constants/validation/error_messages.dart';
 import 'package:flash_mastery/core/exceptions/failures.dart';
 import 'package:flash_mastery/core/usecases/usecase.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
+import 'package:flash_mastery/domain/entities/flashcard_type.dart';
 import 'package:flash_mastery/domain/repositories/deck_repository.dart';
 
 class GetDecksUseCase extends UseCase<List<Deck>, GetDecksParams> {
@@ -65,6 +66,7 @@ class CreateDeckUseCase extends UseCase<Deck, CreateDeckParams> {
       name: trimmedName,
       description: trimmedDescription,
       folderId: params.folderId,
+      type: params.type,
     );
   }
 }
@@ -91,6 +93,7 @@ class UpdateDeckUseCase extends UseCase<Deck, UpdateDeckParams> {
       name: trimmedName,
       description: trimmedDescription,
       folderId: params.folderId,
+      type: params.type,
     );
   }
 }
@@ -110,8 +113,14 @@ class CreateDeckParams {
   final String name;
   final String? description;
   final String? folderId;
+  final FlashcardType type;
 
-  const CreateDeckParams({required this.name, this.description, this.folderId});
+  const CreateDeckParams({
+    required this.name,
+    this.description,
+    this.folderId,
+    this.type = FlashcardType.vocabulary,
+  });
 }
 
 class UpdateDeckParams {
@@ -119,12 +128,14 @@ class UpdateDeckParams {
   final String? name;
   final String? description;
   final String? folderId;
+  final FlashcardType? type;
 
   const UpdateDeckParams({
     required this.id,
     this.name,
     this.description,
     this.folderId,
+    this.type,
   });
 }
 

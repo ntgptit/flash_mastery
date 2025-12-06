@@ -1,6 +1,7 @@
 package com.flash.mastery.entity;
 
 import com.flash.mastery.constant.ValidationConstants;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -44,12 +45,12 @@ public class Folder extends BaseAuditEntity {
   @ToString.Exclude
   private Folder parent;
 
-  @OneToMany(mappedBy = "folder", fetch = FetchType.LAZY)
+  @OneToMany(mappedBy = "folder", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
   @ToString.Exclude
   @Default
   private Set<Deck> decks = new HashSet<>();
 
-  @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
+  @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
   @ToString.Exclude
   @Default
   private Set<Folder> children = new HashSet<>();

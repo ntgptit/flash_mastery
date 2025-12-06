@@ -244,15 +244,26 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
   }
 
   Future<void> _confirmDelete(Folder folder) async {
+    // Build warning message with counts
+    final warnings = <String>[];
+    if (folder.subFolderCount > 0) {
+      warnings.add('${folder.subFolderCount} subfolder${folder.subFolderCount > 1 ? 's' : ''}');
+    }
+    if (folder.deckCount > 0) {
+      warnings.add('${folder.deckCount} deck${folder.deckCount > 1 ? 's' : ''}');
+    }
+
+    final warningText = warnings.isEmpty
+        ? ''
+        : '\n\nThis folder contains:\n• ${warnings.join('\n• ')}\n\nAll contents will be permanently deleted.';
+
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Folder'),
         content: SingleChildScrollView(
           child: Text(
-            'Are you sure you want to delete "${folder.name}"?\nThis action cannot be undone.',
-            maxLines: AppConstants.confirmationDialogMaxLines,
-            overflow: TextOverflow.ellipsis,
+            'Are you sure you want to delete "${folder.name}"?$warningText\n\nThis action cannot be undone.',
           ),
         ),
         actions: [

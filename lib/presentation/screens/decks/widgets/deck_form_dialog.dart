@@ -1,5 +1,6 @@
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
+import 'package:flash_mastery/domain/entities/flashcard_type.dart';
 import 'package:flash_mastery/domain/entities/folder.dart';
 import 'package:flutter/material.dart';
 
@@ -7,7 +8,12 @@ class DeckFormDialog extends StatefulWidget {
   final Deck? deck;
   final List<Folder> folders;
   final String? initialFolderId;
-  final Future<void> Function(String name, String? description, String? folderId) onSubmit;
+  final Future<void> Function(
+    String name,
+    String? description,
+    String? folderId,
+    FlashcardType type,
+  ) onSubmit;
 
   const DeckFormDialog({
     super.key,
@@ -26,6 +32,7 @@ class _DeckFormDialogState extends State<DeckFormDialog> {
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
   String? _selectedFolderId;
+  late FlashcardType _selectedType;
   bool _isSubmitting = false;
   late final Map<String, Folder> _folderById;
 
@@ -35,6 +42,7 @@ class _DeckFormDialogState extends State<DeckFormDialog> {
     _nameController = TextEditingController(text: widget.deck?.name ?? '');
     _descriptionController = TextEditingController(text: widget.deck?.description ?? '');
     _selectedFolderId = widget.deck?.folderId ?? widget.initialFolderId;
+    _selectedType = widget.deck?.type ?? FlashcardType.vocabulary;
     _folderById = {for (final f in widget.folders) f.id: f};
   }
 
@@ -105,6 +113,30 @@ class _DeckFormDialogState extends State<DeckFormDialog> {
                   maxLength: AppConstants.maxDeckDescriptionLength,
                 ),
                 const SizedBox(height: AppSpacing.lg),
+                DropdownButtonFormField<FlashcardType>(
+                  initialValue: _selectedType,
+                  decoration: const InputDecoration(
+                    labelText: 'Deck type',
+                    prefixIcon: Icon(Icons.category_outlined),
+                    border: OutlineInputBorder(),
+                  ),
+                  items: FlashcardType.values
+                      .map(
+                        (t) => DropdownMenuItem(
+                          value: t,
+                          child: Text(t == FlashcardType.vocabulary ? 'Vocabulary' : 'Grammar'),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: isEditing
+                      ? null
+                      : (value) {
+                          if (value != null) {
+                            setState(() => _selectedType = value);
+                          }
+                        },
+                ),
+                const SizedBox(height: AppSpacing.lg),
                 DropdownButtonFormField<String>(
                   initialValue: _selectedFolderId,
                   decoration: const InputDecoration(
@@ -168,6 +200,7 @@ class _DeckFormDialogState extends State<DeckFormDialog> {
         _nameController.text.trim(),
         _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
         _selectedFolderId,
+        _selectedType,
       );
     } finally {
       if (mounted) {

@@ -5,6 +5,7 @@ import 'package:flash_mastery/core/exceptions/failures.dart';
 import 'package:flash_mastery/data/datasources/remote/deck_remote_data_source.dart';
 import 'package:flash_mastery/data/models/deck_model.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
+import 'package:flash_mastery/domain/entities/flashcard_type.dart';
 import 'package:flash_mastery/domain/repositories/deck_repository.dart';
 
 class DeckRepositoryImpl implements DeckRepository {
@@ -17,6 +18,7 @@ class DeckRepositoryImpl implements DeckRepository {
     required String name,
     String? description,
     String? folderId,
+    required FlashcardType type,
   }) async {
     return ErrorGuard.run(() async {
       final deckModel = DeckModel(
@@ -25,6 +27,7 @@ class DeckRepositoryImpl implements DeckRepository {
         description: description,
         folderId: folderId,
         cardCount: 0,
+        type: type,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -90,6 +93,7 @@ class DeckRepositoryImpl implements DeckRepository {
     String? name,
     String? description,
     String? folderId,
+    FlashcardType? type,
   }) async {
     return ErrorGuard.run(() async {
       final existingDeck = await remoteDataSource.getDeckById(id);
@@ -97,6 +101,7 @@ class DeckRepositoryImpl implements DeckRepository {
         name: name ?? existingDeck.name,
         description: description ?? existingDeck.description,
         folderId: folderId ?? existingDeck.folderId,
+        type: type ?? existingDeck.type,
       );
 
       final result = await remoteDataSource.updateDeck(id, updatedDeck);

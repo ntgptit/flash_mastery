@@ -1,3 +1,5 @@
+// ignore_for_file: invalid_annotation_target
+
 import 'package:flash_mastery/domain/entities/flashcard.dart';
 import 'package:flash_mastery/domain/entities/flashcard_type.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -15,11 +17,9 @@ abstract class FlashcardModel with _$FlashcardModel {
     required String question,
     required String answer,
     String? hint,
-    // ignore: invalid_annotation_target
     @JsonKey(
       fromJson: flashcardTypeFromJson,
       toJson: flashcardTypeToJson,
-      defaultValue: FlashcardType.vocabulary,
     )
     @Default(FlashcardType.vocabulary)
     FlashcardType type,

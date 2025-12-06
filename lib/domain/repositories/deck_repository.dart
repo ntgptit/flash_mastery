@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:flash_mastery/core/exceptions/failures.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
+import 'package:flash_mastery/domain/entities/flashcard_type.dart';
 
 /// Repository interface for deck operations.
 abstract class DeckRepository {
@@ -21,6 +22,7 @@ abstract class DeckRepository {
     required String name,
     String? description,
     String? folderId,
+    required FlashcardType type,
   });
 
   /// Update an existing deck.
@@ -29,6 +31,7 @@ abstract class DeckRepository {
     String? name,
     String? description,
     String? folderId,
+    FlashcardType? type,
   });
 
   /// Delete a deck by ID.

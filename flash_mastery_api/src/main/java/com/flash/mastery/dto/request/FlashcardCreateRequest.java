@@ -1,23 +1,25 @@
 package com.flash.mastery.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.validation.constraints.NotBlank;
 import java.util.UUID;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.flash.mastery.entity.FlashcardType;
+
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
 public class FlashcardCreateRequest {
-  @JsonIgnore
-  private UUID deckId;
+    @JsonIgnore
+    private UUID deckId;
 
-  @NotBlank
-  private String question;
+    @NotBlank
+    private String question;
 
-  @NotBlank
-  private String answer;
+    @NotBlank
+    private String answer;
 
-  private String hint;
+    private String hint;
 
-  private FlashcardType type;
+    private FlashcardType type;
 }

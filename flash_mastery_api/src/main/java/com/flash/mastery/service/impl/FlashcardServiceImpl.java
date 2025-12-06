@@ -53,6 +53,14 @@ public class FlashcardServiceImpl implements FlashcardService {
     }
     Deck deck = deckRepository.findById(request.getDeckId())
         .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_DECK)));
+    var deckType = deck.getType() != null ? deck.getType() : request.getType();
+    var requestedType = request.getType() != null ? request.getType() : deckType;
+    if (deckType != null && requestedType != null && deckType != requestedType) {
+      throw new IllegalArgumentException("Flashcard type must match deck type");
+    }
+    if (requestedType != null) {
+      request.setType(requestedType);
+    }
     Flashcard card = flashcardMapper.fromCreate(request, deck);
     Flashcard saved = flashcardRepository.save(card);
     deck.setCardCount(deck.getCardCount() + NumberConstants.ONE);
@@ -66,8 +74,16 @@ public class FlashcardServiceImpl implements FlashcardService {
         flashcardRepository.findById(id)
             .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FLASHCARD)));
     flashcardMapper.update(card, request);
-    if (request.getType() != null) {
-      card.setType(request.getType());
+    var deck = card.getDeck();
+    var deckType = deck != null ? deck.getType() : null;
+    var targetType = request.getType() != null ? request.getType() : card.getType();
+    if (deckType != null && targetType != null && deckType != targetType) {
+      throw new IllegalArgumentException("Flashcard type must match deck type");
+    }
+    if (targetType != null) {
+      card.setType(targetType);
+    } else if (deckType != null) {
+      card.setType(deckType);
     }
     Flashcard saved = flashcardRepository.save(card);
     return flashcardMapper.toResponse(saved);

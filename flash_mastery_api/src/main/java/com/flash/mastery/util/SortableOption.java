@@ -4,9 +4,9 @@ import org.springframework.data.domain.Sort;
 
 public interface SortableOption {
 
-  String getKey();
+    String getKey();
 
-  String getField();
+    String getField();
 
-  Sort.Direction getDirection();
+    Sort.Direction getDirection();
 }

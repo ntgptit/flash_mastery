@@ -275,14 +275,19 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
         deck: deck,
         folders: folders,
         initialFolderId: deck?.folderId ?? widget.folder?.id ?? folders.first.id,
-        onSubmit: (name, description, folderId) async {
+        onSubmit: (name, description, folderId, type) async {
           final navigator = Navigator.of(context);
           final messenger = ScaffoldMessenger.of(context);
           try {
             final notifier = ref.read(deckListViewModelProvider(widget.folder?.id).notifier);
             final errorMessage = deck == null
                 ? await notifier.createDeck(
-                    CreateDeckParams(name: name, description: description, folderId: folderId),
+                    CreateDeckParams(
+                      name: name,
+                      description: description,
+                      folderId: folderId,
+                      type: type,
+                    ),
                   )
                 : await notifier.updateDeck(
                     UpdateDeckParams(
@@ -290,6 +295,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                       name: name,
                       description: description,
                       folderId: folderId,
+                      type: deck.type,
                     ),
                   );
 

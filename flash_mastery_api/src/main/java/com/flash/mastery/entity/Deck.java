@@ -5,8 +5,11 @@ import java.util.Set;
 
 import com.flash.mastery.constant.ValidationConstants;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -38,12 +41,17 @@ public class Deck extends BaseAuditEntity {
     @Column(name = "card_count", nullable = false)
     private int cardCount;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type")
+    @Default
+    private FlashcardType type = FlashcardType.VOCABULARY;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "folder_id")
     @ToString.Exclude
     private Folder folder;
 
-    @OneToMany(mappedBy = "deck", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "deck", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @Default
     private Set<Flashcard> flashcards = new HashSet<>();

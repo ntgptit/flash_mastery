@@ -2,6 +2,7 @@ package com.flash.mastery.service.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
@@ -90,9 +91,17 @@ public class FolderServiceImpl implements FolderService {
     public void delete(UUID id) {
         final var folder = this.folderRepository.findById(id).orElseThrow(() -> new NotFoundException(msg(
                 MessageKeys.ERROR_NOT_FOUND_FOLDER)));
-        if (!folder.getChildren().isEmpty()) {
-            throw new IllegalArgumentException("Cannot delete a folder that contains subfolders");
+        // Recursively delete all subfolders and their contents
+        deleteRecursively(folder);
+    }
+
+    private void deleteRecursively(Folder folder) {
+        // Delete all children folders recursively
+        for (final var child : new HashSet<>(folder.getChildren())) {
+            deleteRecursively(child);
         }
+        // After all children are deleted, delete this folder
+        // (cascade will handle decks due to JPA relationship)
         this.folderRepository.delete(folder);
     }
 

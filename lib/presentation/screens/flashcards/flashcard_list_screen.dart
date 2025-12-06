@@ -149,7 +149,7 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
                             borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
                           ),
                           child: Text(
-                            'Vocabulary · Grammar',
+                            widget.deck.type.label,
                             style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                   color: Theme.of(context).colorScheme.primary,
                                   fontWeight: FontWeight.w700,
@@ -267,6 +267,7 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
       context: context,
       builder: (context) => FlashcardFormDialog(
         flashcard: card,
+        deckType: widget.deck.type,
         onSubmit: ({required String question, required String answer, String? hint, required FlashcardType type}) async {
           final navigator = Navigator.of(context);
           final messenger = ScaffoldMessenger.of(context);

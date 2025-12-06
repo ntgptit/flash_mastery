@@ -24,6 +24,7 @@ class Decks extends Table {
   TextColumn get description => text().nullable()();
   TextColumn get folderId => text().nullable().references(Folders, #id, onDelete: KeyAction.setNull)();
   IntColumn get cardCount => integer().withDefault(const Constant(0))();
+  TextColumn get type => text().withDefault(const Constant('VOCABULARY'))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -54,7 +55,7 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase() => instance;
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -63,6 +64,15 @@ class AppDatabase extends _$AppDatabase {
           if (from < 2) {
             await m.addColumn(folders, folders.parentId);
             await m.addColumn(folders, folders.subFolderCount);
+          }
+          if (from < 3) {
+            await m.addColumn(decks, decks.type);
+          }
+          if (from < 4) {
+            // Fix any existing null type values from previous migrations
+            await customStatement(
+              "UPDATE decks SET type = 'VOCABULARY' WHERE type IS NULL OR type = ''",
+            );
           }
         },
       );

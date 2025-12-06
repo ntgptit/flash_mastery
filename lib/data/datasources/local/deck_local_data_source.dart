@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:flash_mastery/core/exceptions/exceptions.dart';
 import 'package:flash_mastery/data/local/app_database.dart';
 import 'package:flash_mastery/data/models/deck_model.dart';
+import 'package:flash_mastery/domain/entities/flashcard_type.dart';
 import 'package:uuid/uuid.dart';
 
 /// Local data source for deck operations (Drift + SQLite).
@@ -53,6 +54,7 @@ class DeckLocalDataSourceImpl implements DeckLocalDataSource {
             description: Value(newDeck.description),
             folderId: Value(newDeck.folderId),
             cardCount: Value(newDeck.cardCount),
+            type: Value(flashcardTypeToJsonNullable(newDeck.type) ?? 'VOCABULARY'),
             createdAt: newDeck.createdAt,
             updatedAt: newDeck.updatedAt,
           ),
@@ -73,6 +75,7 @@ class DeckLocalDataSourceImpl implements DeckLocalDataSource {
         description: Value(updated.description),
         folderId: Value(updated.folderId),
         cardCount: Value(updated.cardCount),
+        type: Value(flashcardTypeToJsonNullable(updated.type) ?? 'VOCABULARY'),
         updatedAt: Value(updated.updatedAt),
       ),
     );
@@ -105,6 +108,7 @@ class DeckLocalDataSourceImpl implements DeckLocalDataSource {
         description: row.description,
         folderId: row.folderId,
         cardCount: row.cardCount,
+        type: flashcardTypeFromJsonNullable(row.type),
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
       );

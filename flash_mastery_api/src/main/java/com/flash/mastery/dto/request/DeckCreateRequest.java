@@ -1,5 +1,6 @@
 package com.flash.mastery.dto.request;
 
+import com.flash.mastery.entity.FlashcardType;
 import com.flash.mastery.constant.ValidationConstants;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -16,4 +17,7 @@ public class DeckCreateRequest {
 
   @NotNull
   private UUID folderId;
+
+  @NotNull
+  private FlashcardType type;
 }
