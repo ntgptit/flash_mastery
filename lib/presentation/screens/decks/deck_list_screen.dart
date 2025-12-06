@@ -673,14 +673,23 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildExpandableSection(
                   title: 'Success',
                   subtitle: '${summary.decksCreated} decks, ${summary.cardsImported} cards',
                   initiallyExpanded: true,
                   children: [
-                    Text('Decks created: ${summary.decksCreated}'),
-                    Text('Flashcards imported: ${summary.cardsImported}'),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Decks created: ${summary.decksCreated}'),
+                          Text('Flashcards imported: ${summary.cardsImported}'),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.sm),
@@ -689,13 +698,21 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                   subtitle:
                       '${summary.decksSkipped} decks, ${summary.cardsSkippedDuplicate} cards',
                   children: [
-                    Text('Decks skipped (duplicate): ${summary.decksSkipped}'),
-                    if (summary.skippedDeckNames.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: AppSpacing.xs),
-                        child: _buildSkippedDeckList(summary.skippedDeckNames),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Decks skipped (duplicate): ${summary.decksSkipped}'),
+                          if (summary.skippedDeckNames.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: AppSpacing.xs),
+                              child: _buildSkippedDeckList(summary.skippedDeckNames),
+                            ),
+                          Text('Flashcards skipped (duplicate term): ${summary.cardsSkippedDuplicate}'),
+                        ],
                       ),
-                    Text('Flashcards skipped (duplicate term): ${summary.cardsSkippedDuplicate}'),
+                    ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.sm),
@@ -703,11 +720,19 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                   title: 'Errors',
                   subtitle: '${summary.invalidRows} invalid rows',
                   children: summary.errors.isEmpty
-                      ? [const Text('No errors')]
+                      ? [const Align(alignment: Alignment.centerLeft, child: Text('No errors'))]
                       : [
-                          Text('Invalid rows: ${summary.invalidRows}'),
-                          const SizedBox(height: AppSpacing.xs),
-                          ..._buildErrorTree(summary),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Invalid rows: ${summary.invalidRows}'),
+                                const SizedBox(height: AppSpacing.xs),
+                                ..._buildErrorTree(summary),
+                              ],
+                            ),
+                          ),
                         ],
                 ),
               ],
