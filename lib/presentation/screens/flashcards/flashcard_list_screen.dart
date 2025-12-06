@@ -88,21 +88,13 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
           return RefreshIndicator(
             onRefresh: () async =>
                 ref.read(flashcardListViewModelProvider(widget.deck.id).notifier).load(),
-            child: DecoratedBox(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF0B1022), Color(0xFF0F1530)],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     FlashcardHeroCarousel(
                       cards: showCards,
                       pageController: _pageController,
@@ -183,7 +175,6 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
                   ],
                 ),
               ),
-            ),
             ),
           );
         },

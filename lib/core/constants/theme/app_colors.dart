@@ -111,7 +111,7 @@ class AppColors {
   static const Color backgroundLight = Color(0xFFFFF9F6);
 
   /// Dark background color (anti-eye-strain)
-  static const Color backgroundDark = Color(0xFF121110);
+  static const Color backgroundDark = Color(0xFF101823);
 
   /// Surface color for cards, sheets, app bars (light mode)
   static const Color surface = Color(0xFFFFFFFF);
@@ -120,10 +120,10 @@ class AppColors {
   static const Color surfaceVariant = Color(0xFFF5E7E2);
 
   /// Surface color for dark mode (warm gray)
-  static const Color surfaceDark = Color(0xFF1C1B1A);
+  static const Color surfaceDark = Color(0xFF182233);
 
   /// Surface variant for dark mode (deep warm)
-  static const Color surfaceVariantDark = Color(0xFF2B2928);
+  static const Color surfaceVariantDark = Color(0xFF202C3F);
 
   // ==================== GREY SCALE ====================
 
