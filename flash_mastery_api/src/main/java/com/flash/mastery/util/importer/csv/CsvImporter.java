@@ -17,7 +17,7 @@ import com.flash.mastery.util.importer.Importer;
 import com.flash.mastery.util.importer.ImportResult;
 import com.flash.mastery.util.importer.RowContext;
 
-public class CsvImporter<T> implements Importer<RowContext, T> {
+public class CsvImporter<T> implements Importer<T> {
 
     private final CSVFormat format;
 
@@ -28,6 +28,7 @@ public class CsvImporter<T> implements Importer<RowContext, T> {
                 .setIgnoreSurroundingSpaces(true)
                 .setIgnoreHeaderCase(true)
                 .setTrim(true)
+                .setAllowMissingColumnNames(true)
                 .build();
     }
 
@@ -35,12 +36,12 @@ public class CsvImporter<T> implements Importer<RowContext, T> {
     public ImportResult<T> importStream(InputStream inputStream, Function<RowContext, T> mapper) throws IOException {
         var result = ImportResult.<T>builder().build();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-             CSVParser parser = new CSVParser(reader, format.withAllowMissingColumnNames())) {
+             CSVParser parser = new CSVParser(reader, format)) {
             int rowIndex = 0;
-            for (CSVRecord record : parser) {
+            for (CSVRecord csvRecord : parser) {
                 rowIndex++;
                 List<String> cells = new ArrayList<>();
-                record.forEach(cells::add);
+                csvRecord.forEach(cells::add);
                 var ctx = new RowContext(rowIndex, cells);
                 try {
                     T mapped = mapper.apply(ctx);

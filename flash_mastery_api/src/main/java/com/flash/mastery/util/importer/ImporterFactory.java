@@ -7,7 +7,7 @@ import com.flash.mastery.util.importer.excel.ExcelImporter;
 
 public class ImporterFactory {
 
-    public static <T> Importer<? extends RowContext, T> forFilename(String filename) {
+    public static <T> Importer<T> forFilename(String filename) {
         String lower = filename.toLowerCase(Locale.ROOT);
         if (lower.endsWith(".csv") || lower.endsWith(".tsv")) {
             return new CsvImporter<>();

@@ -15,7 +15,7 @@ import com.flash.mastery.util.importer.Importer;
 import com.flash.mastery.util.importer.ImportResult;
 import com.flash.mastery.util.importer.RowContext;
 
-public class ExcelImporter<T> implements Importer<RowContext, T> {
+public class ExcelImporter<T> implements Importer<T> {
 
     @Override
     public ImportResult<T> importStream(InputStream inputStream, Function<RowContext, T> mapper) throws IOException {
