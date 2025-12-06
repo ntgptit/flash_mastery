@@ -8,6 +8,7 @@ class FlashcardHeroCarousel extends StatefulWidget {
   final PageController pageController;
   final int currentPage;
   final ValueChanged<int> onPageChanged;
+  final VoidCallback? onLoadMore;
 
   const FlashcardHeroCarousel({
     super.key,
@@ -15,6 +16,7 @@ class FlashcardHeroCarousel extends StatefulWidget {
     required this.pageController,
     required this.currentPage,
     required this.onPageChanged,
+    this.onLoadMore,
   });
 
   @override
@@ -145,6 +147,11 @@ class _FlashcardHeroCarouselState extends State<FlashcardHeroCarousel> {
               onPageChanged: (page) {
                 setState(() => _showBack = false);
                 widget.onPageChanged(page);
+
+                // Trigger load more when user reaches second-to-last card
+                if (widget.onLoadMore != null && page >= widget.cards.length - 2) {
+                  widget.onLoadMore!();
+                }
               },
               itemBuilder: (context, index) {
               final card = widget.cards[index];
@@ -183,10 +190,10 @@ class _FlashcardHeroCarouselState extends State<FlashcardHeroCarousel> {
                             Text(
                               displayBack ? card.answer : card.question,
                               style: displayBack
-                                  ? textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)
+                                  ? textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)
                                   : textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
                               textAlign: TextAlign.center,
-                              maxLines: 4,
+                              maxLines: 5,
                               overflow: TextOverflow.ellipsis,
                             ),
                             if (displayBack && (card.hint ?? '').isNotEmpty) ...[
@@ -195,9 +202,10 @@ class _FlashcardHeroCarouselState extends State<FlashcardHeroCarousel> {
                                 card.hint ?? '',
                                 style: textTheme.bodySmall?.copyWith(
                                   color: colorScheme.onSurfaceVariant,
+                                  fontSize: 12,
                                 ),
                                 textAlign: TextAlign.center,
-                                maxLines: 3,
+                                maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ],

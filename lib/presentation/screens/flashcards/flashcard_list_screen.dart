@@ -41,6 +41,8 @@ class _FlashcardListScreenState extends ConsumerState<_FlashcardListBody> {
   static const int _pageSize = 15;
   late final PageController _pageController;
   int _currentPage = 0;
+  int _carouselVisibleCount = 5;
+  static const int _carouselPageSize = 5;
 
   @override
   void initState() {
@@ -111,10 +113,19 @@ class _FlashcardListScreenState extends ConsumerState<_FlashcardListBody> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       FlashcardHeroCarousel(
-                        cards: showCards.take(5).toList(),
+                        cards: showCards.take(_carouselVisibleCount).toList(),
                         pageController: _pageController,
                         currentPage: _currentPage,
                         onPageChanged: (page) => setState(() => _currentPage = page),
+                        onLoadMore: () {
+                          final maxCarouselCount = min(
+                            _carouselVisibleCount + _carouselPageSize,
+                            visibleCards.length,
+                          );
+                          if (maxCarouselCount > _carouselVisibleCount) {
+                            setState(() => _carouselVisibleCount = maxCarouselCount);
+                          }
+                        },
                       ),
                       const SizedBox(height: AppSpacing.lg),
                       FlashcardSectionHeader(
@@ -228,6 +239,8 @@ class _FlashcardListScreenState extends ConsumerState<_FlashcardListBody> {
           onSubmitted: (value) {
             setState(() {
               _searchQuery = value;
+              _carouselVisibleCount = _carouselPageSize;
+              _currentPage = 0;
             });
             Navigator.pop(context);
           },
@@ -238,6 +251,8 @@ class _FlashcardListScreenState extends ConsumerState<_FlashcardListBody> {
             onPressed: () {
               setState(() {
                 _searchQuery = controller.text;
+                _carouselVisibleCount = _carouselPageSize;
+                _currentPage = 0;
               });
               Navigator.pop(context);
             },
@@ -249,7 +264,10 @@ class _FlashcardListScreenState extends ConsumerState<_FlashcardListBody> {
   }
 
   Future<void> _openCreateDialog() async {
-    setState(() => _visibleCount = _pageSize);
+    setState(() {
+      _visibleCount = _pageSize;
+      _carouselVisibleCount = _carouselPageSize;
+    });
     await _openFlashcardDialog();
   }
 
