@@ -1,3 +1,4 @@
+import 'package:flash_mastery/core/constants/config/view_scopes.dart';
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/core/router/app_router.dart';
 import 'package:flash_mastery/domain/entities/folder.dart';
@@ -8,12 +9,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
   @override
+  Widget build(BuildContext context) {
+    return const ProviderScope(child: _DashboardScreenBody());
+  }
+}
+
+class _DashboardScreenBody extends ConsumerWidget {
+  const _DashboardScreenBody();
+
+  @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final foldersState = ref.watch(folderListViewModelProvider);
+    final foldersState = ref.watch(folderListViewModelProvider(ViewScope.dashboard));
 
     return Scaffold(
       appBar: AppBar(
@@ -21,7 +31,7 @@ class DashboardScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => ref.read(folderListViewModelProvider.notifier).load(),
+            onPressed: () => ref.read(folderListViewModelProvider(ViewScope.dashboard).notifier).load(),
             tooltip: 'Refresh',
           ),
         ],
@@ -42,7 +52,7 @@ class DashboardScreen extends ConsumerWidget {
           loading: () => const LoadingWidget(),
           error: (message) => AppErrorWidget(
             message: message,
-            onRetry: () => ref.read(folderListViewModelProvider.notifier).load(),
+            onRetry: () => ref.read(folderListViewModelProvider(ViewScope.dashboard).notifier).load(),
           ),
           success: (folders) {
             final totalFolders = folders.length;
@@ -51,7 +61,7 @@ class DashboardScreen extends ConsumerWidget {
             final recentTop = recent.take(4).toList();
 
             return RefreshIndicator(
-              onRefresh: () async => ref.read(folderListViewModelProvider.notifier).load(),
+              onRefresh: () async => ref.read(folderListViewModelProvider(ViewScope.dashboard).notifier).load(),
               child: ListView(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 children: [
@@ -86,9 +96,9 @@ class DashboardScreen extends ConsumerWidget {
   }
 
   Future<void> _showAddFolderDialog(BuildContext context, WidgetRef ref, List<Folder> allFolders) async {
-    await ref.read(folderListViewModelProvider.notifier).load();
+    await ref.read(folderListViewModelProvider(ViewScope.dashboard).notifier).load();
     if (!context.mounted) return;
-    final folders = ref.read(folderListViewModelProvider).maybeWhen(
+    final folders = ref.read(folderListViewModelProvider(ViewScope.dashboard)).maybeWhen(
           success: (items) => items,
           orElse: () => allFolders,
         );
@@ -99,7 +109,7 @@ class DashboardScreen extends ConsumerWidget {
         allFolders: folders,
         onSubmit: (name, description, color, parentId) async {
           try {
-            final errorMessage = await ref.read(folderListViewModelProvider.notifier).createFolder(
+            final errorMessage = await ref.read(folderListViewModelProvider(ViewScope.dashboard).notifier).createFolder(
                   CreateFolderParams(
                     name: name,
                     description: description,

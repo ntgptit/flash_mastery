@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+import 'package:flash_mastery/core/constants/config/view_scopes.dart';
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/core/router/app_router.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
@@ -21,16 +22,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class DeckListScreen extends ConsumerStatefulWidget {
+class DeckListScreen extends StatelessWidget {
   final Folder? folder;
 
   const DeckListScreen({super.key, this.folder});
 
   @override
-  ConsumerState<DeckListScreen> createState() => _DeckListScreenState();
+  Widget build(BuildContext context) {
+    return ProviderScope(
+      child: _DeckListScreenBody(folder: folder),
+    );
+  }
 }
 
-class _DeckListScreenState extends ConsumerState<DeckListScreen> {
+class _DeckListScreenBody extends ConsumerStatefulWidget {
+  final Folder? folder;
+
+  const _DeckListScreenBody({required this.folder});
+
+  @override
+  ConsumerState<_DeckListScreenBody> createState() => _DeckListScreenState();
+}
+
+class _DeckListScreenState extends ConsumerState<_DeckListScreenBody> {
   static const String _defaultSort = 'latest';
   String _sort = _defaultSort;
   String _searchQuery = '';
@@ -42,7 +56,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
     if (_initialized) return;
     _initialized = true;
     Future.microtask(() {
-      ref.read(folderListViewModelProvider.notifier).load();
+      ref.read(folderListViewModelProvider(ViewScope.decks).notifier).load();
       ref
           .read(deckListViewModelProvider(widget.folder?.id).notifier)
           .load(sort: _sort, query: _searchQuery.isEmpty ? null : _searchQuery);
@@ -51,7 +65,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final folderState = ref.watch(folderListViewModelProvider);
+    final folderState = ref.watch(folderListViewModelProvider(ViewScope.decks));
     final deckListState = ref.watch(deckListViewModelProvider(widget.folder?.id));
 
     final folders = folderState.when(
@@ -295,9 +309,9 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
   Future<void> _openSubfolderForm({Folder? folder, Folder? parent, List<Folder> allFolders = const []}) async {
     final parentFolder = parent ?? widget.folder;
     if (parentFolder == null) return;
-    await ref.read(folderListViewModelProvider.notifier).load();
+    await ref.read(folderListViewModelProvider(ViewScope.decks).notifier).load();
     if (!mounted) return;
-    final folders = ref.read(folderListViewModelProvider).maybeWhen(
+    final folders = ref.read(folderListViewModelProvider(ViewScope.decks)).maybeWhen(
           success: (items) => items,
           orElse: () => allFolders,
         );
@@ -311,7 +325,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
           final navigator = Navigator.of(context);
           final messenger = ScaffoldMessenger.of(context);
           try {
-            final notifier = ref.read(folderListViewModelProvider.notifier);
+            final notifier = ref.read(folderListViewModelProvider(ViewScope.decks).notifier);
             final errorMessage = folder == null
                 ? await notifier.createFolder(
                     CreateFolderParams(
@@ -432,7 +446,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
 
     try {
       final errorMessage =
-          await ref.read(folderListViewModelProvider.notifier).deleteFolder(folder.id);
+          await ref.read(folderListViewModelProvider(ViewScope.decks).notifier).deleteFolder(folder.id);
       if (errorMessage != null) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $errorMessage')));
@@ -601,7 +615,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
       ImportDecksParams(folderId: folder.id, type: selectedType, file: file, hasHeader: hasHeader),
     );
     await notifier.load();
-    await ref.read(folderListViewModelProvider.notifier).load();
+    await ref.read(folderListViewModelProvider(ViewScope.decks).notifier).load();
     if (!mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     if (error != null) {

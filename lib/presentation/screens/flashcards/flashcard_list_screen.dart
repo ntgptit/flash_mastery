@@ -15,16 +15,27 @@ import 'package:flash_mastery/presentation/widgets/common/common_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class FlashcardListScreen extends ConsumerStatefulWidget {
+class FlashcardListScreen extends StatelessWidget {
   final Deck deck;
 
   const FlashcardListScreen({super.key, required this.deck});
 
   @override
-  ConsumerState<FlashcardListScreen> createState() => _FlashcardListScreenState();
+  Widget build(BuildContext context) {
+    return ProviderScope(child: _FlashcardListBody(deck: deck));
+  }
 }
 
-class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
+class _FlashcardListBody extends ConsumerStatefulWidget {
+  final Deck deck;
+
+  const _FlashcardListBody({required this.deck});
+
+  @override
+  ConsumerState<_FlashcardListBody> createState() => _FlashcardListScreenState();
+}
+
+class _FlashcardListScreenState extends ConsumerState<_FlashcardListBody> {
   String _searchQuery = '';
   bool _initialized = false;
   int _visibleCount = 15;

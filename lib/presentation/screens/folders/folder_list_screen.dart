@@ -1,3 +1,4 @@
+import 'package:flash_mastery/core/constants/config/view_scopes.dart';
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/folder.dart';
 import 'package:flash_mastery/features/folders/providers.dart';
@@ -9,14 +10,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class FolderListScreen extends ConsumerStatefulWidget {
+class FolderListScreen extends StatelessWidget {
   const FolderListScreen({super.key});
 
   @override
-  ConsumerState<FolderListScreen> createState() => _FolderListScreenState();
+  Widget build(BuildContext context) {
+    return const ProviderScope(child: _FolderListScreenBody());
+  }
 }
 
-class _FolderListScreenState extends ConsumerState<FolderListScreen> {
+class _FolderListScreenBody extends ConsumerStatefulWidget {
+  const _FolderListScreenBody();
+
+  @override
+  ConsumerState<_FolderListScreenBody> createState() => _FolderListScreenState();
+}
+
+class _FolderListScreenState extends ConsumerState<_FolderListScreenBody> {
   String _searchQuery = '';
   bool _initialized = false;
 
@@ -25,24 +35,24 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
     super.didChangeDependencies();
     if (_initialized) return;
     _initialized = true;
-    Future.microtask(() => ref.read(folderListViewModelProvider.notifier).load());
+    Future.microtask(() => ref.read(folderListViewModelProvider(ViewScope.folders).notifier).load());
   }
 
   @override
   Widget build(BuildContext context) {
-    final folderState = ref.watch(folderListViewModelProvider);
+    final folderState = ref.watch(folderListViewModelProvider(ViewScope.folders));
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Folders'),
         actions: [
           Consumer(
-            builder: (context, ref, _) {
-              final mode = ref.watch(folderViewModeProvider);
+              builder: (context, ref, _) {
+              final mode = ref.watch(folderViewModeProvider(ViewScope.folders));
               return IconButton(
                 icon: Icon(mode == FolderViewMode.grid ? Icons.view_list_outlined : Icons.grid_view_outlined),
                 tooltip: mode == FolderViewMode.grid ? 'Switch to list view' : 'Switch to grid view',
-                onPressed: () => ref.read(folderViewModeProvider.notifier).toggle(),
+                onPressed: () => ref.read(folderViewModeProvider(ViewScope.folders).notifier).toggle(),
               );
             },
           ),
@@ -53,7 +63,7 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
         initial: () => const LoadingWidget(),
         loading: () => const LoadingWidget(),
         success: (data) {
-          final mode = ref.watch(folderViewModeProvider);
+          final mode = ref.watch(folderViewModeProvider(ViewScope.folders));
           final displayFolders = _filterFolders(data);
           if (displayFolders.isEmpty) {
             return EmptyStateWidget(
@@ -66,7 +76,7 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
           }
 
           return RefreshIndicator(
-            onRefresh: () async => ref.read(folderListViewModelProvider.notifier).load(),
+            onRefresh: () async => ref.read(folderListViewModelProvider(ViewScope.folders).notifier).load(),
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 250),
               transitionBuilder: (child, animation) =>
@@ -124,7 +134,7 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
         },
         error: (message) => AppErrorWidget(
           message: message,
-          onRetry: () => ref.read(folderListViewModelProvider.notifier).load(),
+          onRetry: () => ref.read(folderListViewModelProvider(ViewScope.folders).notifier).load(),
         ),
       ),
       floatingActionButton: FloatingActionButton.small(
@@ -184,9 +194,9 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
   }
 
   Future<void> _openFolderForm({Folder? folder, Folder? parent}) async {
-    await ref.read(folderListViewModelProvider.notifier).load();
+    await ref.read(folderListViewModelProvider(ViewScope.folders).notifier).load();
     if (!mounted) return;
-    final allFolders = ref.read(folderListViewModelProvider).maybeWhen(
+    final allFolders = ref.read(folderListViewModelProvider(ViewScope.folders)).maybeWhen(
       success: (folders) => folders,
       orElse: () => <Folder>[],
     );
@@ -200,7 +210,7 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
           final navigator = Navigator.of(context);
           final messenger = ScaffoldMessenger.of(context);
           try {
-            final notifier = ref.read(folderListViewModelProvider.notifier);
+            final notifier = ref.read(folderListViewModelProvider(ViewScope.folders).notifier);
             final errorMessage = folder == null
                 ? await notifier.createFolder(
                     CreateFolderParams(
@@ -284,7 +294,7 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
 
     try {
       final errorMessage = await ref
-          .read(folderListViewModelProvider.notifier)
+          .read(folderListViewModelProvider(ViewScope.folders).notifier)
           .deleteFolder(folder.id);
       if (errorMessage != null) {
         if (!mounted) return;

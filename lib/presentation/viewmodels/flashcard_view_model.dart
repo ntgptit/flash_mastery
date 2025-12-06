@@ -36,7 +36,7 @@ DeleteFlashcardUseCase deleteFlashcardUseCase(Ref ref) {
   return DeleteFlashcardUseCase(ref.watch(flashcardRepositoryProvider));
 }
 
-@riverpod
+@Riverpod(keepAlive: false)
 class FlashcardListViewModel extends _$FlashcardListViewModel {
   bool _initialized = false;
 

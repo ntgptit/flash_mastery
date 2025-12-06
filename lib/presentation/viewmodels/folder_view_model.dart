@@ -1,3 +1,4 @@
+import 'package:flash_mastery/core/constants/config/view_scopes.dart';
 import 'package:flash_mastery/core/error/failure_messages.dart';
 import 'package:flash_mastery/domain/entities/folder.dart';
 import 'package:flash_mastery/domain/usecases/folders/folder_usecases.dart';
@@ -36,12 +37,12 @@ DeleteFolderUseCase deleteFolderUseCase(Ref ref) {
   return DeleteFolderUseCase(ref.watch(folderRepositoryProvider));
 }
 
-@riverpod
+@Riverpod(keepAlive: false)
 class FolderListViewModel extends _$FolderListViewModel {
   bool _initialized = false;
 
   @override
-  FolderListState build() {
+  FolderListState build(ViewScope scope) {
     _init();
     return const FolderListState.initial();
   }

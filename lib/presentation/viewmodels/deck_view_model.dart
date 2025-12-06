@@ -1,3 +1,4 @@
+import 'package:flash_mastery/core/constants/config/view_scopes.dart';
 import 'package:flash_mastery/core/error/failure_messages.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/entities/import_summary.dart';
@@ -47,7 +48,7 @@ ImportDecksUseCase importDecksUseCase(Ref ref) {
   return ImportDecksUseCase(ref.watch(deckRepositoryProvider));
 }
 
-@riverpod
+@Riverpod(keepAlive: false)
 class DeckListViewModel extends _$DeckListViewModel {
   bool _initialized = false;
   String? _currentSort;
@@ -154,7 +155,7 @@ class DeckListViewModel extends _$DeckListViewModel {
       (_) => null,
     );
     await load();
-    await ref.read(folderListViewModelProvider.notifier).load();
+    await ref.read(folderListViewModelProvider(ViewScope.decks).notifier).load();
     return message;
   }
 
@@ -166,7 +167,7 @@ class DeckListViewModel extends _$DeckListViewModel {
       (_) => null,
     );
     await load();
-    await ref.read(folderListViewModelProvider.notifier).load();
+    await ref.read(folderListViewModelProvider(ViewScope.decks).notifier).load();
     return message;
   }
 
@@ -178,7 +179,7 @@ class DeckListViewModel extends _$DeckListViewModel {
       (_) => null,
     );
     await load();
-    await ref.read(folderListViewModelProvider.notifier).load();
+    await ref.read(folderListViewModelProvider(ViewScope.decks).notifier).load();
     return message;
   }
 
