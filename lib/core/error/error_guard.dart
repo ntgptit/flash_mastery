@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
-
 import 'package:flash_mastery/core/error/failure_mapper.dart';
 import 'package:flash_mastery/core/exceptions/failures.dart';
+import 'package:flutter/foundation.dart';
 
 /// Helper to centralize error-to-failure mapping.
 class ErrorGuard {
@@ -12,7 +12,9 @@ class ErrorGuard {
     try {
       final result = await action();
       return Right(result);
-    } catch (error) {
+    } catch (error, stack) {
+      debugPrint('ErrorGuard caught: $error');
+      debugPrintStack(stackTrace: stack);
       return Left(FailureMapper.fromException(error));
     }
   }

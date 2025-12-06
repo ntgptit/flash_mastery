@@ -127,10 +127,9 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
           onRetry: () => ref.read(folderListViewModelProvider.notifier).load(),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton.small(
         onPressed: _openFolderForm,
-        icon: const Icon(Icons.add),
-        label: const Text('New Folder'),
+        child: const Icon(Icons.add),
       ),
     );
   }

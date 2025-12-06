@@ -186,10 +186,9 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton.small(
         onPressed: _openCreateDialog,
-        icon: const Icon(Icons.add),
-        label: const Text('New Flashcard'),
+        child: const Icon(Icons.add),
       ),
     );
   }

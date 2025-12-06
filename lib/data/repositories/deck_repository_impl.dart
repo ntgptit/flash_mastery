@@ -118,14 +118,12 @@ class DeckRepositoryImpl implements DeckRepository {
     required PlatformFile file,
   }) async {
     return ErrorGuard.run(() async {
-      if (file.path == null) {
-        throw ArgumentError('File path is null');
-      }
       final summary = await remoteDataSource.importDecks(
         folderId: folderId,
         type: type.name.toUpperCase(),
-        filePath: file.path!,
+        filePath: file.path,
         fileName: file.name,
+        bytes: file.bytes,
       );
       return summary.toEntity();
     });

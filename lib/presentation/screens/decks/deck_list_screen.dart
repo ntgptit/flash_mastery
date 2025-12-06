@@ -182,10 +182,15 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openDeckForm(folders: folders),
-        icon: const Icon(Icons.add),
-        label: const Text('New Deck'),
+      floatingActionButton: FloatingActionButton.small(
+        onPressed: () {
+          if (widget.folder == null) {
+            _openDeckForm(folders: folders);
+            return;
+          }
+          _showFabActions(folders);
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -280,7 +285,9 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                 ),
               ),
             );
-          } catch (e) {
+          } catch (e, st) {
+            debugPrint('Deck form submit error: $e');
+            debugPrintStack(stackTrace: st);
             if (!mounted) return;
             messenger.showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
           }
@@ -340,7 +347,9 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                 ),
               ),
             );
-          } catch (e) {
+          } catch (e, st) {
+            debugPrint('Subfolder form error: $e');
+            debugPrintStack(stackTrace: st);
             if (!mounted) return;
             messenger.showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
           }
@@ -389,7 +398,9 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
       }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Deck deleted')));
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('Delete deck error: $e');
+      debugPrintStack(stackTrace: st);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
     }
@@ -433,7 +444,9 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
       }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Folder deleted')));
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('Delete folder error: $e');
+      debugPrintStack(stackTrace: st);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
     }
@@ -500,6 +513,36 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
 
   void _openDeck(Deck deck) {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => FlashcardListScreen(deck: deck)));
+  }
+
+  void _showFabActions(List<Folder> folders) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.add),
+              title: const Text('Create deck'),
+              onTap: () {
+                Navigator.pop(context);
+                _openDeckForm(folders: folders);
+              },
+            ),
+            if (widget.folder != null)
+              ListTile(
+                leading: const Icon(Icons.upload_file),
+                title: const Text('Import decks'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickAndImport(widget.folder!, folders);
+                },
+              ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _pickAndImport(Folder folder, List<Folder> allFolders) async {

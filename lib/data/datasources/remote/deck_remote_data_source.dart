@@ -4,6 +4,7 @@ import 'package:flash_mastery/core/exceptions/exceptions.dart';
 import 'package:flash_mastery/data/models/deck_model.dart';
 import 'package:flash_mastery/data/models/import_summary_model.dart';
 import 'package:flash_mastery/domain/entities/flashcard_type.dart';
+import 'package:flutter/foundation.dart';
 
 abstract class DeckRemoteDataSource {
   Future<List<DeckModel>> getDecks({
@@ -21,8 +22,9 @@ abstract class DeckRemoteDataSource {
   Future<ImportSummaryModel> importDecks({
     required String folderId,
     required String type,
-    required String filePath,
     required String fileName,
+    String? filePath,
+    List<int>? bytes,
   });
 }
 
@@ -134,11 +136,21 @@ class DeckRemoteDataSourceImpl implements DeckRemoteDataSource {
   Future<ImportSummaryModel> importDecks({
     required String folderId,
     required String type,
-    required String filePath,
     required String fileName,
+    String? filePath,
+    List<int>? bytes,
   }) async {
+    MultipartFile file;
+    if (filePath != null && filePath.isNotEmpty && !kIsWeb) {
+      file = await MultipartFile.fromFile(filePath, filename: fileName);
+    } else if (bytes != null && bytes.isNotEmpty) {
+      file = MultipartFile.fromBytes(bytes, filename: fileName);
+    } else {
+      throw ArgumentError('No file data provided for import');
+    }
+
     final formData = FormData.fromMap({
-      'file': await MultipartFile.fromFile(filePath, filename: fileName),
+      'file': file,
       'type': type,
     });
     final response = await dio.post(
