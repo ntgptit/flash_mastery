@@ -37,20 +37,13 @@ DeleteFolderUseCase deleteFolderUseCase(Ref ref) {
   return DeleteFolderUseCase(ref.watch(folderRepositoryProvider));
 }
 
-@Riverpod(keepAlive: false)
+@riverpod
 class FolderListViewModel extends _$FolderListViewModel {
-  bool _initialized = false;
-
   @override
   FolderListState build(ViewScope scope) {
-    _init();
+    // Auto-load on initialization
+    Future.microtask(() => load());
     return const FolderListState.initial();
-  }
-
-  Future<void> _init() async {
-    if (_initialized) return;
-    _initialized = true;
-    await load();
   }
 
   Future<void> load() async {

@@ -48,9 +48,8 @@ ImportDecksUseCase importDecksUseCase(Ref ref) {
   return ImportDecksUseCase(ref.watch(deckRepositoryProvider));
 }
 
-@Riverpod(keepAlive: false)
+@riverpod
 class DeckListViewModel extends _$DeckListViewModel {
-  bool _initialized = false;
   String? _currentSort;
   String? _currentQuery;
   int _page = 0;
@@ -61,14 +60,9 @@ class DeckListViewModel extends _$DeckListViewModel {
 
   @override
   DeckListState build(String? folderId) {
-    _init();
+    // Auto-load on initialization
+    Future.microtask(() => load());
     return const DeckListState.initial();
-  }
-
-  Future<void> _init() async {
-    if (_initialized) return;
-    _initialized = true;
-    await load();
   }
 
   Future<void> load({String? sort, String? query, int? page}) async {

@@ -36,20 +36,13 @@ DeleteFlashcardUseCase deleteFlashcardUseCase(Ref ref) {
   return DeleteFlashcardUseCase(ref.watch(flashcardRepositoryProvider));
 }
 
-@Riverpod(keepAlive: false)
+@riverpod
 class FlashcardListViewModel extends _$FlashcardListViewModel {
-  bool _initialized = false;
-
   @override
   FlashcardListState build(String deckId) {
-    _init();
+    // Auto-load on initialization
+    Future.microtask(() => load());
     return const FlashcardListState.initial();
-  }
-
-  Future<void> _init() async {
-    if (_initialized) return;
-    _initialized = true;
-    await load();
   }
 
   Future<void> load() async {

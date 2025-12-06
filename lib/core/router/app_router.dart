@@ -1,6 +1,8 @@
+import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/entities/folder.dart';
 import 'package:flash_mastery/presentation/screens/dashboard/dashboard_screen.dart';
 import 'package:flash_mastery/presentation/screens/decks/deck_list_screen.dart';
+import 'package:flash_mastery/presentation/screens/flashcards/flashcard_list_screen.dart';
 import 'package:flash_mastery/presentation/screens/folders/folder_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +16,7 @@ class AppRouter {
   static const String dashboard = '/tabs/dashboard';
   static const String folders = '/tabs/folders';
   static const String decks = '/tabs/decks';
+  static const String flashcards = '/flashcards/:deckId';
   static const String settings = '/tabs/settings';
   static const String home = '/home';
   static const String login = '/login';
@@ -111,6 +114,17 @@ class AppRouter {
         builder: (context, state) {
           final id = state.pathParameters['id']!;
           return DeckDetailScreen(deckId: id);
+        },
+      ),
+      GoRoute(
+        path: flashcards,
+        name: 'flashcards',
+        builder: (context, state) {
+          final deckObj = state.extra;
+          if (deckObj is Deck) {
+            return FlashcardListScreen(deck: deckObj);
+          }
+          return const Scaffold(body: Center(child: Text('Deck not found')));
         },
       ),
       GoRoute(

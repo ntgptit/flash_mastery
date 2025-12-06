@@ -14,7 +14,6 @@ import 'package:flash_mastery/presentation/screens/decks/widgets/deck_form_dialo
 import 'package:flash_mastery/presentation/screens/decks/widgets/deck_header_section.dart';
 import 'package:flash_mastery/presentation/screens/decks/widgets/deck_sort_row.dart';
 import 'package:flash_mastery/presentation/screens/decks/widgets/deck_subfolder_section.dart';
-import 'package:flash_mastery/presentation/screens/flashcards/flashcard_list_screen.dart';
 import 'package:flash_mastery/presentation/screens/folders/widgets/folder_breadcrumb.dart';
 import 'package:flash_mastery/presentation/screens/folders/widgets/folder_form_dialog.dart';
 import 'package:flash_mastery/presentation/widgets/common/common_widgets.dart';
@@ -29,9 +28,7 @@ class DeckListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ProviderScope(
-      child: _DeckListScreenBody(folder: folder),
-    );
+    return _DeckListScreenBody(folder: folder);
   }
 }
 
@@ -48,20 +45,6 @@ class _DeckListScreenState extends ConsumerState<_DeckListScreenBody> {
   static const String _defaultSort = 'latest';
   String _sort = _defaultSort;
   String _searchQuery = '';
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_initialized) return;
-    _initialized = true;
-    Future.microtask(() {
-      ref.read(folderListViewModelProvider(ViewScope.decks).notifier).load();
-      ref
-          .read(deckListViewModelProvider(widget.folder?.id).notifier)
-          .load(sort: _sort, query: _searchQuery.isEmpty ? null : _searchQuery);
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -522,7 +505,11 @@ class _DeckListScreenState extends ConsumerState<_DeckListScreenBody> {
   }
 
   void _openDeck(Deck deck) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => FlashcardListScreen(deck: deck)));
+    context.goNamed(
+      'flashcards',
+      pathParameters: {'deckId': deck.id},
+      extra: deck,
+    );
   }
 
   void _showFabActions(List<Folder> folders) {

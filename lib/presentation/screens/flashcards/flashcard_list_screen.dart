@@ -22,7 +22,7 @@ class FlashcardListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ProviderScope(child: _FlashcardListBody(deck: deck));
+    return _FlashcardListBody(deck: deck);
   }
 }
 
@@ -37,21 +37,15 @@ class _FlashcardListBody extends ConsumerStatefulWidget {
 
 class _FlashcardListScreenState extends ConsumerState<_FlashcardListBody> {
   String _searchQuery = '';
-  bool _initialized = false;
   int _visibleCount = 15;
   static const int _pageSize = 15;
   late final PageController _pageController;
   int _currentPage = 0;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_initialized) return;
-    _initialized = true;
+  void initState() {
+    super.initState();
     _pageController = PageController(viewportFraction: 0.88);
-    Future.microtask(
-      () => ref.read(flashcardListViewModelProvider(widget.deck.id).notifier).load(),
-    );
   }
 
   @override
