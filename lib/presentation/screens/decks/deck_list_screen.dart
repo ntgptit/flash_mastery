@@ -505,7 +505,7 @@ class _DeckListScreenState extends ConsumerState<_DeckListScreenBody> {
   }
 
   void _openDeck(Deck deck) {
-    context.goNamed(
+    context.pushNamed(
       'flashcards',
       pathParameters: {'deckId': deck.id},
       extra: deck,

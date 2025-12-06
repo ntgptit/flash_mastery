@@ -16,7 +16,7 @@ class AppRouter {
   static const String dashboard = '/tabs/dashboard';
   static const String folders = '/tabs/folders';
   static const String decks = '/tabs/decks';
-  static const String flashcards = '/flashcards/:deckId';
+  static const String flashcards = 'flashcards/:deckId';
   static const String settings = '/tabs/settings';
   static const String home = '/home';
   static const String login = '/login';
@@ -74,6 +74,19 @@ class AppRouter {
                       : null;
                   return DeckListScreen(folder: folder);
                 },
+                routes: [
+                  GoRoute(
+                    path: flashcards,
+                    name: 'flashcards',
+                    builder: (context, state) {
+                      final deckObj = state.extra;
+                      if (deckObj is Deck) {
+                        return FlashcardListScreen(deck: deckObj);
+                      }
+                      return const Scaffold(body: Center(child: Text('Deck not found')));
+                    },
+                  ),
+                ],
               ),
             ],
           ),
@@ -114,17 +127,6 @@ class AppRouter {
         builder: (context, state) {
           final id = state.pathParameters['id']!;
           return DeckDetailScreen(deckId: id);
-        },
-      ),
-      GoRoute(
-        path: flashcards,
-        name: 'flashcards',
-        builder: (context, state) {
-          final deckObj = state.extra;
-          if (deckObj is Deck) {
-            return FlashcardListScreen(deck: deckObj);
-          }
-          return const Scaffold(body: Center(child: Text('Deck not found')));
         },
       ),
       GoRoute(
