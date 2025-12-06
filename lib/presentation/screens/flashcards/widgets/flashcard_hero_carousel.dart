@@ -51,14 +51,11 @@ class _FlashcardHeroCarouselState extends State<FlashcardHeroCarousel> {
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                 child: GestureDetector(
                   onTap: _toggleFace,
-                  onHorizontalDragEnd: (details) {
-                    final velocity = details.primaryVelocity ?? 0;
-                    if (velocity.abs() < 50) return;
-                    _toggleFace();
-                  },
+                  onDoubleTap: _toggleFace,
+                  onVerticalDragEnd: (_) => _toggleFace(),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+                      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(AppSpacing.radiusExtraLarge),
                     ),
                     padding: const EdgeInsets.all(AppSpacing.xl),
