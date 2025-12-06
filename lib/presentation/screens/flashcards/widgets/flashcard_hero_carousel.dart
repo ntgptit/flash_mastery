@@ -1,5 +1,6 @@
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 class FlashcardHeroCarousel extends StatefulWidget {
@@ -131,14 +132,21 @@ class _FlashcardHeroCarouselState extends State<FlashcardHeroCarousel> {
       children: [
         SizedBox(
           height: 260,
-          child: PageView.builder(
-            controller: widget.pageController,
-            itemCount: widget.cards.length,
-            onPageChanged: (page) {
-              setState(() => _showBack = false);
-              widget.onPageChanged(page);
-            },
-            itemBuilder: (context, index) {
+          child: ScrollConfiguration(
+            behavior: ScrollConfiguration.of(context).copyWith(
+              dragDevices: {
+                PointerDeviceKind.touch,
+                PointerDeviceKind.mouse,
+              },
+            ),
+            child: PageView.builder(
+              controller: widget.pageController,
+              itemCount: widget.cards.length,
+              onPageChanged: (page) {
+                setState(() => _showBack = false);
+                widget.onPageChanged(page);
+              },
+              itemBuilder: (context, index) {
               final card = widget.cards[index];
               final isCurrent = index == widget.currentPage;
               final displayBack = _showBack && isCurrent;
@@ -174,17 +182,23 @@ class _FlashcardHeroCarouselState extends State<FlashcardHeroCarousel> {
                           children: [
                             Text(
                               displayBack ? card.answer : card.question,
-                              style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                              style: displayBack
+                                  ? textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)
+                                  : textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
                               textAlign: TextAlign.center,
+                              maxLines: 4,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             if (displayBack && (card.hint ?? '').isNotEmpty) ...[
                               const SizedBox(height: AppSpacing.sm),
                               Text(
                                 card.hint ?? '',
-                                style: textTheme.bodyMedium?.copyWith(
+                                style: textTheme.bodySmall?.copyWith(
                                   color: colorScheme.onSurfaceVariant,
                                 ),
                                 textAlign: TextAlign.center,
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ],
@@ -195,6 +209,7 @@ class _FlashcardHeroCarouselState extends State<FlashcardHeroCarousel> {
                 ),
               );
             },
+          ),
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
