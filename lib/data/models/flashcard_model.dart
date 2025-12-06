@@ -1,4 +1,5 @@
 import 'package:flash_mastery/domain/entities/flashcard.dart';
+import 'package:flash_mastery/domain/entities/flashcard_type.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'flashcard_model.freezed.dart';
@@ -14,6 +15,14 @@ abstract class FlashcardModel with _$FlashcardModel {
     required String question,
     required String answer,
     String? hint,
+    // ignore: invalid_annotation_target
+    @JsonKey(
+      fromJson: flashcardTypeFromJson,
+      toJson: flashcardTypeToJson,
+      defaultValue: FlashcardType.vocabulary,
+    )
+    @Default(FlashcardType.vocabulary)
+    FlashcardType type,
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _FlashcardModel;
@@ -26,6 +35,7 @@ abstract class FlashcardModel with _$FlashcardModel {
     question: question,
     answer: answer,
     hint: hint,
+    type: type,
     createdAt: createdAt,
     updatedAt: updatedAt,
   );
@@ -36,6 +46,7 @@ abstract class FlashcardModel with _$FlashcardModel {
     question: flashcard.question,
     answer: flashcard.answer,
     hint: flashcard.hint,
+    type: flashcard.type,
     createdAt: flashcard.createdAt,
     updatedAt: flashcard.updatedAt,
   );

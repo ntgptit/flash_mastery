@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flash_mastery/domain/entities/flashcard_type.dart';
 
 /// Flashcard entity representing a single study card.
 class Flashcard extends Equatable {
@@ -7,6 +8,7 @@ class Flashcard extends Equatable {
   final String question;
   final String answer;
   final String? hint;
+  final FlashcardType type;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -16,6 +18,7 @@ class Flashcard extends Equatable {
     required this.question,
     required this.answer,
     this.hint,
+    this.type = FlashcardType.vocabulary,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -26,6 +29,7 @@ class Flashcard extends Equatable {
     String? question,
     String? answer,
     String? hint,
+    FlashcardType? type,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -35,6 +39,7 @@ class Flashcard extends Equatable {
       question: question ?? this.question,
       answer: answer ?? this.answer,
       hint: hint ?? this.hint,
+      type: type ?? this.type,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -47,6 +52,7 @@ class Flashcard extends Equatable {
         question,
         answer,
         hint,
+        type,
         createdAt,
         updatedAt,
       ];

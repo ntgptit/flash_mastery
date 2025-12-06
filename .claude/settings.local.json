@@ -11,7 +11,15 @@
       "Bash(move libcoreerrorfailures.dart libcoreexceptionsfailures.dart)",
       "Bash(grep:*)",
       "Bash(ls:*)",
-      "Bash(mvn clean compile:*)"
+      "Bash(mvn clean compile:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(psql:*)",
+      "Bash(where:*)",
+      "Bash(taskkill /F /PID 40368)",
+      "Bash(taskkill //F //PID 40368)",
+      "Bash(mvn spring-boot:run:*)",
+      "Bash(timeout:*)"
     ],
     "deny": [],
     "ask": []

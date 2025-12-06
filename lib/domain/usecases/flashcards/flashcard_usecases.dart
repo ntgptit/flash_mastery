@@ -4,6 +4,7 @@ import 'package:flash_mastery/core/constants/validation/error_messages.dart';
 import 'package:flash_mastery/core/exceptions/failures.dart';
 import 'package:flash_mastery/core/usecases/usecase.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
+import 'package:flash_mastery/domain/entities/flashcard_type.dart';
 import 'package:flash_mastery/domain/repositories/flashcard_repository.dart';
 
 class GetFlashcardsUseCase extends UseCase<List<Flashcard>, String> {
@@ -58,6 +59,7 @@ class CreateFlashcardUseCase extends UseCase<Flashcard, CreateFlashcardParams> {
       question: trimmedQuestion,
       answer: trimmedAnswer,
       hint: trimmedHint,
+      type: params.type,
     );
   }
 }
@@ -85,6 +87,7 @@ class UpdateFlashcardUseCase extends UseCase<Flashcard, UpdateFlashcardParams> {
       question: trimmedQuestion,
       answer: trimmedAnswer,
       hint: trimmedHint,
+      type: params.type,
     );
   }
 }
@@ -105,12 +108,14 @@ class CreateFlashcardParams {
   final String question;
   final String answer;
   final String? hint;
+  final FlashcardType type;
 
   const CreateFlashcardParams({
     required this.deckId,
     required this.question,
     required this.answer,
     this.hint,
+    this.type = FlashcardType.vocabulary,
   });
 }
 
@@ -119,12 +124,14 @@ class UpdateFlashcardParams {
   final String? question;
   final String? answer;
   final String? hint;
+  final FlashcardType? type;
 
   const UpdateFlashcardParams({
     required this.id,
     this.question,
     this.answer,
     this.hint,
+    this.type,
   });
 }
 

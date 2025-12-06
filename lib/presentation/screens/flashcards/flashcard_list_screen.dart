@@ -1,6 +1,9 @@
+import 'dart:math';
+
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
+import 'package:flash_mastery/domain/entities/flashcard_type.dart';
 import 'package:flash_mastery/features/flashcards/providers.dart';
 import 'package:flash_mastery/presentation/screens/flashcards/widgets/flashcard_form_dialog.dart';
 import 'package:flash_mastery/presentation/widgets/common/common_widgets.dart';
@@ -19,6 +22,8 @@ class FlashcardListScreen extends ConsumerStatefulWidget {
 class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
   String _searchQuery = '';
   bool _initialized = false;
+  int _visibleCount = 15;
+  static const int _pageSize = 15;
 
   @override
   void didChangeDependencies() {
@@ -49,7 +54,7 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
           initial: () => const LoadingWidget(),
           loading: () => const LoadingWidget(),
           success: (cards) {
-            final visibleCards = filteredCards ?? cards;
+            final List<Flashcard> visibleCards = filteredCards ?? cards;
             if (visibleCards.isEmpty) {
               return EmptyStateWidget(
                 icon: Icons.style_outlined,
@@ -60,23 +65,47 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
               );
             }
 
+            final total = visibleCards.length;
+            final showCount = total <= 0 ? 0 : max(0, min(_visibleCount, total));
+            final showCards = showCount == 0 ? <Flashcard>[] : visibleCards.take(showCount).toList();
+            final hasMore = showCount < total;
+
             return RefreshIndicator(
               onRefresh: () async =>
                   ref.read(flashcardListViewModelProvider(widget.deck.id).notifier).load(),
-              child: ListView.separated(
-                itemCount: visibleCards.length,
-                separatorBuilder: (_, __) => const Divider(
-                  height: AppSpacing.borderWidthThin,
-                  thickness: AppSpacing.borderWidthThin,
-                ),
-                itemBuilder: (context, index) {
-                  final card = visibleCards[index];
-                  return _FlashcardTile(
-                    card: card,
-                    onEdit: () => _openEditDialog(card),
-                    onDelete: () => _confirmDelete(card),
-                  );
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (notification) {
+                  if (notification.metrics.extentAfter < 200 && hasMore) {
+                    final nextCount = min(_visibleCount + _pageSize, visibleCards.length);
+                    setState(() => _visibleCount = nextCount);
+                  }
+                  return false;
                 },
+                child: ListView.separated(
+                  itemCount: showCards.length + (hasMore ? 1 : 0),
+                  separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+                  itemBuilder: (context, index) {
+                    if (hasMore && index == showCards.length) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                        child: Center(
+                          child: Text(
+                            'Scroll to load more...',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                          ),
+                        ),
+                      );
+                    }
+                    final card = showCards[index];
+                    return _FlashcardTile(
+                      card: card,
+                      onEdit: () => _openEditDialog(card),
+                      onDelete: () => _confirmDelete(card),
+                    );
+                  },
+                ),
               ),
             );
           },
@@ -145,6 +174,7 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
   }
 
   Future<void> _openCreateDialog() async {
+    setState(() => _visibleCount = _pageSize);
     await _openFlashcardDialog();
   }
 
@@ -157,7 +187,7 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
       context: context,
       builder: (context) => FlashcardFormDialog(
         flashcard: card,
-        onSubmit: ({required String question, required String answer, String? hint}) async {
+        onSubmit: ({required String question, required String answer, String? hint, required FlashcardType type}) async {
           final navigator = Navigator.of(context);
           final messenger = ScaffoldMessenger.of(context);
           try {
@@ -169,6 +199,7 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
                       question: question,
                       answer: answer,
                       hint: hint,
+                      type: type,
                     ),
                   )
                 : await notifier.updateFlashcard(
@@ -177,6 +208,7 @@ class _FlashcardListScreenState extends ConsumerState<FlashcardListScreen> {
                       question: question,
                       answer: answer,
                       hint: hint,
+                      type: type,
                     ),
                   );
 
@@ -256,61 +288,130 @@ class _FlashcardTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(card.question, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(card.answer, maxLines: 2, overflow: TextOverflow.ellipsis),
-          if ((card.hint ?? '').isNotEmpty)
-            Text(
-              'Hint: ${card.hint}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-        ],
-      ),
-      trailing: PopupMenuButton<String>(
-        onSelected: (value) {
-          if (value == 'edit') {
-            onEdit();
-          } else if (value == 'delete') {
-            onDelete();
-          }
+    final colorScheme = Theme.of(context).colorScheme;
+    return Card(
+      elevation: AppSpacing.elevationLow,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLarge)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Flashcard detail coming soon')),
+          );
         },
-        itemBuilder: (context) => [
-          const PopupMenuItem(
-            value: 'edit',
-            child: Row(
-              children: [
-                Icon(Icons.edit, size: AppSpacing.iconSmallMedium),
-                SizedBox(width: AppSpacing.sm),
-                Text('Edit'),
-              ],
-            ),
-          ),
-          PopupMenuItem(
-            value: 'delete',
-            child: Row(
-              children: [
-                Icon(
-                  Icons.delete,
-                  size: AppSpacing.iconSmallMedium,
-                  color: Theme.of(context).colorScheme.error,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _TypeChip(type: card.type),
+                  PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'edit') {
+                        onEdit();
+                      } else if (value == 'delete') {
+                        onDelete();
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit, size: AppSpacing.iconSmallMedium),
+                            SizedBox(width: AppSpacing.sm),
+                            Text('Edit'),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.delete,
+                              size: AppSpacing.iconSmallMedium,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Text('Delete', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                card.question,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                card.answer,
+                style: Theme.of(context).textTheme.bodyMedium,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if ((card.hint ?? '').isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.xs),
+                Row(
+                  children: [
+                    Icon(Icons.lightbulb_outline, size: AppSpacing.iconSmallMedium, color: colorScheme.tertiary),
+                    const SizedBox(width: AppSpacing.xs),
+                    Expanded(
+                      child: Text(
+                        card.hint ?? '',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: AppSpacing.sm),
-                Text('Delete', style: TextStyle(color: Theme.of(context).colorScheme.error)),
               ],
-            ),
+            ],
           ),
-        ],
+        ),
       ),
-      onTap: () {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Flashcard detail not implemented yet')));
-      },
+    );
+  }
+}
+
+class _TypeChip extends StatelessWidget {
+  final FlashcardType type;
+
+  const _TypeChip({required this.type});
+
+  @override
+  Widget build(BuildContext context) {
+    final isVocab = type == FlashcardType.vocabulary;
+    final colorScheme = Theme.of(context).colorScheme;
+    final bg = isVocab
+        ? colorScheme.primary.withValues(alpha: AppOpacity.low)
+        : colorScheme.secondary.withValues(alpha: AppOpacity.low);
+    final fg = isVocab ? colorScheme.primary : colorScheme.secondary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+      ),
+      child: Text(
+        isVocab ? 'Vocabulary' : 'Grammar',
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: fg,
+              fontWeight: FontWeight.w700,
+            ),
+      ),
     );
   }
 }

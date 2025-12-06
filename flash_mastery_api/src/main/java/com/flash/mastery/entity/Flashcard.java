@@ -2,6 +2,8 @@ package com.flash.mastery.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -35,4 +37,8 @@ public class Flashcard extends BaseAuditEntity {
 
   @Column(name = "hint")
   private String hint;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "type", nullable = true, length = 32)
+  private FlashcardType type;
 }

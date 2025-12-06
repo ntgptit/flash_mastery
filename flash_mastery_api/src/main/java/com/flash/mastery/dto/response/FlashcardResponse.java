@@ -2,6 +2,7 @@ package com.flash.mastery.dto.response;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+import com.flash.mastery.entity.FlashcardType;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,6 +19,7 @@ public class FlashcardResponse {
   String question;
   String answer;
   String hint;
+  FlashcardType type;
   LocalDateTime createdAt;
   LocalDateTime updatedAt;
 }

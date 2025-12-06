@@ -1,10 +1,15 @@
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
+import 'package:flash_mastery/domain/entities/flashcard_type.dart';
 import 'package:flutter/material.dart';
 
 class FlashcardFormDialog extends StatefulWidget {
   final Flashcard? flashcard;
-  final Future<void> Function({required String question, required String answer, String? hint})
+  final Future<void> Function(
+      {required String question,
+      required String answer,
+      String? hint,
+      required FlashcardType type})
   onSubmit;
 
   const FlashcardFormDialog({super.key, this.flashcard, required this.onSubmit});
@@ -18,6 +23,7 @@ class _FlashcardFormDialogState extends State<FlashcardFormDialog> {
   late final TextEditingController _questionController;
   late final TextEditingController _answerController;
   late final TextEditingController _hintController;
+  late FlashcardType _type;
   bool _isSubmitting = false;
 
   @override
@@ -26,6 +32,7 @@ class _FlashcardFormDialogState extends State<FlashcardFormDialog> {
     _questionController = TextEditingController(text: widget.flashcard?.question ?? '');
     _answerController = TextEditingController(text: widget.flashcard?.answer ?? '');
     _hintController = TextEditingController(text: widget.flashcard?.hint ?? '');
+    _type = widget.flashcard?.type ?? FlashcardType.vocabulary;
   }
 
   @override
@@ -56,6 +63,26 @@ class _FlashcardFormDialogState extends State<FlashcardFormDialog> {
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: AppSpacing.xl),
+                DropdownButtonFormField<FlashcardType>(
+                  initialValue: _type,
+                  decoration: const InputDecoration(
+                    labelText: 'Type',
+                    prefixIcon: Icon(Icons.category_outlined),
+                    border: OutlineInputBorder(),
+                  ),
+                  items: FlashcardType.values
+                      .map(
+                        (t) => DropdownMenuItem(
+                          value: t,
+                          child: Text(t == FlashcardType.vocabulary ? 'Vocabulary' : 'Grammar'),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) setState(() => _type = value);
+                  },
+                ),
+                const SizedBox(height: AppSpacing.lg),
                 TextFormField(
                   controller: _questionController,
                   decoration: const InputDecoration(
@@ -148,6 +175,7 @@ class _FlashcardFormDialogState extends State<FlashcardFormDialog> {
         question: _questionController.text.trim(),
         answer: _answerController.text.trim(),
         hint: _hintController.text.trim().isEmpty ? null : _hintController.text.trim(),
+        type: _type,
       );
     } finally {
       if (mounted) {

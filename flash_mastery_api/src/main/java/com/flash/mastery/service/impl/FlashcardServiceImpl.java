@@ -66,6 +66,9 @@ public class FlashcardServiceImpl implements FlashcardService {
         flashcardRepository.findById(id)
             .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FLASHCARD)));
     flashcardMapper.update(card, request);
+    if (request.getType() != null) {
+      card.setType(request.getType());
+    }
     Flashcard saved = flashcardRepository.save(card);
     return flashcardMapper.toResponse(saved);
   }

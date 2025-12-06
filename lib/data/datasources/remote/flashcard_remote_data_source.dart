@@ -46,6 +46,7 @@ class FlashcardRemoteDataSourceImpl implements FlashcardRemoteDataSource {
         'question': flashcard.question,
         'answer': flashcard.answer,
         'hint': flashcard.hint,
+        'type': flashcard.type.name.toUpperCase(),
       },
     );
     if (response.statusCode == 201 || response.statusCode == 200) {
@@ -62,6 +63,7 @@ class FlashcardRemoteDataSourceImpl implements FlashcardRemoteDataSource {
         'question': flashcard.question,
         'answer': flashcard.answer,
         'hint': flashcard.hint,
+        'type': flashcard.type.name.toUpperCase(),
       },
     );
     if (response.statusCode == 200) {

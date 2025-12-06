@@ -4,6 +4,7 @@ import 'package:flash_mastery/core/exceptions/failures.dart';
 import 'package:flash_mastery/data/datasources/remote/flashcard_remote_data_source.dart';
 import 'package:flash_mastery/data/models/flashcard_model.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
+import 'package:flash_mastery/domain/entities/flashcard_type.dart';
 import 'package:flash_mastery/domain/repositories/flashcard_repository.dart';
 
 class FlashcardRepositoryImpl implements FlashcardRepository {
@@ -17,6 +18,7 @@ class FlashcardRepositoryImpl implements FlashcardRepository {
     required String question,
     required String answer,
     String? hint,
+    FlashcardType type = FlashcardType.vocabulary,
   }) async {
     return ErrorGuard.run(() async {
       final card = FlashcardModel(
@@ -25,6 +27,7 @@ class FlashcardRepositoryImpl implements FlashcardRepository {
         question: question,
         answer: answer,
         hint: hint,
+        type: type,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -82,6 +85,7 @@ class FlashcardRepositoryImpl implements FlashcardRepository {
     String? question,
     String? answer,
     String? hint,
+    FlashcardType? type,
   }) async {
     return ErrorGuard.run(() async {
       final existing = await remoteDataSource.getById(id);
@@ -89,6 +93,7 @@ class FlashcardRepositoryImpl implements FlashcardRepository {
         question: question ?? existing.question,
         answer: answer ?? existing.answer,
         hint: hint ?? existing.hint,
+        type: type ?? existing.type,
       );
       final saved = await remoteDataSource.updateFlashcard(id, updated);
       return saved.toEntity();

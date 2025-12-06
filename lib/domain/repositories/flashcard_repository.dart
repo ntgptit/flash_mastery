@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:flash_mastery/core/exceptions/failures.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
+import 'package:flash_mastery/domain/entities/flashcard_type.dart';
 
 /// Repository interface for flashcard operations.
 abstract class FlashcardRepository {
@@ -16,6 +17,7 @@ abstract class FlashcardRepository {
     required String question,
     required String answer,
     String? hint,
+    FlashcardType type,
   });
 
   /// Update a flashcard.
@@ -24,6 +26,7 @@ abstract class FlashcardRepository {
     String? question,
     String? answer,
     String? hint,
+    FlashcardType? type,
   });
 
   /// Delete a flashcard.
