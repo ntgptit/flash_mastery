@@ -18,7 +18,7 @@ import com.flash.mastery.util.importer.RowContext;
 public class ExcelImporter<T> implements Importer<T> {
 
     @Override
-    public ImportResult<T> importStream(InputStream inputStream, Function<RowContext, T> mapper) throws IOException {
+    public ImportResult<T> importStream(InputStream inputStream, Function<RowContext, ? extends T> mapper) throws IOException {
         var result = ImportResult.<T>builder().build();
         try (XSSFWorkbook workbook = new XSSFWorkbook(inputStream)) {
             Sheet sheet = workbook.getNumberOfSheets() > 0 ? workbook.getSheetAt(0) : null;

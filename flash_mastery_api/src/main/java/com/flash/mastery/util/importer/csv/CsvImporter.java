@@ -33,7 +33,7 @@ public class CsvImporter<T> implements Importer<T> {
     }
 
     @Override
-    public ImportResult<T> importStream(InputStream inputStream, Function<RowContext, T> mapper) throws IOException {
+    public ImportResult<T> importStream(InputStream inputStream, Function<RowContext, ? extends T> mapper) throws IOException {
         var result = ImportResult.<T>builder().build();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
              CSVParser parser = new CSVParser(reader, format)) {

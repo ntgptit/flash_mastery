@@ -39,6 +39,8 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class DeckServiceImpl implements DeckService {
 
+  private static final int TEXT_LIMIT = 255;
+
   private final DeckRepository deckRepository;
   private final FlashcardRepository flashcardRepository;
   private final FolderRepository folderRepository;
@@ -121,11 +123,11 @@ public class DeckServiceImpl implements DeckService {
   }
 
   @Override
-  public ImportResult<?> importDecks(UUID folderId, MultipartFile file, FlashcardType type) throws java.io.IOException {
+  public ImportResult<ImportRow> importDecks(UUID folderId, MultipartFile file, FlashcardType type) throws java.io.IOException {
     Folder folder = folderRepository.findById(folderId)
         .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FOLDER)));
     var importer = ImporterFactory.<ImportRow>forFilename(file.getOriginalFilename());
-    ImportResult<ImportRow> parsed = importer.importStream(file.getInputStream(), this::mapRow);
+    ImportResult<ImportRow> parsed = importer.importStream(file.getInputStream(), ctx -> mapRow(ctx));
     persistRows(parsed.getItems(), folder, type);
     return parsed;
   }
@@ -137,7 +139,7 @@ public class DeckServiceImpl implements DeckService {
     if (first.startsWith("*")) {
       String deckName = StringUtils.trimToEmpty(first.substring(1));
       if (deckName.isEmpty()) deckName = "Imported Deck";
-      return ImportRow.deck(ctx.rowIndex(), deckName);
+      return ImportRow.deck(ctx.rowIndex(), clamp(deckName));
     }
     if (ctx.cells().size() < 2) {
       throw new IllegalArgumentException("Missing vocabulary or meaning");
@@ -147,7 +149,7 @@ public class DeckServiceImpl implements DeckService {
     if (vocab == null || meaning == null) {
       throw new IllegalArgumentException("Vocabulary/meaning is blank");
     }
-    return ImportRow.card(ctx.rowIndex(), vocab, meaning);
+    return ImportRow.card(ctx.rowIndex(), clamp(vocab), clamp(meaning));
   }
 
   private void persistRows(List<ImportRow> rows, Folder folder, FlashcardType defaultType) {
@@ -187,7 +189,7 @@ public class DeckServiceImpl implements DeckService {
 
   private Deck createDeck(String name, Folder folder, FlashcardType type) {
     Deck deck = Deck.builder()
-        .name(name)
+        .name(clamp(name))
         .description("Imported deck")
         .folder(folder)
         .cardCount(0)
@@ -197,6 +199,13 @@ public class DeckServiceImpl implements DeckService {
     folder.setDeckCount(folder.getDeckCount() + 1);
     folderRepository.save(folder);
     return saved;
+  }
+
+  private String clamp(String value) {
+    if (value == null) {
+      return null;
+    }
+    return value.length() > TEXT_LIMIT ? value.substring(0, TEXT_LIMIT) : value;
   }
 
   private record ImportRow(int rowIndex, Kind kind, String deckName, String vocab, String meaning) {

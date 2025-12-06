@@ -5,5 +5,5 @@ import java.io.InputStream;
 import java.util.function.Function;
 
 public interface Importer<T> {
-    ImportResult<T> importStream(InputStream inputStream, Function<RowContext, T> mapper) throws IOException;
+    ImportResult<T> importStream(InputStream inputStream, Function<RowContext, ? extends T> mapper) throws IOException;
 }
