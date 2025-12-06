@@ -4,6 +4,7 @@ import 'package:flash_mastery/core/router/app_router.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/entities/flashcard_type.dart';
 import 'package:flash_mastery/domain/entities/folder.dart';
+import 'package:flash_mastery/domain/entities/import_summary.dart';
 import 'package:flash_mastery/features/decks/providers.dart';
 import 'package:flash_mastery/features/folders/providers.dart';
 import 'package:flash_mastery/presentation/screens/decks/widgets/deck_card.dart';
@@ -553,12 +554,13 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
     if (picked == null || picked.files.isEmpty) return;
     final file = picked.files.first;
     if (!mounted) return;
-    final selectedType = await _chooseType(context);
-    if (selectedType == null) return;
+    final selected = await _chooseImportOptions(context);
+    if (selected == null) return;
+    final (selectedType, hasHeader) = selected;
 
     final notifier = ref.read(deckListViewModelProvider(folder.id).notifier);
     final (summary, error) = await notifier.importDecks(
-      ImportDecksParams(folderId: folder.id, type: selectedType, file: file),
+      ImportDecksParams(folderId: folder.id, type: selectedType, file: file, hasHeader: hasHeader),
     );
     await notifier.load();
     await ref.read(folderListViewModelProvider.notifier).load();
@@ -568,64 +570,47 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
       messenger.showSnackBar(SnackBar(content: Text('Import failed: $error')));
       return;
     }
-    final errCount = summary?.errors.length ?? 0;
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text('Imported ${summary?.successCount ?? 0} rows${errCount > 0 ? ', errors: $errCount' : ''}'),
-        action: errCount > 0
-            ? SnackBarAction(
-                label: 'Details',
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (_) => AlertDialog(
-                      title: const Text('Import errors'),
-                      content: SizedBox(
-                        width: 360,
-                        child: SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: summary!.errors
-                                .map((e) => Text('Row ${e.rowIndex}: ${e.message}'))
-                                .toList(),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              )
-            : null,
-      ),
-    );
+    if (summary != null) {
+      _showImportSummaryDialog(summary);
+    } else {
+      messenger.showSnackBar(const SnackBar(content: Text('Import completed')));
+    }
   }
 
-  Future<FlashcardType?> _chooseType(BuildContext context) async {
+  Future<(FlashcardType, bool)?> _chooseImportOptions(BuildContext context) async {
     FlashcardType temp = FlashcardType.vocabulary;
-    return showDialog<FlashcardType>(
+    bool hasHeader = true;
+    return showDialog<(FlashcardType, bool)>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Select flashcard type'),
+        title: const Text('Import options'),
         content: StatefulBuilder(
           builder: (context, setState) => Column(
             mainAxisSize: MainAxisSize.min,
-            children: FlashcardType.values
-                .map(
-                  (t) => ListTile(
-                        leading: Icon(
-                          temp == t ? Icons.radio_button_checked : Icons.radio_button_off,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        title: Text(t == FlashcardType.vocabulary ? 'Vocabulary' : 'Grammar'),
-                        onTap: () => setState(() => temp = t),
-                      ),
-                )
-                .toList(),
+            children: [
+              ...FlashcardType.values.map(
+                (t) => ListTile(
+                  leading: Icon(
+                    temp == t ? Icons.radio_button_checked : Icons.radio_button_off,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: Text(t == FlashcardType.vocabulary ? 'Vocabulary' : 'Grammar'),
+                  onTap: () => setState(() => temp = t),
+                ),
+              ),
+              const Divider(),
+              CheckboxListTile(
+                value: hasHeader,
+                onChanged: (value) => setState(() => hasHeader = value ?? true),
+                contentPadding: EdgeInsets.zero,
+                title: const Text('File has header row'),
+              ),
+            ],
           ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(context, temp), child: const Text('Import')),
+          FilledButton(onPressed: () => Navigator.pop(context, (temp, hasHeader)), child: const Text('Import')),
         ],
       ),
     );
@@ -638,6 +623,61 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
       return;
     }
     context.go(AppRouter.dashboard);
+  }
+
+  void _showImportSummaryDialog(ImportSummary summary) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Import Summary'),
+        content: SizedBox(
+          width: 420,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Decks created: ${summary.decksCreated}'),
+                Text('Decks skipped (duplicate): ${summary.decksSkipped}'),
+                if (summary.skippedDeckNames.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppSpacing.xs),
+                    child: Text(
+                      'Skipped decks: ${summary.skippedDeckNames.join(', ')}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                const SizedBox(height: AppSpacing.sm),
+                Text('Flashcards imported: ${summary.cardsImported}'),
+                Text('Flashcards skipped (duplicate term): ${summary.cardsSkippedDuplicate}'),
+                Text('Invalid rows: ${summary.invalidRows}'),
+                const SizedBox(height: AppSpacing.sm),
+                if (summary.errors.isNotEmpty)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Errors:'),
+                      const SizedBox(height: AppSpacing.xs),
+                      ...summary.errors
+                          .map(
+                            (e) => Text(
+                              'Row ${e.rowIndex}: ${e.message}',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(color: Theme.of(context).colorScheme.error),
+                            ),
+                          ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+        ],
+      ),
+    );
   }
 
   Widget _buildDecksSliver(List<Deck> decks, List<Folder> folders) {

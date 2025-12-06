@@ -25,6 +25,7 @@ abstract class DeckRemoteDataSource {
     required String fileName,
     String? filePath,
     List<int>? bytes,
+    bool hasHeader = true,
   });
 }
 
@@ -139,6 +140,7 @@ class DeckRemoteDataSourceImpl implements DeckRemoteDataSource {
     required String fileName,
     String? filePath,
     List<int>? bytes,
+    bool hasHeader = true,
   }) async {
     MultipartFile file;
     if (filePath != null && filePath.isNotEmpty && !kIsWeb) {
@@ -156,6 +158,7 @@ class DeckRemoteDataSourceImpl implements DeckRemoteDataSource {
     final response = await dio.post(
       ApiConstants.importDecks(folderId),
       data: formData,
+      queryParameters: {'skipHeader': hasHeader},
       options: Options(contentType: 'multipart/form-data'),
     );
     if (response.statusCode == 200) {

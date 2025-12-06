@@ -17,5 +17,5 @@ public interface DeckService {
   DeckResponse update(UUID id, DeckUpdateRequest request);
   void delete(UUID id);
 
-  ImportResult<?> importDecks(UUID folderId, MultipartFile file, FlashcardType type) throws IOException;
+  ImportResult<?> importDecks(UUID folderId, MultipartFile file, FlashcardType type, boolean skipHeader) throws IOException;
 }

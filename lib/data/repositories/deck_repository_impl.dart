@@ -116,6 +116,7 @@ class DeckRepositoryImpl implements DeckRepository {
     required String folderId,
     required FlashcardType type,
     required PlatformFile file,
+    bool hasHeader = true,
   }) async {
     return ErrorGuard.run(() async {
       final summary = await remoteDataSource.importDecks(
@@ -124,6 +125,7 @@ class DeckRepositoryImpl implements DeckRepository {
         filePath: file.path,
         fileName: file.name,
         bytes: file.bytes,
+        hasHeader: hasHeader,
       );
       return summary.toEntity();
     });

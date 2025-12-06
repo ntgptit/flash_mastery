@@ -11,6 +11,12 @@ abstract class ImportSummaryModel with _$ImportSummaryModel {
 
   const factory ImportSummaryModel({
     @Default(0) int successCount,
+    @Default(0) int decksCreated,
+    @Default(0) int decksSkipped,
+    @Default(<String>[]) List<String> skippedDeckNames,
+    @Default(0) int cardsImported,
+    @Default(0) int cardsSkippedDuplicate,
+    @Default(0) int invalidRows,
     @Default(<ImportErrorModel>[]) List<ImportErrorModel> errors,
   }) = _ImportSummaryModel;
 
@@ -18,5 +24,14 @@ abstract class ImportSummaryModel with _$ImportSummaryModel {
       _$ImportSummaryModelFromJson(json);
 
   ImportSummary toEntity() =>
-      ImportSummary(successCount: successCount, errors: errors.map((e) => e.toEntity()).toList());
+      ImportSummary(
+        successCount: successCount,
+        decksCreated: decksCreated,
+        decksSkipped: decksSkipped,
+        skippedDeckNames: skippedDeckNames,
+        cardsImported: cardsImported,
+        cardsSkippedDuplicate: cardsSkippedDuplicate,
+        invalidRows: invalidRows,
+        errors: errors.map((e) => e.toEntity()).toList(),
+      );
 }

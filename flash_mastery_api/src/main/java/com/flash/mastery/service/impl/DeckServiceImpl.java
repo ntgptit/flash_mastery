@@ -23,6 +23,8 @@ import com.flash.mastery.util.importer.RowContext;
 import java.util.List;
 import java.util.UUID;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -123,12 +125,15 @@ public class DeckServiceImpl implements DeckService {
   }
 
   @Override
-  public ImportResult<ImportRow> importDecks(UUID folderId, MultipartFile file, FlashcardType type) throws java.io.IOException {
+  public ImportResult<ImportRow> importDecks(UUID folderId, MultipartFile file, FlashcardType type, boolean skipHeader) throws java.io.IOException {
     Folder folder = folderRepository.findById(folderId)
         .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FOLDER)));
     var importer = ImporterFactory.<ImportRow>forFilename(file.getOriginalFilename());
-    ImportResult<ImportRow> parsed = importer.importStream(file.getInputStream(), ctx -> mapRow(ctx));
-    persistRows(parsed.getItems(), folder, type);
+    ImportResult<ImportRow> parsed = importer.importStream(file.getInputStream(), ctx -> mapRow(ctx), skipHeader);
+    Set<String> existingDeckNames = new HashSet<>();
+    deckRepository.findByFolderId(folderId, Pageable.unpaged())
+        .forEach(deck -> existingDeckNames.add(StringUtils.lowerCase(deck.getName())));
+    persistRows(parsed, folder, type, existingDeckNames);
     return parsed;
   }
 
@@ -152,18 +157,50 @@ public class DeckServiceImpl implements DeckService {
     return ImportRow.card(ctx.rowIndex(), clamp(vocab), clamp(meaning));
   }
 
-  private void persistRows(List<ImportRow> rows, Folder folder, FlashcardType defaultType) {
+  private void persistRows(ImportResult<ImportRow> summary, Folder folder, FlashcardType defaultType, Set<String> existingDeckNames) {
     List<Flashcard> buffer = new ArrayList<>();
     Deck currentDeck = null;
     final int batchSize = 500;
-    for (ImportRow row : rows) {
+    Set<String> currentTerms = new HashSet<>();
+    boolean skipCurrentDeck = false;
+    for (ImportRow row : summary.getItems()) {
       if (row.kind == ImportRow.Kind.DECK) {
         flushBatch(buffer, currentDeck);
-        currentDeck = createDeck(row.deckName, folder, defaultType);
+        currentTerms.clear();
+        String deckName = row.deckName;
+        String deckKey = StringUtils.lowerCase(deckName);
+        if (existingDeckNames.contains(deckKey)) {
+          summary.addDeckSkipped(deckName, row.rowIndex);
+          skipCurrentDeck = true;
+          currentDeck = null;
+          continue;
+        }
+        currentDeck = createDeck(deckName, folder, defaultType);
+        existingDeckNames.add(deckKey);
+        summary.addDeckCreated();
+        skipCurrentDeck = false;
         continue;
       }
       if (currentDeck == null) {
-        currentDeck = createDeck("Imported Deck", folder, defaultType);
+        String defaultDeckName = "Imported Deck";
+        String deckKey = StringUtils.lowerCase(defaultDeckName);
+        if (existingDeckNames.contains(deckKey)) {
+          summary.addDeckSkipped(defaultDeckName, row.rowIndex);
+          skipCurrentDeck = true;
+          continue;
+        }
+        currentDeck = createDeck(defaultDeckName, folder, defaultType);
+        existingDeckNames.add(deckKey);
+        summary.addDeckCreated();
+        skipCurrentDeck = false;
+      }
+      if (skipCurrentDeck) {
+        continue;
+      }
+      String termKey = StringUtils.lowerCase(row.vocab);
+      if (currentTerms.contains(termKey)) {
+        summary.addCardDuplicate(row.rowIndex, row.vocab, currentDeck.getName());
+        continue;
       }
       buffer.add(
           Flashcard.builder()
@@ -172,6 +209,8 @@ public class DeckServiceImpl implements DeckService {
               .type(defaultType)
               .deck(currentDeck)
               .build());
+      currentTerms.add(termKey);
+      summary.addCardImported();
       if (buffer.size() >= batchSize) {
         flushBatch(buffer, currentDeck);
       }

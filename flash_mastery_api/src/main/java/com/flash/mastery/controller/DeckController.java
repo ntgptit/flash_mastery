@@ -93,10 +93,17 @@ public class DeckController {
   public ImportSummaryResponse importDecks(
       @PathVariable UUID folderId,
       @RequestParam("file") MultipartFile file,
-      @RequestParam(value = "type", defaultValue = "VOCABULARY") FlashcardType type) throws java.io.IOException {
-    var result = deckService.importDecks(folderId, file, type);
+      @RequestParam(value = "type", defaultValue = "VOCABULARY") FlashcardType type,
+      @RequestParam(value = "skipHeader", defaultValue = "false") boolean skipHeader) throws java.io.IOException {
+    var result = deckService.importDecks(folderId, file, type, skipHeader);
     return ImportSummaryResponse.builder()
-        .successCount(result.getItems().size())
+        .successCount(result.getCardsImported())
+        .cardsImported(result.getCardsImported())
+        .cardsSkippedDuplicate(result.getCardsSkippedDuplicate())
+        .invalidRows(result.getInvalidRows())
+        .decksCreated(result.getDecksCreated())
+        .decksSkipped(result.getDecksSkipped())
+        .skippedDeckNames(result.getSkippedDeckNames())
         .errors(result.getErrors())
         .build();
   }

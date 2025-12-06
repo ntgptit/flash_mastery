@@ -122,6 +122,7 @@ class ImportDecksUseCase extends UseCase<ImportSummary, ImportDecksParams> {
       folderId: params.folderId,
       type: params.type,
       file: params.file,
+      hasHeader: params.hasHeader,
     );
   }
 }
@@ -183,11 +184,13 @@ class ImportDecksParams {
   final String folderId;
   final FlashcardType type;
   final PlatformFile file;
+  final bool hasHeader;
 
   const ImportDecksParams({
     required this.folderId,
     required this.type,
     required this.file,
+    this.hasHeader = true,
   });
 }
 

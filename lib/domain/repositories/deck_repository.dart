@@ -40,6 +40,7 @@ abstract class DeckRepository {
     required String folderId,
     required FlashcardType type,
     required PlatformFile file,
+    bool hasHeader = true,
   });
 
   /// Delete a deck by ID.

@@ -14,4 +14,6 @@ public interface DeckRepository extends JpaRepository<Deck, UUID> {
     Page<Deck> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
     Page<Deck> findByFolderIdAndNameContainingIgnoreCase(UUID folderId, String name, Pageable pageable);
+
+    boolean existsByFolderIdAndNameIgnoreCase(UUID folderId, String name);
 }
