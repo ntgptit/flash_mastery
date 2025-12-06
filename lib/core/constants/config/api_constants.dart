@@ -109,6 +109,9 @@ class ApiConstants {
   /// Delete deck endpoint.
   static String deleteDeck(String id) => '/decks/$id';
 
+  /// Import decks into a folder.
+  static String importDecks(String folderId) => '/decks/import/$folderId';
+
   // ==================== FOLDER ENDPOINTS ====================
 
   /// Get all folders endpoint.

@@ -1,6 +1,8 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/core/router/app_router.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
+import 'package:flash_mastery/domain/entities/flashcard_type.dart';
 import 'package:flash_mastery/domain/entities/folder.dart';
 import 'package:flash_mastery/features/decks/providers.dart';
 import 'package:flash_mastery/features/folders/providers.dart';
@@ -126,19 +128,33 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                       ),
                     ),
                     if (widget.folder != null)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                          vertical: AppSpacing.md,
+                        ),
+                        child: DeckSubfolderSection(
+                          subfolders: subFolders,
+                          onCreate: () => _openSubfolderForm(allFolders: folders),
+                          onOpen: (folder) => context.goNamed('decks', extra: folder),
+                          onEdit: (folder) => _openSubfolderForm(folder: folder, allFolders: folders),
+                          onDelete: _confirmDeleteFolder,
+                          onAddSubfolder: (folder) => _openSubfolderForm(parent: folder, allFolders: folders),
+                        ),
+                      ),
+                    ),
+                    if (widget.folder != null)
                       SliverToBoxAdapter(
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.lg,
-                            vertical: AppSpacing.md,
-                          ),
-                          child: DeckSubfolderSection(
-                            subfolders: subFolders,
-                            onCreate: () => _openSubfolderForm(allFolders: folders),
-                            onOpen: (folder) => context.goNamed('decks', extra: folder),
-                            onEdit: (folder) => _openSubfolderForm(folder: folder, allFolders: folders),
-                            onDelete: _confirmDeleteFolder,
-                            onAddSubfolder: (folder) => _openSubfolderForm(parent: folder, allFolders: folders),
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: TextButton.icon(
+                              onPressed: () => _pickAndImport(widget.folder!, folders),
+                              icon: const Icon(Icons.upload_file),
+                              label: const Text('Import decks'),
+                            ),
                           ),
                         ),
                       ),
@@ -484,6 +500,92 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
 
   void _openDeck(Deck deck) {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => FlashcardListScreen(deck: deck)));
+  }
+
+  Future<void> _pickAndImport(Folder folder, List<Folder> allFolders) async {
+    final picked = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['csv', 'tsv', 'xlsx'],
+    );
+    if (picked == null || picked.files.isEmpty) return;
+    final file = picked.files.first;
+    if (!mounted) return;
+    final selectedType = await _chooseType(context);
+    if (selectedType == null) return;
+
+    final notifier = ref.read(deckListViewModelProvider(folder.id).notifier);
+    final (summary, error) = await notifier.importDecks(
+      ImportDecksParams(folderId: folder.id, type: selectedType, file: file),
+    );
+    await notifier.load();
+    await ref.read(folderListViewModelProvider.notifier).load();
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    if (error != null) {
+      messenger.showSnackBar(SnackBar(content: Text('Import failed: $error')));
+      return;
+    }
+    final errCount = summary?.errors.length ?? 0;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text('Imported ${summary?.successCount ?? 0} rows${errCount > 0 ? ', errors: $errCount' : ''}'),
+        action: errCount > 0
+            ? SnackBarAction(
+                label: 'Details',
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: const Text('Import errors'),
+                      content: SizedBox(
+                        width: 360,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: summary!.errors
+                                .map((e) => Text('Row ${e.rowIndex}: ${e.message}'))
+                                .toList(),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              )
+            : null,
+      ),
+    );
+  }
+
+  Future<FlashcardType?> _chooseType(BuildContext context) async {
+    FlashcardType temp = FlashcardType.vocabulary;
+    return showDialog<FlashcardType>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select flashcard type'),
+        content: StatefulBuilder(
+          builder: (context, setState) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: FlashcardType.values
+                .map(
+                  (t) => ListTile(
+                        leading: Icon(
+                          temp == t ? Icons.radio_button_checked : Icons.radio_button_off,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        title: Text(t == FlashcardType.vocabulary ? 'Vocabulary' : 'Grammar'),
+                        onTap: () => setState(() => temp = t),
+                      ),
+                )
+                .toList(),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(context, temp), child: const Text('Import')),
+        ],
+      ),
+    );
   }
 
   void _handleBack() {

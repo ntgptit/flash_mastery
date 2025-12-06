@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:file_picker/file_picker.dart';
 
 import 'package:flash_mastery/core/error/error_guard.dart';
 import 'package:flash_mastery/core/exceptions/failures.dart';
@@ -6,6 +7,7 @@ import 'package:flash_mastery/data/datasources/remote/deck_remote_data_source.da
 import 'package:flash_mastery/data/models/deck_model.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/entities/flashcard_type.dart';
+import 'package:flash_mastery/domain/entities/import_summary.dart';
 import 'package:flash_mastery/domain/repositories/deck_repository.dart';
 
 class DeckRepositoryImpl implements DeckRepository {
@@ -106,6 +108,26 @@ class DeckRepositoryImpl implements DeckRepository {
 
       final result = await remoteDataSource.updateDeck(id, updatedDeck);
       return result.toEntity();
+    });
+  }
+
+  @override
+  Future<Either<Failure, ImportSummary>> importDecks({
+    required String folderId,
+    required FlashcardType type,
+    required PlatformFile file,
+  }) async {
+    return ErrorGuard.run(() async {
+      if (file.path == null) {
+        throw ArgumentError('File path is null');
+      }
+      final summary = await remoteDataSource.importDecks(
+        folderId: folderId,
+        type: type.name.toUpperCase(),
+        filePath: file.path!,
+        fileName: file.name,
+      );
+      return summary.toEntity();
     });
   }
 }

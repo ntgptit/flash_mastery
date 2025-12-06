@@ -1,5 +1,6 @@
 import 'package:flash_mastery/core/error/failure_messages.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
+import 'package:flash_mastery/domain/entities/import_summary.dart';
 import 'package:flash_mastery/domain/usecases/decks/deck_usecases.dart';
 import 'package:flash_mastery/presentation/providers/deck_providers.dart';
 import 'package:flash_mastery/presentation/viewmodels/folder_view_model.dart';
@@ -39,6 +40,11 @@ UpdateDeckUseCase updateDeckUseCase(Ref ref) {
 @riverpod
 DeleteDeckUseCase deleteDeckUseCase(Ref ref) {
   return DeleteDeckUseCase(ref.watch(deckRepositoryProvider));
+}
+
+@riverpod
+ImportDecksUseCase importDecksUseCase(Ref ref) {
+  return ImportDecksUseCase(ref.watch(deckRepositoryProvider));
 }
 
 @riverpod
@@ -174,5 +180,13 @@ class DeckListViewModel extends _$DeckListViewModel {
     await load();
     await ref.read(folderListViewModelProvider.notifier).load();
     return message;
+  }
+
+  Future<(ImportSummary?, String?)> importDecks(ImportDecksParams params) async {
+    final result = await ref.read(importDecksUseCaseProvider).call(params);
+    return result.fold(
+      (failure) => (null, failure.toDisplayMessage()),
+      (summary) => (summary, null),
+    );
   }
 }

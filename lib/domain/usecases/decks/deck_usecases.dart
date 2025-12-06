@@ -1,10 +1,12 @@
 import 'package:dartz/dartz.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flash_mastery/core/constants/config/app_constants.dart';
 import 'package:flash_mastery/core/constants/validation/error_messages.dart';
 import 'package:flash_mastery/core/exceptions/failures.dart';
 import 'package:flash_mastery/core/usecases/usecase.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/entities/flashcard_type.dart';
+import 'package:flash_mastery/domain/entities/import_summary.dart';
 import 'package:flash_mastery/domain/repositories/deck_repository.dart';
 
 class GetDecksUseCase extends UseCase<List<Deck>, GetDecksParams> {
@@ -109,6 +111,21 @@ class DeleteDeckUseCase extends UseCase<void, String> {
   }
 }
 
+class ImportDecksUseCase extends UseCase<ImportSummary, ImportDecksParams> {
+  final DeckRepository repository;
+
+  ImportDecksUseCase(this.repository);
+
+  @override
+  Future<Either<Failure, ImportSummary>> call(ImportDecksParams params) {
+    return repository.importDecks(
+      folderId: params.folderId,
+      type: params.type,
+      file: params.file,
+    );
+  }
+}
+
 class CreateDeckParams {
   final String name;
   final String? description;
@@ -159,6 +176,18 @@ class GetDecksParams {
     this.query,
     this.page = 0,
     this.size = 20,
+  });
+}
+
+class ImportDecksParams {
+  final String folderId;
+  final FlashcardType type;
+  final PlatformFile file;
+
+  const ImportDecksParams({
+    required this.folderId,
+    required this.type,
+    required this.file,
   });
 }
 

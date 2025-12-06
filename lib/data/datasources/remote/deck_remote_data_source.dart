@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/core/exceptions/exceptions.dart';
 import 'package:flash_mastery/data/models/deck_model.dart';
+import 'package:flash_mastery/data/models/import_summary_model.dart';
+import 'package:flash_mastery/domain/entities/flashcard_type.dart';
 
 abstract class DeckRemoteDataSource {
   Future<List<DeckModel>> getDecks({
@@ -16,6 +18,12 @@ abstract class DeckRemoteDataSource {
   Future<DeckModel> updateDeck(String id, DeckModel deck);
   Future<void> deleteDeck(String id);
   Future<List<DeckModel>> searchDecks(String query, {String? folderId});
+  Future<ImportSummaryModel> importDecks({
+    required String folderId,
+    required String type,
+    required String filePath,
+    required String fileName,
+  });
 }
 
 class DeckRemoteDataSourceImpl implements DeckRemoteDataSource {
@@ -72,7 +80,7 @@ class DeckRemoteDataSourceImpl implements DeckRemoteDataSource {
         'name': deck.name,
         'description': deck.description,
         'folderId': deck.folderId,
-        'type': deck.type?.name.toUpperCase() ?? 'VOCABULARY',
+        'type': (deck.type ?? FlashcardType.vocabulary).name.toUpperCase(),
       },
     );
     if (response.statusCode == 201 || response.statusCode == 200) {
@@ -91,7 +99,7 @@ class DeckRemoteDataSourceImpl implements DeckRemoteDataSource {
         'name': deck.name,
         'description': deck.description,
         'folderId': deck.folderId,
-        'type': deck.type?.name.toUpperCase() ?? 'VOCABULARY',
+        'type': (deck.type ?? FlashcardType.vocabulary).name.toUpperCase(),
       },
     );
     if (response.statusCode == 200) {
@@ -120,5 +128,27 @@ class DeckRemoteDataSourceImpl implements DeckRemoteDataSource {
   @override
   Future<List<DeckModel>> searchDecks(String query, {String? folderId}) async {
     return getDecks(folderId: folderId, query: query, page: 0, size: 50);
+  }
+
+  @override
+  Future<ImportSummaryModel> importDecks({
+    required String folderId,
+    required String type,
+    required String filePath,
+    required String fileName,
+  }) async {
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(filePath, filename: fileName),
+      'type': type,
+    });
+    final response = await dio.post(
+      ApiConstants.importDecks(folderId),
+      data: formData,
+      options: Options(contentType: 'multipart/form-data'),
+    );
+    if (response.statusCode == 200) {
+      return ImportSummaryModel.fromJson(response.data as Map<String, dynamic>);
+    }
+    throw ServerException(message: response.statusMessage ?? 'Failed to import decks');
   }
 }

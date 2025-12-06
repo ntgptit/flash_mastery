@@ -1,7 +1,9 @@
 import 'package:dartz/dartz.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flash_mastery/core/exceptions/failures.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/entities/flashcard_type.dart';
+import 'package:flash_mastery/domain/entities/import_summary.dart';
 
 /// Repository interface for deck operations.
 abstract class DeckRepository {
@@ -32,6 +34,12 @@ abstract class DeckRepository {
     String? description,
     String? folderId,
     FlashcardType? type,
+  });
+
+  Future<Either<Failure, ImportSummary>> importDecks({
+    required String folderId,
+    required FlashcardType type,
+    required PlatformFile file,
   });
 
   /// Delete a deck by ID.
