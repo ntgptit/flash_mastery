@@ -123,8 +123,9 @@ class _FlashcardListScreenState extends ConsumerState<_FlashcardListBody> {
                       children: [
                         CircleAvatar(
                           radius: 18,
-                          backgroundColor:
-                              Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
                           child: const Icon(Icons.person, size: AppSpacing.iconSmallMedium),
                         ),
                         const SizedBox(width: AppSpacing.sm),
@@ -133,20 +134,24 @@ class _FlashcardListScreenState extends ConsumerState<_FlashcardListBody> {
                           children: [
                             Text(
                               'Shared deck',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                             ),
                             Text(
                               '${visibleCards.length} terms',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
                             ),
                           ],
                         ),
                         const Spacer(),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.sm,
+                            vertical: AppSpacing.xs,
+                          ),
                           decoration: BoxDecoration(
                             color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
@@ -154,21 +159,15 @@ class _FlashcardListScreenState extends ConsumerState<_FlashcardListBody> {
                           child: Text(
                             widget.deck.type.label,
                             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    FlashcardActionList(
-                      onCreate: _openCreateDialog,
-                      onStudy: () {},
-                      onTest: () {},
-                      onMatch: () {},
-                      onBlast: () {},
-                    ),
+                    FlashcardActionList(onStudy: () {}, onTest: () {}),
                     const SizedBox(height: AppSpacing.lg),
                     FlashcardProgressOverview(total: total),
                     const SizedBox(height: AppSpacing.lg),
@@ -269,45 +268,53 @@ class _FlashcardListScreenState extends ConsumerState<_FlashcardListBody> {
       builder: (context) => FlashcardFormDialog(
         flashcard: card,
         deckType: widget.deck.type,
-        onSubmit: ({required String question, required String answer, String? hint, required FlashcardType type}) async {
-          final navigator = Navigator.of(context);
-          final messenger = ScaffoldMessenger.of(context);
-          try {
-            final notifier = ref.read(flashcardListViewModelProvider(widget.deck.id).notifier);
-            final errorMessage = card == null
-                ? await notifier.createFlashcard(
-                    CreateFlashcardParams(
-                      deckId: widget.deck.id,
-                      question: question,
-                      answer: answer,
-                      hint: hint,
-                      type: type,
-                    ),
-                  )
-                : await notifier.updateFlashcard(
-                    UpdateFlashcardParams(
-                      id: card.id,
-                      question: question,
-                      answer: answer,
-                      hint: hint,
-                      type: type,
+        onSubmit:
+            ({
+              required String question,
+              required String answer,
+              String? hint,
+              required FlashcardType type,
+            }) async {
+              final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(context);
+              try {
+                final notifier = ref.read(flashcardListViewModelProvider(widget.deck.id).notifier);
+                final errorMessage = card == null
+                    ? await notifier.createFlashcard(
+                        CreateFlashcardParams(
+                          deckId: widget.deck.id,
+                          question: question,
+                          answer: answer,
+                          hint: hint,
+                          type: type,
+                        ),
+                      )
+                    : await notifier.updateFlashcard(
+                        UpdateFlashcardParams(
+                          id: card.id,
+                          question: question,
+                          answer: answer,
+                          hint: hint,
+                          type: type,
+                        ),
+                      );
+
+                if (!mounted) return;
+                navigator.pop();
+                if (errorMessage != null) {
+                  messenger.showSnackBar(SnackBar(content: Text('Error: $errorMessage')));
+                } else {
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: Text(card == null ? 'Flashcard created' : 'Flashcard updated'),
                     ),
                   );
-
-            if (!mounted) return;
-            navigator.pop();
-            if (errorMessage != null) {
-              messenger.showSnackBar(SnackBar(content: Text('Error: $errorMessage')));
-            } else {
-              messenger.showSnackBar(
-                SnackBar(content: Text(card == null ? 'Flashcard created' : 'Flashcard updated')),
-              );
-            }
-          } catch (e) {
-            if (!mounted) return;
-            messenger.showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
-          }
-        },
+                }
+              } catch (e) {
+                if (!mounted) return;
+                messenger.showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+              }
+            },
       ),
     );
   }
