@@ -288,10 +288,9 @@ class _RootShell extends StatelessWidget {
   const _RootShell({required this.navigationShell});
 
   void _onTap(int index) {
-    navigationShell.goBranch(
-      index,
-      initialLocation: index == navigationShell.currentIndex,
-    );
+    // Always reset to the branch's initial location when switching tabs
+    // so tab navigation renders the root view (no stale extras).
+    navigationShell.goBranch(index, initialLocation: true);
   }
 
   @override
