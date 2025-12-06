@@ -163,6 +163,7 @@ public class DeckServiceImpl implements DeckService {
     final int batchSize = 500;
     Set<String> currentTerms = new HashSet<>();
     boolean skipCurrentDeck = false;
+    boolean defaultDeckSkipLogged = false;
     for (ImportRow row : summary.getItems()) {
       if (row.kind == ImportRow.Kind.DECK) {
         flushBatch(buffer, currentDeck);
@@ -185,7 +186,10 @@ public class DeckServiceImpl implements DeckService {
         String defaultDeckName = "Imported Deck";
         String deckKey = StringUtils.lowerCase(defaultDeckName);
         if (existingDeckNames.contains(deckKey)) {
-          summary.addDeckSkipped(defaultDeckName, row.rowIndex);
+          if (!defaultDeckSkipLogged) {
+            summary.addDeckSkipped(defaultDeckName, row.rowIndex);
+            defaultDeckSkipLogged = true;
+          }
           skipCurrentDeck = true;
           continue;
         }
@@ -193,6 +197,7 @@ public class DeckServiceImpl implements DeckService {
         existingDeckNames.add(deckKey);
         summary.addDeckCreated();
         skipCurrentDeck = false;
+        defaultDeckSkipLogged = false;
       }
       if (skipCurrentDeck) {
         continue;
