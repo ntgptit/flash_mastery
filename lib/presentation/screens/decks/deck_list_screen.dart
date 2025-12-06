@@ -184,13 +184,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton.small(
-        onPressed: () {
-          if (widget.folder == null) {
-            _openDeckForm(folders: folders);
-            return;
-          }
-          _showFabActions(folders);
-        },
+        onPressed: () => _showFabActions(folders),
         child: const Icon(Icons.add),
       ),
     );
@@ -531,17 +525,60 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                 _openDeckForm(folders: folders);
               },
             ),
-            if (widget.folder != null)
+            if (folders.isNotEmpty)
               ListTile(
                 leading: const Icon(Icons.upload_file),
                 title: const Text('Import decks'),
-                onTap: () {
+                subtitle: Text(widget.folder != null ? 'Into ${widget.folder!.name}' : 'Select a folder'),
+                onTap: () async {
                   Navigator.pop(context);
-                  _pickAndImport(widget.folder!, folders);
+                  if (widget.folder != null) {
+                    _pickAndImport(widget.folder!, folders);
+                    return;
+                  }
+                  final target = await _chooseFolderForImport(folders);
+                  if (target != null && mounted) {
+                    _pickAndImport(target, folders);
+                  }
                 },
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  Future<Folder?> _chooseFolderForImport(List<Folder> folders) async {
+    if (folders.isEmpty) return null;
+    Folder selected = folders.first;
+    return showDialog<Folder>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select folder'),
+        content: StatefulBuilder(
+          builder: (context, setState) => SizedBox(
+            width: 360,
+            height: 320,
+            child: ListView(
+              children: folders
+                  .map(
+                    (f) => ListTile(
+                      leading: Icon(
+                        selected == f ? Icons.radio_button_checked : Icons.radio_button_off,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      title: Text(f.name),
+                      onTap: () => setState(() => selected = f),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(context, selected), child: const Text('Continue')),
+        ],
       ),
     );
   }
