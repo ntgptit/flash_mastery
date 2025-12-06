@@ -4,10 +4,13 @@ import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/entities/folder.dart';
 import 'package:flash_mastery/features/decks/providers.dart';
 import 'package:flash_mastery/features/folders/providers.dart';
+import 'package:flash_mastery/presentation/screens/decks/widgets/deck_card.dart';
 import 'package:flash_mastery/presentation/screens/decks/widgets/deck_form_dialog.dart';
+import 'package:flash_mastery/presentation/screens/decks/widgets/deck_header_section.dart';
+import 'package:flash_mastery/presentation/screens/decks/widgets/deck_sort_row.dart';
+import 'package:flash_mastery/presentation/screens/decks/widgets/deck_subfolder_section.dart';
 import 'package:flash_mastery/presentation/screens/flashcards/flashcard_list_screen.dart';
 import 'package:flash_mastery/presentation/screens/folders/widgets/folder_breadcrumb.dart';
-import 'package:flash_mastery/presentation/screens/folders/widgets/folder_card.dart';
 import 'package:flash_mastery/presentation/screens/folders/widgets/folder_form_dialog.dart';
 import 'package:flash_mastery/presentation/widgets/common/common_widgets.dart';
 import 'package:flutter/material.dart';
@@ -100,7 +103,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                                   onFolderTap: (folder) => context.goNamed('decks', extra: folder),
                                 ),
                               ),
-                            _HeaderSection(
+                            DeckHeaderSection(
                               title: widget.folder?.name ?? 'Decks',
                               description:
                                   widget.folder?.description ?? 'Organize and review your decks',
@@ -119,7 +122,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                        child: _SortRow(onTap: _showSortSheet, sortLabel: _sortLabel),
+                        child: DeckSortRow(onTap: _showSortSheet, sortLabel: _sortLabel),
                       ),
                     ),
                     if (widget.folder != null)
@@ -129,7 +132,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                             horizontal: AppSpacing.lg,
                             vertical: AppSpacing.md,
                           ),
-                          child: _SubfolderSection(
+                          child: DeckSubfolderSection(
                             subfolders: subFolders,
                             onCreate: () => _openSubfolderForm(allFolders: folders),
                             onOpen: (folder) => context.goNamed('decks', extra: folder),
@@ -179,7 +182,7 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
                                     updatedAt: DateTime.now(),
                                   ),
                             );
-                            return _DeckCard(
+                            return DeckCard(
                               deck: deck,
                               folder: folder,
                               onOpen: () => _openDeck(deck),
@@ -541,273 +544,5 @@ class _DeckListScreenState extends ConsumerState<DeckListScreen> {
       return;
     }
     context.go(AppRouter.dashboard);
-  }
-}
-
-class _HeaderSection extends StatelessWidget {
-  final String title;
-  final String description;
-  final VoidCallback onBack;
-  final VoidCallback onSearch;
-  final void Function(String value) onMenuSelect;
-
-  const _HeaderSection({
-    required this.title,
-    required this.description,
-    required this.onBack,
-    required this.onSearch,
-    required this.onMenuSelect,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            IconButton(onPressed: onBack, icon: const Icon(Icons.arrow_back), tooltip: 'Back'),
-            const Spacer(),
-            IconButton(onPressed: onSearch, icon: const Icon(Icons.search), tooltip: 'Search'),
-            PopupMenuButton<String>(
-              onSelected: onMenuSelect,
-              itemBuilder: (context) => const [
-                PopupMenuItem(value: 'refresh', child: Text('Refresh')),
-              ],
-              icon: const Icon(Icons.more_vert),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.xl),
-        Center(
-          child: Container(
-            height: 72,
-            width: 72,
-            decoration: BoxDecoration(
-              color: colorScheme.primary.withValues(alpha: AppOpacity.low),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusExtraLarge),
-            ),
-            child: Icon(Icons.folder, color: colorScheme.onPrimary, size: AppSpacing.iconLarge),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Center(
-          child: Text(title, style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Center(
-          child: Text(
-            description,
-            style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
-            textAlign: TextAlign.center,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-      ],
-    );
-  }
-}
-
-class _SubfolderSection extends StatelessWidget {
-  final List<Folder> subfolders;
-  final VoidCallback onCreate;
-  final void Function(Folder folder) onOpen;
-  final void Function(Folder folder) onEdit;
-  final void Function(Folder folder) onDelete;
-  final void Function(Folder folder)? onAddSubfolder;
-
-  const _SubfolderSection({
-    required this.subfolders,
-    required this.onCreate,
-    required this.onOpen,
-    required this.onEdit,
-    required this.onDelete,
-    this.onAddSubfolder,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('Subfolders', style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
-            TextButton.icon(
-              onPressed: onCreate,
-              icon: const Icon(Icons.create_new_folder_outlined),
-              label: const Text('New subfolder'),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        if (subfolders.isEmpty)
-          Card(
-            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Row(
-                children: [
-                  Icon(Icons.folder_open_outlined, color: colorScheme.onSurfaceVariant),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Text(
-                      'No subfolders yet. Create one to organize deeper.',
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          )
-        else
-          Column(
-            children: subfolders
-                .map(
-                  (folder) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: FolderTile(
-                      folder: folder,
-                      onTap: () => onOpen(folder),
-                      onEdit: () => onEdit(folder),
-                      onAddSubfolder:
-                          onAddSubfolder != null ? () => onAddSubfolder!(folder) : null,
-                      onDelete: () => onDelete(folder),
-                      isGrid: false,
-                      fixedColor: colorScheme.primary,
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
-      ],
-    );
-  }
-}
-
-class _SortRow extends StatelessWidget {
-  final VoidCallback onTap;
-  final String sortLabel;
-
-  const _SortRow({required this.onTap, required this.sortLabel});
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
-    return Row(
-      children: [
-        Text(sortLabel, style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-        IconButton(
-          onPressed: onTap,
-          icon: Icon(Icons.arrow_drop_down, color: colorScheme.onSurfaceVariant),
-        ),
-      ],
-    );
-  }
-}
-
-class _DeckCard extends StatelessWidget {
-  final Deck deck;
-  final Folder folder;
-  final VoidCallback onOpen;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
-
-  const _DeckCard({
-    required this.deck,
-    required this.folder,
-    required this.onOpen,
-    required this.onEdit,
-    required this.onDelete,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(AppSpacing.radiusExtraLarge),
-      onTap: onOpen,
-      child: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusExtraLarge),
-        ),
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              height: 48,
-              width: 48,
-              decoration: BoxDecoration(
-                color: colorScheme.primary.withValues(alpha: AppOpacity.low),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-              ),
-              child: Icon(Icons.style, color: colorScheme.onPrimary, size: AppSpacing.iconMedium),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    deck.name,
-                    style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    (deck.description ?? 'No description'),
-                    style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    '${folder.name} - ${deck.cardCount} cards',
-                    style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'open') {
-                  onOpen();
-                } else if (value == 'edit') {
-                  onEdit();
-                } else if (value == 'delete') {
-                  onDelete();
-                }
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(value: 'open', child: Text('Open')),
-                const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                PopupMenuItem(
-                  value: 'delete',
-                  child: Text('Delete', style: TextStyle(color: colorScheme.error)),
-                ),
-              ],
-              icon: const Icon(Icons.more_vert),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
