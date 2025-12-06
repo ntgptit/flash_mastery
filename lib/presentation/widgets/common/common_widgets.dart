@@ -15,5 +15,6 @@ export 'fm_button.dart';
 export 'fm_card.dart';
 export 'fm_dialog.dart';
 export 'fm_page_indicator.dart';
+export 'fm_sort_bottom_sheet.dart';
 export 'fm_text_field.dart';
 export 'loading_widget.dart';

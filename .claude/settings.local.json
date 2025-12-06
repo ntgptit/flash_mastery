@@ -20,7 +20,8 @@
       "Bash(taskkill //F //PID 40368)",
       "Bash(mvn spring-boot:run:*)",
       "Bash(timeout:*)",
-      "Bash(dart run build_runner build:*)"
+      "Bash(dart run build_runner build:*)",
+      "Bash(dart analyze:*)"
     ],
     "deny": [],
     "ask": []

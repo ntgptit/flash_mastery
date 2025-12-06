@@ -468,39 +468,23 @@ class _DeckListScreenState extends ConsumerState<_DeckListScreenBody> {
   }
 
   void _showSortSheet() {
-    final options = <Map<String, String>>[
-      {'value': _defaultSort, 'label': 'Latest'},
-      {'value': 'name,asc', 'label': 'Name (A-Z)'},
-      {'value': 'name,desc', 'label': 'Name (Z-A)'},
-      {'value': 'cardCount,desc', 'label': 'Cards (High-Low)'},
-      {'value': 'cardCount,asc', 'label': 'Cards (Low-High)'},
-    ];
-    showModalBottomSheet(
+    FmSortBottomSheet.show(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: AppSpacing.md),
-            Text('Sort decks', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.md),
-            ...options.map(
-              (opt) => ListTile(
-                title: Text(opt['label']!),
-                trailing: _sort == opt['value'] ? const Icon(Icons.check) : null,
-                onTap: () {
-                  setState(() => _sort = opt['value']!);
-                  ref
-                      .read(deckListViewModelProvider(widget.folder?.id).notifier)
-                      .load(sort: _sort, query: _searchQuery.isEmpty ? null : _searchQuery);
-                  Navigator.pop(context);
-                },
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-          ],
-        ),
-      ),
+      title: 'Sort decks',
+      currentValue: _sort,
+      options: const [
+        SortOption(value: _defaultSort, label: 'Latest'),
+        SortOption(value: 'name,asc', label: 'Name (A-Z)'),
+        SortOption(value: 'name,desc', label: 'Name (Z-A)'),
+        SortOption(value: 'cardCount,desc', label: 'Cards (High-Low)'),
+        SortOption(value: 'cardCount,asc', label: 'Cards (Low-High)'),
+      ],
+      onSelected: (value) {
+        setState(() => _sort = value);
+        ref
+            .read(deckListViewModelProvider(widget.folder?.id).notifier)
+            .load(sort: _sort, query: _searchQuery.isEmpty ? null : _searchQuery);
+      },
     );
   }
 
