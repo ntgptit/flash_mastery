@@ -27,6 +27,102 @@ class _FlashcardHeroCarouselState extends State<FlashcardHeroCarousel> {
     setState(() => _showBack = !_showBack);
   }
 
+  Widget _buildPageIndicator(ColorScheme colorScheme) {
+    final totalDots = widget.cards.length;
+    const maxVisibleDots = 7;
+
+    // If we have fewer dots than max, show all
+    if (totalDots <= maxVisibleDots) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(totalDots, (i) {
+          final isActive = i == widget.currentPage;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            width: isActive ? 10 : 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: isActive
+                  ? colorScheme.primary
+                  : colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(20),
+            ),
+          );
+        }),
+      );
+    }
+
+    // For many dots, show a subset with current page in center
+    final List<int> visibleIndices = [];
+    final halfVisible = maxVisibleDots ~/ 2;
+
+    int start = widget.currentPage - halfVisible;
+    int end = widget.currentPage + halfVisible;
+
+    // Adjust if we're near the start
+    if (start < 0) {
+      end += start.abs();
+      start = 0;
+    }
+
+    // Adjust if we're near the end
+    if (end >= totalDots) {
+      start -= (end - totalDots + 1);
+      end = totalDots - 1;
+      if (start < 0) start = 0;
+    }
+
+    for (int i = start; i <= end; i++) {
+      visibleIndices.add(i);
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        if (start > 0) ...[
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
+          const SizedBox(width: 2),
+        ],
+        ...visibleIndices.map((i) {
+          final isActive = i == widget.currentPage;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            width: isActive ? 10 : 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: isActive
+                  ? colorScheme.primary
+                  : colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(20),
+            ),
+          );
+        }),
+        if (end < totalDots - 1) ...[
+          const SizedBox(width: 2),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.cards.isEmpty) return const SizedBox.shrink();
@@ -102,23 +198,7 @@ class _FlashcardHeroCarouselState extends State<FlashcardHeroCarousel> {
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(widget.cards.length, (i) {
-            final isActive = i == widget.currentPage;
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              width: isActive ? 10 : 6,
-              height: 6,
-              decoration: BoxDecoration(
-                color:
-                    isActive ? colorScheme.primary : colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(20),
-              ),
-            );
-          }),
-        ),
+        _buildPageIndicator(colorScheme),
       ],
     );
   }

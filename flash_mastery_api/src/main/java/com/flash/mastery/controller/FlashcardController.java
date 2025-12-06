@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -34,8 +35,11 @@ public class FlashcardController {
 
   @GetMapping("/decks/{deckId}/cards")
   @Operation(summary = "List flashcards by deck", responses = @ApiResponse(responseCode = "200", description = "List of flashcards"))
-  public List<FlashcardResponse> listByDeck(@PathVariable UUID deckId) {
-    return flashcardService.getByDeck(deckId);
+  public List<FlashcardResponse> listByDeck(
+      @PathVariable UUID deckId,
+      @RequestParam(value = "page", required = false) Integer page,
+      @RequestParam(value = "size", required = false) Integer size) {
+    return flashcardService.getByDeck(deckId, page, size);
   }
 
   @GetMapping("/cards/{id}")

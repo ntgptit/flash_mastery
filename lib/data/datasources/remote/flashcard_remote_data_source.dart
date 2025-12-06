@@ -4,7 +4,7 @@ import 'package:flash_mastery/core/exceptions/exceptions.dart';
 import 'package:flash_mastery/data/models/flashcard_model.dart';
 
 abstract class FlashcardRemoteDataSource {
-  Future<List<FlashcardModel>> getByDeck(String deckId);
+  Future<List<FlashcardModel>> getByDeck(String deckId, {int? page, int? size});
   Future<FlashcardModel> getById(String id);
   Future<FlashcardModel> createFlashcard(String deckId, FlashcardModel flashcard);
   Future<FlashcardModel> updateFlashcard(String id, FlashcardModel flashcard);
@@ -17,8 +17,14 @@ class FlashcardRemoteDataSourceImpl implements FlashcardRemoteDataSource {
   final Dio dio;
 
   @override
-  Future<List<FlashcardModel>> getByDeck(String deckId) async {
-    final response = await dio.get(ApiConstants.deckFlashcards(deckId));
+  Future<List<FlashcardModel>> getByDeck(String deckId, {int? page, int? size}) async {
+    final query = <String, dynamic>{};
+    if (page != null) query['page'] = page;
+    if (size != null) query['size'] = size;
+    final response = await dio.get(
+      ApiConstants.deckFlashcards(deckId),
+      queryParameters: query.isEmpty ? null : query,
+    );
     if (response.statusCode == 200) {
       final data = (response.data as List).cast<Map<String, dynamic>>();
       return data.map(FlashcardModel.fromJson).toList();

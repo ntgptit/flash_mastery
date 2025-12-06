@@ -93,90 +93,91 @@ class _FlashcardListScreenState extends ConsumerState<_FlashcardListBody> {
           return RefreshIndicator(
             onRefresh: () async =>
                 ref.read(flashcardListViewModelProvider(widget.deck.id).notifier).load(),
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    FlashcardHeroCarousel(
-                      cards: showCards,
-                      pageController: _pageController,
-                      currentPage: _currentPage,
-                      onPageChanged: (page) => setState(() => _currentPage = page),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    FlashcardSectionHeader(
-                      title: 'Section: ${widget.deck.name}',
-                      subtitle:
-                          '${visibleCards.length} cards${widget.deck.description != null ? ' • ${widget.deck.description}' : ''}',
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 18,
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-                          child: const Icon(Icons.person, size: AppSpacing.iconSmallMedium),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Shared deck',
-                              style: Theme.of(
-                                context,
-                              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                            ),
-                            Text(
-                              '${visibleCards.length} terms',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (notification) {
+                if (notification.metrics.extentAfter < 300 && hasMore) {
+                  final nextCount = min(_visibleCount + _pageSize, visibleCards.length);
+                  if (nextCount != _visibleCount) {
+                    setState(() => _visibleCount = nextCount);
+                  }
+                }
+                return false;
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      FlashcardHeroCarousel(
+                        cards: showCards.take(5).toList(),
+                        pageController: _pageController,
+                        currentPage: _currentPage,
+                        onPageChanged: (page) => setState(() => _currentPage = page),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      FlashcardSectionHeader(
+                        title: 'Section: ${widget.deck.name}',
+                        subtitle:
+                            '${visibleCards.length} cards${widget.deck.description != null ? ' • ${widget.deck.description}' : ''}',
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 18,
+                            backgroundColor:
+                                Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                            child: const Icon(Icons.person, size: AppSpacing.iconSmallMedium),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Shared deck',
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                               ),
+                              Text(
+                                '${visibleCards.length} terms',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
                             ),
-                          ],
-                        ),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.sm,
-                            vertical: AppSpacing.xs,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                          ),
-                          child: Text(
-                            widget.deck.type.label,
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.w700,
+                            child: Text(
+                              widget.deck.type.label,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelSmall
+                                  ?.copyWith(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w700),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    FlashcardActionList(onStudy: () {}, onTest: () {}),
-                    const SizedBox(height: AppSpacing.lg),
-                    FlashcardProgressOverview(total: total),
-                    const SizedBox(height: AppSpacing.lg),
-                    FlashcardCardList(
-                      cards: showCards,
-                      hasMore: hasMore,
-                      onLoadMore: () {
-                        final nextCount = min(_visibleCount + _pageSize, visibleCards.length);
-                        setState(() => _visibleCount = nextCount);
-                      },
-                      onEdit: _openEditDialog,
-                      onDelete: _confirmDelete,
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-                  ],
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      FlashcardActionList(onStudy: () {}, onTest: () {}),
+                      const SizedBox(height: AppSpacing.lg),
+                      FlashcardProgressOverview(total: total),
+                      const SizedBox(height: AppSpacing.lg),
+                      FlashcardCardList(
+                        cards: showCards,
+                        onEdit: _openEditDialog,
+                        onDelete: _confirmDelete,
+                      ),
+                      const SizedBox(height: AppSpacing.xl),
+                    ],
+                  ),
                 ),
               ),
             ),

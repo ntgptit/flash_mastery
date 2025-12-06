@@ -14,6 +14,9 @@ import com.flash.mastery.repository.FlashcardRepository;
 import com.flash.mastery.service.FlashcardService;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
@@ -32,9 +35,18 @@ public class FlashcardServiceImpl implements FlashcardService {
 
   @Override
   @Transactional(readOnly = true)
-  public List<FlashcardResponse> getByDeck(UUID deckId) {
-    List<Flashcard> cards = flashcardRepository.findByDeckId(deckId);
-    return cards.stream().map(flashcardMapper::toResponse).toList();
+  public List<FlashcardResponse> getByDeck(UUID deckId, Integer page, Integer size) {
+    if ((page == null) || (size == null) || (size <= 0)) {
+      List<Flashcard> cards = flashcardRepository.findByDeckId(deckId);
+      return cards.stream().map(flashcardMapper::toResponse).toList();
+    }
+    final int safePage = Math.max(page, NumberConstants.ZERO);
+    final int safeSize = Math.max(size, NumberConstants.ONE);
+    final Pageable pageable = PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "createdAt"));
+    return flashcardRepository.findByDeckId(deckId, pageable)
+        .stream()
+        .map(flashcardMapper::toResponse)
+        .toList();
   }
 
   @Override

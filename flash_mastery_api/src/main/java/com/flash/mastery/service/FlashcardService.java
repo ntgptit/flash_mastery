@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface FlashcardService {
-  List<FlashcardResponse> getByDeck(UUID deckId);
+  List<FlashcardResponse> getByDeck(UUID deckId, Integer page, Integer size);
   FlashcardResponse getById(UUID id);
   FlashcardResponse create(FlashcardCreateRequest request);
   FlashcardResponse update(UUID id, FlashcardUpdateRequest request);

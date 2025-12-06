@@ -4,16 +4,12 @@ import 'package:flutter/material.dart';
 
 class FlashcardCardList extends StatelessWidget {
   final List<Flashcard> cards;
-  final bool hasMore;
-  final VoidCallback onLoadMore;
   final void Function(Flashcard card) onEdit;
   final void Function(Flashcard card) onDelete;
 
   const FlashcardCardList({
     super.key,
     required this.cards,
-    required this.hasMore,
-    required this.onLoadMore,
     required this.onEdit,
     required this.onDelete,
   });
@@ -131,14 +127,6 @@ class FlashcardCardList extends StatelessWidget {
             ),
           ),
         ),
-        if (hasMore)
-          Center(
-            child: TextButton.icon(
-              onPressed: onLoadMore,
-              icon: const Icon(Icons.expand_more),
-              label: const Text('Load more'),
-            ),
-          ),
       ],
     );
   }
