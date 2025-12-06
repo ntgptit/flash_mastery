@@ -1,6 +1,5 @@
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
-import 'package:flash_mastery/domain/entities/flashcard_type.dart';
 import 'package:flutter/material.dart';
 
 class FlashcardCardList extends StatelessWidget {
@@ -63,12 +62,12 @@ class FlashcardCardList extends StatelessWidget {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _TypeChip(type: card.type),
-                        const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: Text(
                             card.question,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         Row(
@@ -91,7 +90,11 @@ class FlashcardCardList extends StatelessWidget {
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       card.answer,
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontSize: Theme.of(context).textTheme.bodyMedium?.fontSize ?? 14 - 2,
+                          ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     if ((card.hint ?? '').isNotEmpty) ...[
                       const SizedBox(height: AppSpacing.xs),
@@ -137,36 +140,6 @@ class FlashcardCardList extends StatelessWidget {
             ),
           ),
       ],
-    );
-  }
-}
-
-class _TypeChip extends StatelessWidget {
-  final FlashcardType type;
-
-  const _TypeChip({required this.type});
-
-  @override
-  Widget build(BuildContext context) {
-    final isVocab = type == FlashcardType.vocabulary;
-    final colorScheme = Theme.of(context).colorScheme;
-    final bg = isVocab
-        ? colorScheme.primary.withValues(alpha: AppOpacity.low)
-        : colorScheme.secondary.withValues(alpha: AppOpacity.low);
-    final fg = isVocab ? colorScheme.primary : colorScheme.secondary;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-      ),
-      child: Text(
-        isVocab ? 'Vocabulary' : 'Grammar',
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: fg,
-              fontWeight: FontWeight.w700,
-            ),
-      ),
     );
   }
 }
