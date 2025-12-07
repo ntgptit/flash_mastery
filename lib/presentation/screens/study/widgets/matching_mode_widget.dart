@@ -38,10 +38,10 @@ class _MatchingModeWidgetState extends State<MatchingModeWidget> {
       return const Center(child: Text('No flashcards in this batch'));
     }
 
-    final terms = widget.flashcards.map((f) => f).toList();
-    final meanings = List<Flashcard>.from(widget.flashcards)..shuffle(Random());
-
-    final isComplete = _matches.length == widget.flashcards.length;
+    // Filter out matched cards
+    final unmatchedTerms = widget.flashcards.where((f) => !_matches.containsKey(f.id)).toList();
+    final unmatchedMeanings =
+        widget.flashcards.where((f) => !_matches.values.contains(f.id)).toList()..shuffle(Random());
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -59,21 +59,12 @@ class _MatchingModeWidgetState extends State<MatchingModeWidget> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Terms column
-              Expanded(child: _buildTermsColumn(terms)),
+              Expanded(child: _buildTermsColumn(unmatchedTerms)),
               const SizedBox(width: AppSpacing.md),
               // Meanings column
-              Expanded(child: _buildMeaningsColumn(meanings)),
+              Expanded(child: _buildMeaningsColumn(unmatchedMeanings)),
             ],
           ),
-
-          if (isComplete) ...[
-            const SizedBox(height: AppSpacing.lg),
-            FilledButton.icon(
-              onPressed: widget.onComplete,
-              icon: const Icon(Icons.check),
-              label: const Text('Continue'),
-            ),
-          ],
         ],
       ),
     );
@@ -86,31 +77,26 @@ class _MatchingModeWidgetState extends State<MatchingModeWidget> {
         Text('Terms', style: Theme.of(context).textTheme.titleMedium, textAlign: TextAlign.center),
         const SizedBox(height: AppSpacing.md),
         ...terms.map((card) {
-          final isMatched = _matches.containsKey(card.id);
           final isSelected = _selectedTermId == card.id;
 
           return Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
             child: InkWell(
-              onTap: isMatched
-                  ? null
-                  : () {
-                      setState(() {
-                        if (_selectedTermId == card.id) {
-                          _selectedTermId = null;
-                        } else {
-                          _selectedTermId = card.id;
-                          _selectedMeaningId = null;
-                        }
-                      });
-                    },
+              onTap: () {
+                setState(() {
+                  if (_selectedTermId == card.id) {
+                    _selectedTermId = null;
+                  } else {
+                    _selectedTermId = card.id;
+                    _selectedMeaningId = null;
+                  }
+                });
+              },
               child: Container(
                 height: 150, // Same height as meanings column
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: isMatched
-                      ? Theme.of(context).colorScheme.primaryContainer
-                      : isSelected
+                  color: isSelected
                       ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
                       : Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
@@ -129,8 +115,6 @@ class _MatchingModeWidgetState extends State<MatchingModeWidget> {
                         ),
                       ),
                     ),
-                    if (isMatched)
-                      Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary),
                   ],
                 ),
               ),
@@ -152,52 +136,55 @@ class _MatchingModeWidgetState extends State<MatchingModeWidget> {
         ),
         const SizedBox(height: AppSpacing.md),
         ...meanings.map((card) {
-          final isMatched = _matches.values.contains(card.id);
           final isSelected = _selectedMeaningId == card.id;
 
           return Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
             child: InkWell(
-              onTap: isMatched
-                  ? null
-                  : () {
-                      setState(() {
-                        if (_selectedMeaningId == card.id) {
-                          _selectedMeaningId = null;
-                        } else {
-                          _selectedMeaningId = card.id;
-                          if (_selectedTermId != null) {
-                            // Check if match is correct
-                            final termCard = widget.flashcards.firstWhere(
-                              (f) => f.id == _selectedTermId,
-                            );
-                            if (termCard.id == card.id) {
-                              // Correct match
-                              _matches[_selectedTermId!] = card.id;
-                              _selectedTermId = null;
-                              _selectedMeaningId = null;
-                            } else {
-                              // Wrong match - show error briefly
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Incorrect match. Try again.'),
-                                  duration: Duration(seconds: 1),
-                                ),
-                              );
-                              _selectedTermId = null;
-                              _selectedMeaningId = null;
+              onTap: () {
+                setState(() {
+                  if (_selectedMeaningId == card.id) {
+                    _selectedMeaningId = null;
+                  } else {
+                    _selectedMeaningId = card.id;
+                    if (_selectedTermId != null) {
+                      // Check if match is correct
+                      final termCard = widget.flashcards.firstWhere((f) => f.id == _selectedTermId);
+                      if (termCard.id == card.id) {
+                        // Correct match
+                        _matches[_selectedTermId!] = card.id;
+                        _selectedTermId = null;
+                        _selectedMeaningId = null;
+
+                        // Check if all matches are complete
+                        if (_matches.length == widget.flashcards.length) {
+                          // Auto-advance to next mode after a brief delay
+                          Future.delayed(const Duration(milliseconds: 500), () {
+                            if (mounted) {
+                              widget.onComplete();
                             }
-                          }
+                          });
                         }
-                      });
-                    },
+                      } else {
+                        // Wrong match - show error briefly
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Incorrect match. Try again.'),
+                            duration: Duration(seconds: 1),
+                          ),
+                        );
+                        _selectedTermId = null;
+                        _selectedMeaningId = null;
+                      }
+                    }
+                  }
+                });
+              },
               child: Container(
                 height: 150, // Taller height for meanings column due to longer text
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: isMatched
-                      ? Theme.of(context).colorScheme.primaryContainer
-                      : isSelected
+                  color: isSelected
                       ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
                       : Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
@@ -216,8 +203,6 @@ class _MatchingModeWidgetState extends State<MatchingModeWidget> {
                         ),
                       ),
                     ),
-                    if (isMatched)
-                      Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary),
                   ],
                 ),
               ),

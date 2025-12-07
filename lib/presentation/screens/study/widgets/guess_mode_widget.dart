@@ -26,6 +26,7 @@ class _GuessModeWidgetState extends State<GuessModeWidget> {
   int _currentIndex = 0;
   String? _selectedAnswer;
   final Map<int, bool> _results = {}; // index -> isCorrect
+  final Map<int, List<String>> _cachedOptions = {}; // index -> options (to prevent reshuffling)
 
   @override
   Widget build(BuildContext context) {
@@ -35,13 +36,19 @@ class _GuessModeWidgetState extends State<GuessModeWidget> {
 
     final currentCard = widget.flashcards[_currentIndex];
     final handler = StudyModeFactory.createHandler(widget.session.currentMode);
-    final options = handler.getOptions(
-      flashcard: currentCard,
-      allFlashcards: widget.allFlashcards,
-    ) ?? [];
 
-    final isComplete = _currentIndex >= widget.flashcards.length - 1 && _results.containsKey(_currentIndex);
-    final isAnswered = _results.containsKey(_currentIndex);
+    // Cache options for each card index to prevent reshuffling after selection
+    List<String> options;
+    if (_cachedOptions.containsKey(_currentIndex)) {
+      options = _cachedOptions[_currentIndex]!;
+    } else {
+      final generatedOptions =
+          handler.getOptions(flashcard: currentCard, allFlashcards: widget.allFlashcards) ?? [];
+      _cachedOptions[_currentIndex] = generatedOptions;
+      options = generatedOptions;
+    }
+
+    final isCorrect = _results[_currentIndex] == true; // Only true if answered correctly
 
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -60,26 +67,36 @@ class _GuessModeWidgetState extends State<GuessModeWidget> {
           ),
           const SizedBox(height: AppSpacing.xl),
 
-          // Meaning displayed
+          // Term displayed
           Card(
             elevation: 4,
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl),
+            margin: EdgeInsets.zero, // Remove default card margin
+            child: Container(
+              height: 250, // Fixed height to prevent layout shifts
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xl,
+                vertical: AppSpacing.xl,
+              ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Meaning',
+                    'Term',
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    currentCard.answer,
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                    textAlign: TextAlign.center,
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        currentCard.question,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontSize: Theme.of(context).textTheme.titleLarge?.fontSize ?? 22,
+                        ), // Increased font size without bold
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -94,14 +111,15 @@ class _GuessModeWidgetState extends State<GuessModeWidget> {
               itemBuilder: (context, index) {
                 final option = options[index];
                 final isSelected = _selectedAnswer == option;
-                final isCorrect = option == currentCard.question;
-                final showResult = isAnswered && isSelected;
+                final isOptionCorrect = option == currentCard.answer;
+                final showResult = isSelected && _selectedAnswer != null;
+                final wasWrong = showResult && !isOptionCorrect;
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: AppSpacing.md),
                   child: InkWell(
-                    onTap: isAnswered
-                        ? null
+                    onTap: isCorrect
+                        ? null // Disable only if already answered correctly
                         : () {
                             setState(() {
                               _selectedAnswer = option;
@@ -109,23 +127,50 @@ class _GuessModeWidgetState extends State<GuessModeWidget> {
                                 flashcard: currentCard,
                                 userAnswer: option,
                               );
-                              _results[_currentIndex] = isCorrectAnswer;
+
+                              // Only save result and advance if answer is correct
+                              if (isCorrectAnswer) {
+                                _results[_currentIndex] = true;
+                                // Auto-advance to next card if answer is correct
+                                Future.delayed(const Duration(milliseconds: 1000), () {
+                                  if (mounted) {
+                                    if (_currentIndex >= widget.flashcards.length - 1) {
+                                      // All cards completed
+                                      widget.onComplete();
+                                    } else {
+                                      setState(() {
+                                        _currentIndex++;
+                                        _selectedAnswer = null;
+                                        // Options for new card will be generated on next build
+                                      });
+                                    }
+                                  }
+                                });
+                              } else {
+                                // Wrong answer - show feedback but allow retry
+                                // Don't save result, allow user to try again
+                              }
                             });
                           },
                     child: Container(
-                      padding: const EdgeInsets.all(AppSpacing.md),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.xl,
+                        vertical: AppSpacing.md,
+                      ),
                       decoration: BoxDecoration(
                         color: showResult
-                            ? (isCorrect
-                                ? Theme.of(context).colorScheme.primaryContainer
-                                : Theme.of(context).colorScheme.errorContainer)
+                            ? (isOptionCorrect
+                                  ? Theme.of(context).colorScheme.primaryContainer
+                                  : Theme.of(context).colorScheme.errorContainer)
                             : isSelected
-                                ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
-                                : Theme.of(context).colorScheme.surfaceContainerHighest,
+                            ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
+                            : Theme.of(context).colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
                         border: isSelected
                             ? Border.all(
-                                color: Theme.of(context).colorScheme.primary,
+                                color: wasWrong
+                                    ? Theme.of(context).colorScheme.error
+                                    : Theme.of(context).colorScheme.primary,
                                 width: 2,
                               )
                             : null,
@@ -135,13 +180,13 @@ class _GuessModeWidgetState extends State<GuessModeWidget> {
                           Expanded(
                             child: Text(
                               option,
-                              style: Theme.of(context).textTheme.bodyLarge,
+                              style: Theme.of(context).textTheme.bodyMedium, // Reduced font size
                             ),
                           ),
                           if (showResult)
                             Icon(
-                              isCorrect ? Icons.check_circle : Icons.cancel,
-                              color: isCorrect
+                              isOptionCorrect ? Icons.check_circle : Icons.cancel,
+                              color: isOptionCorrect
                                   ? Theme.of(context).colorScheme.primary
                                   : Theme.of(context).colorScheme.error,
                             ),
@@ -153,49 +198,8 @@ class _GuessModeWidgetState extends State<GuessModeWidget> {
               },
             ),
           ),
-
-          const SizedBox(height: AppSpacing.lg),
-
-          // Navigation buttons
-          Row(
-            children: [
-              if (_currentIndex > 0)
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        _currentIndex--;
-                        _selectedAnswer = null;
-                      });
-                    },
-                    icon: const Icon(Icons.arrow_back),
-                    label: const Text('Previous'),
-                  ),
-                ),
-              if (_currentIndex > 0) const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: isAnswered
-                      ? () {
-                          if (isComplete) {
-                            widget.onComplete();
-                          } else {
-                            setState(() {
-                              _currentIndex++;
-                              _selectedAnswer = null;
-                            });
-                          }
-                        }
-                      : null,
-                  icon: Icon(isComplete ? Icons.check : Icons.arrow_forward),
-                  label: Text(isComplete ? 'Complete' : 'Next'),
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );
   }
 }
-

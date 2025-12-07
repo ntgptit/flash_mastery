@@ -78,9 +78,15 @@ class _FillInBlankModeWidgetState extends State<FillInBlankModeWidget> {
           // Meaning displayed
           Card(
             elevation: 4,
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl),
+            margin: EdgeInsets.zero, // Remove default card margin
+            child: Container(
+              height: 200, // Fixed height to prevent layout shifts
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xl,
+                vertical: AppSpacing.xl,
+              ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Meaning',
@@ -89,12 +95,14 @@ class _FillInBlankModeWidgetState extends State<FillInBlankModeWidget> {
                         ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    currentCard.answer,
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                    textAlign: TextAlign.center,
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        currentCard.answer,
+                        style: Theme.of(context).textTheme.bodyLarge, // No bold
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -109,6 +117,10 @@ class _FillInBlankModeWidgetState extends State<FillInBlankModeWidget> {
             decoration: InputDecoration(
               labelText: 'Type the term',
               hintText: 'Enter your answer',
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xl,
+                vertical: AppSpacing.md,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
               ),

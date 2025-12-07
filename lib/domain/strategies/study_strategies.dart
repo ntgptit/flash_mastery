@@ -97,7 +97,7 @@ class MatchingStudyHandler implements StudyModeHandler {
 }
 
 /// Guess study handler.
-/// Show meaning, guess term from multiple choice.
+/// Show term, guess meaning from multiple choice.
 class GuessStudyHandler implements StudyModeHandler {
   @override
   StudyMode get mode => StudyMode.guess;
@@ -115,9 +115,9 @@ class GuessStudyHandler implements StudyModeHandler {
     required Flashcard flashcard,
     required dynamic userAnswer,
   }) {
-    // userAnswer should be the selected term (question)
+    // userAnswer should be the selected meaning (answer)
     if (userAnswer is String) {
-      return userAnswer.trim().toLowerCase() == flashcard.question.trim().toLowerCase();
+      return userAnswer.trim().toLowerCase() == flashcard.answer.trim().toLowerCase();
     }
     return false;
   }
@@ -128,13 +128,13 @@ class GuessStudyHandler implements StudyModeHandler {
     required List<Flashcard> allFlashcards,
   }) {
     // Generate 5 options: 1 correct + 4 incorrect
-    final options = <String>[flashcard.question];
+    final options = <String>[flashcard.answer];
     final otherFlashcards = allFlashcards.where((c) => c.id != flashcard.id).toList();
     otherFlashcards.shuffle(Random());
 
     // Add 4 incorrect options
     for (int i = 0; i < 4 && i < otherFlashcards.length; i++) {
-      options.add(otherFlashcards[i].question);
+      options.add(otherFlashcards[i].answer);
     }
 
     // Shuffle options

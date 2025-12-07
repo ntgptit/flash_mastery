@@ -55,8 +55,12 @@ class _OverviewModeWidgetState extends State<OverviewModeWidget> {
           Expanded(
             child: Card(
               elevation: 4,
+              margin: EdgeInsets.zero, // Remove default card margin
               child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.xl),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xl,
+                  vertical: AppSpacing.xl,
+                ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -73,7 +77,7 @@ class _OverviewModeWidgetState extends State<OverviewModeWidget> {
                       child: Center(
                         child: Text(
                           currentCard.answer,
-                          style: Theme.of(context).textTheme.titleLarge,
+                          style: Theme.of(context).textTheme.bodyLarge, // No bold
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -96,7 +100,7 @@ class _OverviewModeWidgetState extends State<OverviewModeWidget> {
                       child: Center(
                         child: Text(
                           currentCard.question,
-                          style: Theme.of(context).textTheme.headlineSmall,
+                          style: Theme.of(context).textTheme.bodyLarge, // No bold
                           textAlign: TextAlign.center,
                         ),
                       ),

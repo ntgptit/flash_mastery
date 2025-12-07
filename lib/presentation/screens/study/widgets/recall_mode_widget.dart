@@ -76,6 +76,25 @@ class _RecallModeWidgetState extends State<RecallModeWidget> {
       _results[_currentIndex] = isCorrect;
     });
     _timer?.cancel();
+
+    // Auto-advance to next card if answer is correct
+    if (isCorrect) {
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted) {
+          if (_currentIndex >= widget.flashcards.length - 1) {
+            // All cards completed
+            widget.onComplete();
+          } else {
+            setState(() {
+              _currentIndex++;
+              _answerController.clear();
+              _isAnswered = false;
+              _startTimer();
+            });
+          }
+        }
+      });
+    }
   }
 
   @override
@@ -85,7 +104,6 @@ class _RecallModeWidgetState extends State<RecallModeWidget> {
     }
 
     final currentCard = widget.flashcards[_currentIndex];
-    final isComplete = _currentIndex >= widget.flashcards.length - 1 && _isAnswered;
     final isCorrect = _results[_currentIndex] ?? false;
 
     return Padding(
@@ -120,8 +138,7 @@ class _RecallModeWidgetState extends State<RecallModeWidget> {
                 ),
                 child: Text(
                   '$_timeRemaining s',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: _timeRemaining <= 5
                             ? Theme.of(context).colorScheme.onErrorContainer
                             : Theme.of(context).colorScheme.onPrimaryContainer,
@@ -135,9 +152,15 @@ class _RecallModeWidgetState extends State<RecallModeWidget> {
           // Term displayed
           Card(
             elevation: 4,
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl),
+            margin: EdgeInsets.zero, // Remove default card margin
+            child: Container(
+              height: 200, // Fixed height to prevent layout shifts
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xl,
+                vertical: AppSpacing.xl,
+              ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Term',
@@ -146,12 +169,14 @@ class _RecallModeWidgetState extends State<RecallModeWidget> {
                         ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    currentCard.question,
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                    textAlign: TextAlign.center,
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        currentCard.question,
+                        style: Theme.of(context).textTheme.bodyLarge, // No bold
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -166,6 +191,10 @@ class _RecallModeWidgetState extends State<RecallModeWidget> {
             decoration: InputDecoration(
               labelText: 'Type the meaning',
               hintText: 'Enter your answer',
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xl,
+                vertical: AppSpacing.md,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
               ),
@@ -214,50 +243,6 @@ class _RecallModeWidgetState extends State<RecallModeWidget> {
               ),
             ),
           ],
-
-          const Spacer(),
-
-          // Navigation buttons
-          Row(
-            children: [
-              if (_currentIndex > 0)
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        _currentIndex--;
-                        _answerController.clear();
-                        _isAnswered = false;
-                        _startTimer();
-                      });
-                    },
-                    icon: const Icon(Icons.arrow_back),
-                    label: const Text('Previous'),
-                  ),
-                ),
-              if (_currentIndex > 0) const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: _isAnswered
-                      ? () {
-                          if (isComplete) {
-                            widget.onComplete();
-                          } else {
-                            setState(() {
-                              _currentIndex++;
-                              _answerController.clear();
-                              _isAnswered = false;
-                              _startTimer();
-                            });
-                          }
-                        }
-                      : null,
-                  icon: Icon(isComplete ? Icons.check : Icons.arrow_forward),
-                  label: Text(isComplete ? 'Complete' : 'Next'),
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );
