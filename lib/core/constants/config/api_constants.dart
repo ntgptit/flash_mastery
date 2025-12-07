@@ -8,7 +8,7 @@ class ApiConstants {
   // ==================== BASE CONFIGURATION ====================
 
   /// Base URL for the API server.
-  static const String baseUrl = 'http://192.168.35.26:8080/api/v1';
+  static const String baseUrl = 'http://192.168.35.146:8080/api/v1';
 
   // ==================== TIMEOUT VALUES ====================
 
@@ -134,8 +134,14 @@ class ApiConstants {
   /// Start study session endpoint.
   static const String startSession = '/sessions/start';
 
-  /// End study session endpoint.
-  static String endSession(String id) => '/sessions/$id/end';
+  /// Get study session by ID endpoint.
+  static String sessionById(String id) => '/sessions/$id';
+
+  /// Update study session endpoint.
+  static String updateSession(String id) => '/sessions/$id';
+
+  /// Complete study session endpoint.
+  static String completeSession(String id) => '/sessions/$id/complete';
 
   /// Get session history endpoint.
   static const String sessionHistory = '/sessions/history';

@@ -16,6 +16,7 @@ A modern flashcard learning application built with Flutter, following Clean Arch
 This project follows Clean Architecture with the following layers:
 
 ### Core Layer
+
 - **Constants**: Centralized app constants (colors, typography, spacing, API config)
 - **Error Handling**: Custom exceptions and failures with Either pattern
 - **Network**: Dio client configuration with interceptors
@@ -26,16 +27,19 @@ This project follows Clean Architecture with the following layers:
 - **Providers**: Riverpod dependency injection setup
 
 ### Data Layer
+
 - **Models**: Data models with JSON serialization
 - **Repositories**: Implementation of repository interfaces
 - **Data Sources**: Remote (API) and Local (cache) data sources
 
 ### Domain Layer
+
 - **Entities**: Business logic entities
 - **Repositories**: Repository interfaces
 - **Use Cases**: Business logic operations
 
 ### Presentation Layer
+
 - **Pages**: UI screens
 - **Widgets**: Reusable UI components
 - **Providers**: State management with Riverpod
@@ -60,22 +64,26 @@ This project follows Clean Architecture with the following layers:
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/yourusername/flash_mastery.git
 cd flash_mastery
 ```
 
 2. Install dependencies:
+
 ```bash
 flutter pub get
 ```
 
 3. Run code generation:
+
 ```bash
 flutter pub run build_runner build --delete-conflicting-outputs
 ```
 
 4. Run the app:
+
 ```bash
 flutter run
 ```
@@ -112,15 +120,18 @@ lib/
 ## Code Generation
 
 This project uses code generation for:
+
 - Riverpod providers (`riverpod_generator`)
 - Freezed models (`freezed`)
 - JSON serialization (`json_serializable`)
 - Retrofit API clients (`retrofit_generator`)
 
 Run code generation:
+
 ```bash
-# Watch mode (auto-generate on file changes)
-flutter pub run build_runner watch
+# Watch mode (with polling watcher to avoid Windows FileSystem watcher crashes)
+dart run build_runner watch --delete-conflicting-outputs --use-polling-watcher
+# Windows shortcut: tool/build_runner_watch.bat
 
 # One-time generation
 flutter pub run build_runner build --delete-conflicting-outputs

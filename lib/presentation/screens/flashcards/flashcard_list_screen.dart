@@ -14,6 +14,7 @@ import 'package:flash_mastery/presentation/screens/flashcards/widgets/flashcard_
 import 'package:flash_mastery/presentation/widgets/common/common_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class FlashcardListScreen extends StatelessWidget {
   final Deck deck;
@@ -177,7 +178,10 @@ class _FlashcardListScreenState extends ConsumerState<_FlashcardListBody> {
                         ],
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      FlashcardActionList(onStudy: () {}, onTest: () {}),
+                      FlashcardActionList(
+                        onStudy: () => context.push('/study/${widget.deck.id}'),
+                        onTest: () {},
+                      ),
                       const SizedBox(height: AppSpacing.lg),
                       FlashcardProgressOverview(total: total),
                       const SizedBox(height: AppSpacing.lg),

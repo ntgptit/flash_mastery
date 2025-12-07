@@ -4,6 +4,7 @@ import 'package:flash_mastery/presentation/screens/dashboard/dashboard_screen.da
 import 'package:flash_mastery/presentation/screens/decks/deck_list_screen.dart';
 import 'package:flash_mastery/presentation/screens/flashcards/flashcard_list_screen.dart';
 import 'package:flash_mastery/presentation/screens/folders/folder_list_screen.dart';
+import 'package:flash_mastery/presentation/screens/study/study_session_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -242,19 +243,6 @@ class DeckDetailScreen extends StatelessWidget {
   }
 }
 
-class StudySessionScreen extends StatelessWidget {
-  final String deckId;
-
-  const StudySessionScreen({super.key, required this.deckId});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Study Session')),
-      body: Center(child: Text('Study Session Screen: $deckId')),
-    );
-  }
-}
 
 class CreateFlashcardScreen extends StatelessWidget {
   const CreateFlashcardScreen({super.key});
