@@ -17,6 +17,7 @@ import com.flash.mastery.dto.response.StudySessionResponse;
 import com.flash.mastery.entity.Flashcard;
 import com.flash.mastery.entity.StudySession;
 import com.flash.mastery.entity.enums.StudyMode;
+import com.flash.mastery.entity.enums.StudySessionStatus;
 import com.flash.mastery.exception.NotFoundException;
 import com.flash.mastery.mapper.StudySessionMapper;
 import com.flash.mastery.repository.DeckRepository;
@@ -63,6 +64,7 @@ public class StudySessionServiceImpl implements StudySessionService {
                 .flashcardIds(flashcardIds)
                 .currentMode(StudyMode.OVERVIEW)
                 .currentBatchIndex(0)
+                .status(StudySessionStatus.IN_PROGRESS)
                 .build();
 
         final var saved = this.studySessionRepository.save(session);
@@ -101,6 +103,15 @@ public class StudySessionServiceImpl implements StudySessionService {
         final var session = this.studySessionRepository.findById(sessionId)
                 .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_SESSION)));
         session.setCompletedAt(LocalDateTime.now());
+        session.setStatus(StudySessionStatus.SUCCESS);
+        this.studySessionRepository.save(session);
+    }
+
+    @Override
+    public void cancelSession(UUID sessionId) {
+        final var session = this.studySessionRepository.findById(sessionId)
+                .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_SESSION)));
+        session.setStatus(StudySessionStatus.CANCEL);
         this.studySessionRepository.save(session);
     }
 

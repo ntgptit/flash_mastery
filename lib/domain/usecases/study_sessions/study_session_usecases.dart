@@ -56,6 +56,17 @@ class CompleteStudySessionUseCase extends UseCase<void, String> {
   }
 }
 
+class CancelStudySessionUseCase extends UseCase<void, String> {
+  final StudySessionRepository repository;
+
+  CancelStudySessionUseCase(this.repository);
+
+  @override
+  Future<Either<Failure, void>> call(String sessionId) {
+    return repository.cancelSession(sessionId);
+  }
+}
+
 class StartStudySessionParams {
   final String deckId;
   final List<String>? flashcardIds;

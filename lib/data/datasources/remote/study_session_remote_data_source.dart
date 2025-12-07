@@ -12,6 +12,7 @@ abstract class StudySessionRemoteDataSource {
     Map<String, String>? progressData,
   });
   Future<void> completeSession(String sessionId);
+  Future<void> cancelSession(String sessionId);
 }
 
 class StudySessionRemoteDataSourceImpl implements StudySessionRemoteDataSource {
@@ -78,6 +79,16 @@ class StudySessionRemoteDataSourceImpl implements StudySessionRemoteDataSource {
       throw const NotFoundException(message: 'Study session not found');
     }
     throw ServerException(message: response.statusMessage ?? 'Failed to complete study session');
+  }
+
+  @override
+  Future<void> cancelSession(String sessionId) async {
+    final response = await dio.post(ApiConstants.cancelSession(sessionId));
+    if (response.statusCode == 204 || response.statusCode == 200) return;
+    if (response.statusCode == 404) {
+      throw const NotFoundException(message: 'Study session not found');
+    }
+    throw ServerException(message: response.statusMessage ?? 'Failed to cancel study session');
   }
 }
 

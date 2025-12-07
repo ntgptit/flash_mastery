@@ -1,8 +1,8 @@
 import 'package:flash_mastery/domain/entities/study_mode.dart';
 import 'package:flash_mastery/domain/entities/study_session.dart';
+import 'package:flash_mastery/domain/entities/study_session_status.dart';
 
 class StudySessionModel {
-
   final String id;
   final String deckId;
   final List<String> flashcardIds;
@@ -10,6 +10,7 @@ class StudySessionModel {
   final int currentBatchIndex;
   final DateTime startedAt;
   final DateTime? completedAt;
+  final StudySessionStatus status;
   final Map<String, String> progressData;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -22,6 +23,7 @@ class StudySessionModel {
     this.currentBatchIndex = 0,
     required this.startedAt,
     this.completedAt,
+    this.status = StudySessionStatus.inProgress,
     this.progressData = const {},
     required this.createdAt,
     required this.updatedAt,
@@ -38,6 +40,9 @@ class StudySessionModel {
       completedAt: json['completedAt'] != null
           ? DateTime.parse(json['completedAt'] as String)
           : null,
+      status: json['status'] != null
+          ? studySessionStatusFromJson(json['status'] as String)
+          : StudySessionStatus.inProgress,
       progressData: json['progressData'] != null
           ? Map<String, String>.from(json['progressData'] as Map)
           : {},
@@ -61,10 +66,7 @@ class StudySessionModel {
           modes[mode] = completed;
         }
       }
-      progress[entry.key] = StudyProgress(
-        flashcardId: entry.key,
-        modeCompletion: modes,
-      );
+      progress[entry.key] = StudyProgress(flashcardId: entry.key, modeCompletion: modes);
     }
 
     return StudySession(
@@ -75,6 +77,7 @@ class StudySessionModel {
       currentBatchIndex: currentBatchIndex,
       startedAt: startedAt,
       completedAt: completedAt,
+      status: status,
       progress: progress,
     );
   }
@@ -97,6 +100,7 @@ class StudySessionModel {
       currentBatchIndex: session.currentBatchIndex,
       startedAt: session.startedAt,
       completedAt: session.completedAt,
+      status: session.status,
       progressData: progressData,
       createdAt: DateTime.now(), // These should come from backend
       updatedAt: DateTime.now(),
@@ -135,4 +139,3 @@ String studyModeToJson(StudyMode mode) {
       return 'FILL_IN_BLANK';
   }
 }
-

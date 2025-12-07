@@ -181,6 +181,19 @@
 					</excludes>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.flywaydb</groupId>
+				<artifactId>flyway-maven-plugin</artifactId>
+				<configuration>
+					<url>jdbc:postgresql://localhost:5432/flash_mastery</url>
+					<user>${flyway.user:giapnt}</user>
+					<password>${flyway.password:abcd1234}</password>
+					<locations>
+						<location>classpath:db/migration</location>
+					</locations>
+					<cleanDisabled>false</cleanDisabled>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 

@@ -143,6 +143,9 @@ class ApiConstants {
   /// Complete study session endpoint.
   static String completeSession(String id) => '/sessions/$id/complete';
 
+  /// Cancel study session endpoint.
+  static String cancelSession(String id) => '/sessions/$id/cancel';
+
   /// Get session history endpoint.
   static const String sessionHistory = '/sessions/history';
 

@@ -37,6 +37,11 @@ CompleteStudySessionUseCase completeStudySessionUseCase(Ref ref) {
 }
 
 @riverpod
+CancelStudySessionUseCase cancelStudySessionUseCase(Ref ref) {
+  return CancelStudySessionUseCase(ref.watch(studySessionRepositoryProvider));
+}
+
+@riverpod
 class StudySessionViewModel extends _$StudySessionViewModel {
   @override
   StudySessionState build(String? sessionId) {
@@ -115,6 +120,20 @@ class StudySessionViewModel extends _$StudySessionViewModel {
         // Reload session to get updated state
         await loadSession(sessionId);
       }
+      return message;
+    } catch (e) {
+      // Provider was disposed, ignore
+      return null;
+    }
+  }
+
+  Future<String?> cancelSession(String sessionId) async {
+    try {
+      final result = await ref.read(cancelStudySessionUseCaseProvider).call(sessionId);
+      final message = result.fold(
+        (failure) => failure.toDisplayMessage(),
+        (_) => null,
+      );
       return message;
     } catch (e) {
       // Provider was disposed, ignore

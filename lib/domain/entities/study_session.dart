@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flash_mastery/domain/entities/study_mode.dart';
+import 'package:flash_mastery/domain/entities/study_session_status.dart';
 
 /// Study session entity representing a study session.
 class StudySession extends Equatable {
@@ -10,6 +11,7 @@ class StudySession extends Equatable {
   final int currentBatchIndex;
   final DateTime startedAt;
   final DateTime? completedAt;
+  final StudySessionStatus status;
   final Map<String, StudyProgress> progress;
 
   const StudySession({
@@ -20,6 +22,7 @@ class StudySession extends Equatable {
     this.currentBatchIndex = 0,
     required this.startedAt,
     this.completedAt,
+    this.status = StudySessionStatus.inProgress,
     this.progress = const {},
   });
 
@@ -31,6 +34,7 @@ class StudySession extends Equatable {
     int? currentBatchIndex,
     DateTime? startedAt,
     DateTime? completedAt,
+    StudySessionStatus? status,
     Map<String, StudyProgress>? progress,
   }) {
     return StudySession(
@@ -41,6 +45,7 @@ class StudySession extends Equatable {
       currentBatchIndex: currentBatchIndex ?? this.currentBatchIndex,
       startedAt: startedAt ?? this.startedAt,
       completedAt: completedAt ?? this.completedAt,
+      status: status ?? this.status,
       progress: progress ?? this.progress,
     );
   }
@@ -89,6 +94,7 @@ class StudySession extends Equatable {
         currentBatchIndex,
         startedAt,
         completedAt,
+        status,
         progress,
       ];
 }

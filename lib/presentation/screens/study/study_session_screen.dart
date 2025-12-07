@@ -262,28 +262,68 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
   }
 
   Future<void> _showExitDialog(BuildContext context, StudySession session) async {
-    final shouldExit = await showDialog<bool>(
+    final shouldSave = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(widget.testMode ? 'Exit Test?' : 'Exit Study Session?'),
         content: Text(widget.testMode
-            ? 'Are you sure you want to exit the test?'
-            : 'Your progress will be saved. Are you sure you want to exit?'),
+            ? 'Do you want to save your progress?'
+            : 'Do you want to save your progress?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text('Không'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Exit'),
+            child: const Text('Có'),
           ),
         ],
       ),
     );
 
-    if (shouldExit == true && mounted) {
-      context.pop();
+    if (shouldSave == null || !mounted) return;
+
+    if (shouldSave == true) {
+      // User wants to save - complete the session
+      if (_sessionId != null) {
+        final viewModel = ref.read(studySessionViewModelProvider(_sessionId).notifier);
+        final error = await viewModel.completeSession(_sessionId!);
+        if (mounted) {
+          if (error != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error: $error')),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Đã lưu tiến trình học tập')),
+            );
+          }
+        }
+      }
+      if (mounted) {
+        context.pop();
+      }
+    } else {
+      // User doesn't want to save - cancel the session
+      if (_sessionId != null) {
+        final viewModel = ref.read(studySessionViewModelProvider(_sessionId).notifier);
+        final error = await viewModel.cancelSession(_sessionId!);
+        if (mounted) {
+          if (error != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error: $error')),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Đã hủy phiên học tập')),
+            );
+          }
+        }
+      }
+      if (mounted) {
+        context.pop();
+      }
     }
   }
 }

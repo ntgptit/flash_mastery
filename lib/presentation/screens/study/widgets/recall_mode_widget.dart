@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flash_mastery/core/core.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
 import 'package:flash_mastery/domain/entities/study_session.dart';
@@ -31,7 +32,7 @@ class _RecallModeWidgetState extends State<RecallModeWidget> {
   Timer? _timer;
   final Map<int, bool> _results = {};
   bool _isAnswerShown = false; // Whether user clicked "Show" button
-  List<Flashcard> _notMasteredQueue = []; // Queue for flashcards not mastered
+  final List<Flashcard> _notMasteredQueue = []; // Queue for flashcards not mastered
   List<Flashcard> _currentFlashcards = []; // Current flashcards being studied
 
   @override
@@ -137,7 +138,6 @@ class _RecallModeWidgetState extends State<RecallModeWidget> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     if (_currentFlashcards.isEmpty) {
@@ -169,11 +169,7 @@ class _RecallModeWidgetState extends State<RecallModeWidget> {
           const SizedBox(height: AppSpacing.xl),
 
           // Meaning displayed
-          StudyCard(
-            label: 'Meaning',
-            content: currentCard.answer,
-            height: _cardHeight,
-          ),
+          StudyCard(label: 'Meaning', content: currentCard.answer, height: _cardHeight),
           // Term displayed (same design as Meaning) - shown when answer is revealed
           if (_isAnswerShown) ...[
             const SizedBox(height: AppSpacing.xl),
@@ -182,8 +178,8 @@ class _RecallModeWidgetState extends State<RecallModeWidget> {
               content: currentCard.question,
               height: _cardHeight,
               contentStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontSize: Theme.of(context).textTheme.headlineSmall?.fontSize,
-                  ),
+                fontSize: Theme.of(context).textTheme.headlineSmall?.fontSize,
+              ),
             ),
           ],
           const Spacer(),
@@ -247,4 +243,3 @@ class _RecallModeWidgetState extends State<RecallModeWidget> {
     );
   }
 }
-

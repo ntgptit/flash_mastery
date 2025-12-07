@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.flash.mastery.entity.enums.StudyMode;
+import com.flash.mastery.entity.enums.StudySessionStatus;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -23,6 +24,7 @@ public class StudySessionResponse {
     List<UUID> flashcardIds;
     StudyMode currentMode;
     Integer currentBatchIndex;
+    StudySessionStatus status;
     Map<UUID, String> progressData;
     LocalDateTime startedAt;
     LocalDateTime completedAt;

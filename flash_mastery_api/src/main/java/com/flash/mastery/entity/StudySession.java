@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.flash.mastery.entity.enums.StudyMode;
+import com.flash.mastery.entity.enums.StudySessionStatus;
 
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -18,6 +19,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -56,6 +59,11 @@ public class StudySession extends BaseAuditEntity {
     @Default
     private Integer currentBatchIndex = 0;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    @Default
+    private StudySessionStatus status = StudySessionStatus.IN_PROGRESS;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "study_session_progress", joinColumns = @JoinColumn(name = "session_id"))
     @MapKeyColumn(name = "flashcard_id")
@@ -65,6 +73,17 @@ public class StudySession extends BaseAuditEntity {
 
     @Column(name = "completed_at")
     private java.time.LocalDateTime completedAt;
+
+    /**
+     * Ensure status is never null before persisting or updating.
+     */
+    @PrePersist
+    @PreUpdate
+    private void ensureStatus() {
+        if (this.status == null) {
+            this.status = StudySessionStatus.IN_PROGRESS;
+        }
+    }
 
     /**
      * Get flashcards for current batch (max 7 cards).
@@ -111,4 +130,3 @@ public class StudySession extends BaseAuditEntity {
         }
     }
 }
-
