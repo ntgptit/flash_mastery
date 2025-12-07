@@ -2,6 +2,9 @@ import 'dart:async';
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
 import 'package:flash_mastery/domain/entities/study_session.dart';
+import 'package:flash_mastery/presentation/screens/study/widgets/common/study_card.dart';
+import 'package:flash_mastery/presentation/screens/study/widgets/common/study_progress_indicator.dart';
+import 'package:flash_mastery/presentation/screens/study/widgets/common/study_timer_display.dart';
 import 'package:flutter/material.dart';
 
 class RecallModeWidget extends StatefulWidget {
@@ -147,119 +150,37 @@ class _RecallModeWidgetState extends State<RecallModeWidget> {
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         children: [
-          // Progress indicator
-          LinearProgressIndicator(
-            value: (_currentIndex + 1) / _currentFlashcards.length,
-            minHeight: 4,
+          // Progress indicator with queue count
+          StudyProgressIndicator(
+            currentIndex: _currentIndex,
+            totalCount: _currentFlashcards.length,
+            queueCount: _notMasteredQueue.isNotEmpty ? _notMasteredQueue.length : null,
           ),
           const SizedBox(height: AppSpacing.lg),
 
           // Timer
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Text(
-                '${_currentIndex + 1} / ${_currentFlashcards.length}',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              if (_notMasteredQueue.isNotEmpty)
-                Text(
-                  'Queue: ${_notMasteredQueue.length}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.sm,
-                ),
-                decoration: BoxDecoration(
-                  color: _timeRemaining <= 5
-                      ? Theme.of(context).colorScheme.errorContainer
-                      : Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                ),
-                child: Text(
-                  '$_timeRemaining s',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: _timeRemaining <= 5
-                            ? Theme.of(context).colorScheme.onErrorContainer
-                            : Theme.of(context).colorScheme.onPrimaryContainer,
-                      ),
-                ),
-              ),
+              if (!_isAnswerShown && _timeRemaining > 0)
+                StudyTimerDisplay(timeRemaining: _timeRemaining),
             ],
           ),
           const SizedBox(height: AppSpacing.xl),
 
           // Meaning displayed
-          Card(
-            elevation: 4,
-            margin: EdgeInsets.zero, // Remove default card margin
-            child: Container(
-              height: _cardHeight, // Fixed height to match Term card
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.xl,
-                vertical: AppSpacing.xl,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Meaning',
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        currentCard.answer,
-                        style: Theme.of(context).textTheme.bodyLarge, // No bold
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          StudyCard(
+            label: 'Meaning',
+            content: currentCard.answer,
+            height: _cardHeight,
           ),
           // Term displayed (same design as Meaning) - shown when answer is revealed
           if (_isAnswerShown) ...[
             const SizedBox(height: AppSpacing.xl),
-            Card(
-              elevation: 4,
-              margin: EdgeInsets.zero, // Remove default card margin
-              child: Container(
-                height: _cardHeight, // Fixed height to match Meaning card
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.xl,
-                  vertical: AppSpacing.xl,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Term',
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Expanded(
-                      child: Center(
-                        child: Text(
-                          currentCard.question,
-                          style: Theme.of(context).textTheme.bodyLarge, // No bold
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            StudyCard(
+              label: 'Term',
+              content: currentCard.question,
+              height: _cardHeight,
             ),
           ],
           const Spacer(),

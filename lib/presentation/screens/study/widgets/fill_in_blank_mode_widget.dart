@@ -2,6 +2,9 @@ import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
 import 'package:flash_mastery/domain/entities/study_session.dart';
 import 'package:flash_mastery/domain/strategies/study_strategies.dart';
+import 'package:flash_mastery/presentation/screens/study/widgets/common/study_card.dart';
+import 'package:flash_mastery/presentation/screens/study/widgets/common/study_progress_indicator.dart';
+import 'package:flash_mastery/presentation/screens/study/widgets/common/study_result_card.dart';
 import 'package:flutter/material.dart';
 
 class FillInBlankModeWidget extends StatefulWidget {
@@ -117,63 +120,18 @@ class _FillInBlankModeWidgetState extends State<FillInBlankModeWidget> {
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         children: [
-          // Progress indicator
-          LinearProgressIndicator(
-            value: (_currentIndex + 1) / _currentFlashcards.length,
-            minHeight: 4,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${_currentIndex + 1} / ${_currentFlashcards.length}',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              if (_notMasteredQueue.isNotEmpty)
-                Text(
-                  'Queue: ${_notMasteredQueue.length}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                ),
-            ],
+          StudyProgressIndicator(
+            currentIndex: _currentIndex,
+            totalCount: _currentFlashcards.length,
+            queueCount: _notMasteredQueue.isNotEmpty ? _notMasteredQueue.length : null,
           ),
           const SizedBox(height: AppSpacing.xl),
 
           // Meaning displayed
-          Card(
-            elevation: 4,
-            margin: EdgeInsets.zero, // Remove default card margin
-            child: Container(
-              height: 200, // Fixed height to prevent layout shifts
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.xl,
-                vertical: AppSpacing.xl,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Meaning',
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        currentCard.answer,
-                        style: Theme.of(context).textTheme.bodyLarge, // No bold
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          StudyCard(
+            label: 'Meaning',
+            content: currentCard.answer,
+            height: 200,
           ),
           const SizedBox(height: AppSpacing.xl),
 
@@ -208,39 +166,9 @@ class _FillInBlankModeWidgetState extends State<FillInBlankModeWidget> {
 
           if (_isAnswered) ...[
             const SizedBox(height: AppSpacing.xl),
-            // Show correct answer
-            Card(
-              color: isCorrect
-                  ? Theme.of(context).colorScheme.primaryContainer
-                  : Theme.of(context).colorScheme.errorContainer,
-              margin: EdgeInsets.zero, // Match other cards
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.xl,
-                  vertical: AppSpacing.md,
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      isCorrect ? Icons.check_circle : Icons.cancel,
-                      color: isCorrect
-                          ? Theme.of(context).colorScheme.onPrimaryContainer
-                          : Theme.of(context).colorScheme.onErrorContainer,
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Text(
-                        'Correct answer: ${currentCard.question}',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: isCorrect
-                                  ? Theme.of(context).colorScheme.onPrimaryContainer
-                                  : Theme.of(context).colorScheme.onErrorContainer,
-                            ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            StudyResultCard(
+              isCorrect: isCorrect,
+              message: 'Correct answer: ${currentCard.question}',
             ),
           ],
         ],

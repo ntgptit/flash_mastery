@@ -2,6 +2,8 @@ import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
 import 'package:flash_mastery/domain/entities/study_session.dart';
 import 'package:flash_mastery/domain/factories/study_mode_factory.dart';
+import 'package:flash_mastery/presentation/screens/study/widgets/common/study_card.dart';
+import 'package:flash_mastery/presentation/screens/study/widgets/common/study_progress_indicator.dart';
 import 'package:flutter/material.dart';
 
 class GuessModeWidget extends StatefulWidget {
@@ -54,52 +56,16 @@ class _GuessModeWidgetState extends State<GuessModeWidget> {
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         children: [
-          // Progress indicator
-          LinearProgressIndicator(
-            value: (_currentIndex + 1) / widget.flashcards.length,
-            minHeight: 4,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-
-          Text(
-            '${_currentIndex + 1} / ${widget.flashcards.length}',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          StudyProgressIndicator(currentIndex: _currentIndex, totalCount: widget.flashcards.length),
           const SizedBox(height: AppSpacing.xl),
 
           // Term displayed
-          Card(
-            elevation: 4,
-            margin: EdgeInsets.zero, // Remove default card margin
-            child: Container(
-              height: 250, // Fixed height to prevent layout shifts
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.xl,
-                vertical: AppSpacing.xl,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Term',
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        currentCard.question,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontSize: Theme.of(context).textTheme.titleLarge?.fontSize ?? 22,
-                        ), // Increased font size without bold
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+          StudyCard(
+            label: 'Term',
+            content: currentCard.question,
+            height: 250,
+            contentStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              fontSize: Theme.of(context).textTheme.titleLarge?.fontSize ?? 22,
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
