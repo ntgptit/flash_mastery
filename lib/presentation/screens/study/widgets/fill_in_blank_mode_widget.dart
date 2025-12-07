@@ -25,11 +25,19 @@ class _FillInBlankModeWidgetState extends State<FillInBlankModeWidget> {
   final TextEditingController _answerController = TextEditingController();
   final Map<int, bool> _results = {};
   bool _isAnswered = false;
+  List<Flashcard> _notMasteredQueue = []; // Queue for flashcards not mastered
+  List<Flashcard> _currentFlashcards = []; // Current flashcards being studied
+
+  @override
+  void initState() {
+    super.initState();
+    _currentFlashcards = List.from(widget.flashcards);
+  }
 
   void _checkAnswer() {
     if (_isAnswered) return;
 
-    final currentCard = widget.flashcards[_currentIndex];
+    final currentCard = _currentFlashcards[_currentIndex];
     final handler = FillInBlankStudyHandler();
     final isCorrect = handler.validateAnswer(
       flashcard: currentCard,
@@ -40,6 +48,54 @@ class _FillInBlankModeWidgetState extends State<FillInBlankModeWidget> {
       _isAnswered = true;
       _results[_currentIndex] = isCorrect;
     });
+
+    // Auto-advance to next card
+    if (isCorrect) {
+      // Correct answer - remove from queue if exists and move to next
+      _notMasteredQueue.removeWhere((card) => card.id == currentCard.id);
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted) {
+          _moveToNextCard();
+        }
+      });
+    } else {
+      // Wrong answer - add to queue and move to next
+      if (!_notMasteredQueue.any((card) => card.id == currentCard.id)) {
+        _notMasteredQueue.add(currentCard);
+      }
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted) {
+          _moveToNextCard();
+        }
+      });
+    }
+  }
+
+  void _moveToNextCard() {
+    if (_currentIndex >= _currentFlashcards.length - 1) {
+      // Finished current batch - check if queue has items
+      if (_notMasteredQueue.isEmpty) {
+        // No more cards to study - complete mode
+        widget.onComplete();
+      } else {
+        // Start studying from queue
+        setState(() {
+          _currentFlashcards = List.from(_notMasteredQueue);
+          _notMasteredQueue.clear();
+          _currentIndex = 0;
+          _answerController.clear();
+          _isAnswered = false;
+          _results.clear();
+        });
+      }
+    } else {
+      // Move to next card in current batch
+      setState(() {
+        _currentIndex++;
+        _answerController.clear();
+        _isAnswered = false;
+      });
+    }
   }
 
   @override
@@ -50,12 +106,11 @@ class _FillInBlankModeWidgetState extends State<FillInBlankModeWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.flashcards.isEmpty) {
+    if (_currentFlashcards.isEmpty) {
       return const Center(child: Text('No flashcards in this batch'));
     }
 
-    final currentCard = widget.flashcards[_currentIndex];
-    final isComplete = _currentIndex >= widget.flashcards.length - 1 && _isAnswered;
+    final currentCard = _currentFlashcards[_currentIndex];
     final isCorrect = _results[_currentIndex] ?? false;
 
     return Padding(
@@ -64,14 +119,26 @@ class _FillInBlankModeWidgetState extends State<FillInBlankModeWidget> {
         children: [
           // Progress indicator
           LinearProgressIndicator(
-            value: (_currentIndex + 1) / widget.flashcards.length,
+            value: (_currentIndex + 1) / _currentFlashcards.length,
             minHeight: 4,
           ),
           const SizedBox(height: AppSpacing.lg),
 
-          Text(
-            '${_currentIndex + 1} / ${widget.flashcards.length}',
-            style: Theme.of(context).textTheme.bodyMedium,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${_currentIndex + 1} / ${_currentFlashcards.length}',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              if (_notMasteredQueue.isNotEmpty)
+                Text(
+                  'Queue: ${_notMasteredQueue.length}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                ),
+            ],
           ),
           const SizedBox(height: AppSpacing.xl),
 
@@ -172,48 +239,6 @@ class _FillInBlankModeWidgetState extends State<FillInBlankModeWidget> {
               ),
             ),
           ],
-
-          const Spacer(),
-
-          // Navigation buttons
-          Row(
-            children: [
-              if (_currentIndex > 0)
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        _currentIndex--;
-                        _answerController.clear();
-                        _isAnswered = false;
-                      });
-                    },
-                    icon: const Icon(Icons.arrow_back),
-                    label: const Text('Previous'),
-                  ),
-                ),
-              if (_currentIndex > 0) const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: _isAnswered
-                      ? () {
-                          if (isComplete) {
-                            widget.onComplete();
-                          } else {
-                            setState(() {
-                              _currentIndex++;
-                              _answerController.clear();
-                              _isAnswered = false;
-                            });
-                          }
-                        }
-                      : null,
-                  icon: Icon(isComplete ? Icons.check : Icons.arrow_forward),
-                  label: Text(isComplete ? 'Complete' : 'Next'),
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );
