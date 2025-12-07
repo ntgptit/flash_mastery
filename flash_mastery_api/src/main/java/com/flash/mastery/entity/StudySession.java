@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.flash.mastery.constant.NumberConstants;
 import com.flash.mastery.entity.enums.StudyMode;
 import com.flash.mastery.entity.enums.StudySessionStatus;
 
@@ -86,10 +87,10 @@ public class StudySession extends BaseAuditEntity {
     }
 
     /**
-     * Get flashcards for current batch (max 7 cards).
+     * Get flashcards for current batch.
      */
     public List<UUID> getCurrentBatch() {
-        final int batchSize = 7;
+        final int batchSize = NumberConstants.STUDY_SESSION_BATCH_SIZE;
         final int start = currentBatchIndex * batchSize;
         final int end = Math.min(start + batchSize, flashcardIds.size());
         if (start >= flashcardIds.size()) {

@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,18 +18,24 @@ import com.flash.mastery.entity.Folder;
 import com.flash.mastery.exception.NotFoundException;
 import com.flash.mastery.mapper.FolderMapper;
 import com.flash.mastery.repository.FolderRepository;
+import com.flash.mastery.service.BaseService;
 import com.flash.mastery.service.FolderService;
-
-import lombok.RequiredArgsConstructor;
 
 @Service
 @Transactional
-@RequiredArgsConstructor
-public class FolderServiceImpl implements FolderService {
+public class FolderServiceImpl extends BaseService implements FolderService {
 
     private final FolderRepository folderRepository;
     private final FolderMapper folderMapper;
-    private final MessageSource messageSource;
+
+    public FolderServiceImpl(
+            FolderRepository folderRepository,
+            FolderMapper folderMapper,
+            MessageSource messageSource) {
+        super(messageSource);
+        this.folderRepository = folderRepository;
+        this.folderMapper = folderMapper;
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -105,9 +110,6 @@ public class FolderServiceImpl implements FolderService {
         this.folderRepository.delete(folder);
     }
 
-    private String msg(String key) {
-        return this.messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
-    }
 
     private void validateParent(Folder folder, Folder newParent) {
         var current = newParent;

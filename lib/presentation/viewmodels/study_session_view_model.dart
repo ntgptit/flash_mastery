@@ -134,6 +134,10 @@ class StudySessionViewModel extends _$StudySessionViewModel {
         (failure) => failure.toDisplayMessage(),
         (_) => null,
       );
+      if (message == null) {
+        // Reload session to get updated state (status = CANCEL)
+        await loadSession(sessionId);
+      }
       return message;
     } catch (e) {
       // Provider was disposed, ignore

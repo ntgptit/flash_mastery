@@ -64,11 +64,10 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
   Future<void> _startSession() async {
     if (!mounted) return;
 
-    // Get unstudied flashcards (for now, use all flashcards)
-    final unstudiedIds = _flashcards.map((f) => f.id).toList();
-
+    // Let backend handle selecting 7 random flashcards
+    // Backend will shuffle and select 7 flashcards automatically
     final viewModel = ref.read(studySessionViewModelProvider(null).notifier);
-    final error = await viewModel.startSession(widget.deckId, flashcardIds: unstudiedIds);
+    final error = await viewModel.startSession(widget.deckId, flashcardIds: null);
 
     if (!mounted) return;
 
@@ -146,7 +145,12 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
       initial: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
       success: (session) {
-        final flashcards = _flashcards.where((f) => session.flashcardIds.contains(f.id)).toList();
+        // Maintain the shuffled order from session.flashcardIds
+        final flashcardMap = {for (var f in _flashcards) f.id: f};
+        final flashcards = session.flashcardIds
+            .map((id) => flashcardMap[id])
+            .whereType<Flashcard>()
+            .toList();
         return Scaffold(
           appBar: AppBar(
             title: Text(widget.testMode ? 'Test Mode' : 'Study - ${session.currentMode.displayName}'),

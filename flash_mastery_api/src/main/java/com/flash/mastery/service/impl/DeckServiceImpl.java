@@ -8,7 +8,6 @@ import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +29,7 @@ import com.flash.mastery.mapper.DeckMapper;
 import com.flash.mastery.repository.DeckRepository;
 import com.flash.mastery.repository.FlashcardRepository;
 import com.flash.mastery.repository.FolderRepository;
+import com.flash.mastery.service.BaseService;
 import com.flash.mastery.service.DeckService;
 import com.flash.mastery.util.DeckSortOption;
 import com.flash.mastery.util.SortMapper;
@@ -37,12 +37,9 @@ import com.flash.mastery.util.importer.ImportResult;
 import com.flash.mastery.util.importer.ImporterFactory;
 import com.flash.mastery.util.importer.RowContext;
 
-import lombok.RequiredArgsConstructor;
-
 @Service
 @Transactional
-@RequiredArgsConstructor
-public class DeckServiceImpl implements DeckService {
+public class DeckServiceImpl extends BaseService implements DeckService {
 
     private static final int TEXT_LIMIT = 255;
 
@@ -50,7 +47,19 @@ public class DeckServiceImpl implements DeckService {
     private final FlashcardRepository flashcardRepository;
     private final FolderRepository folderRepository;
     private final DeckMapper deckMapper;
-    private final MessageSource messageSource;
+
+    public DeckServiceImpl(
+            DeckRepository deckRepository,
+            FlashcardRepository flashcardRepository,
+            FolderRepository folderRepository,
+            DeckMapper deckMapper,
+            MessageSource messageSource) {
+        super(messageSource);
+        this.deckRepository = deckRepository;
+        this.flashcardRepository = flashcardRepository;
+        this.folderRepository = folderRepository;
+        this.deckMapper = deckMapper;
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -123,9 +132,6 @@ public class DeckServiceImpl implements DeckService {
         }
     }
 
-    private String msg(String key) {
-        return this.messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
-    }
 
     @Override
     public ImportResult<ImportRow> importDecks(UUID folderId, MultipartFile file, FlashcardType type,
