@@ -144,7 +144,7 @@ class GuessStudyHandler implements StudyModeHandler {
 }
 
 /// Recall study handler.
-/// Show term, guess meaning with time limit.
+/// Show meaning, guess term with time limit.
 class RecallStudyHandler implements StudyModeHandler {
   @override
   StudyMode get mode => StudyMode.recall;
@@ -162,9 +162,9 @@ class RecallStudyHandler implements StudyModeHandler {
     required Flashcard flashcard,
     required dynamic userAnswer,
   }) {
-    // userAnswer should be the guessed meaning (answer)
+    // userAnswer should be the guessed term (question)
     if (userAnswer is String) {
-      return userAnswer.trim().toLowerCase() == flashcard.answer.trim().toLowerCase();
+      return userAnswer.trim().toLowerCase() == flashcard.question.trim().toLowerCase();
     }
     return false;
   }

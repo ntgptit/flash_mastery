@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
 import 'package:flash_mastery/domain/entities/study_session.dart';
-import 'package:flash_mastery/domain/strategies/study_strategies.dart';
 import 'package:flutter/material.dart';
 
 class RecallModeWidget extends StatefulWidget {
@@ -22,38 +21,43 @@ class RecallModeWidget extends StatefulWidget {
 }
 
 class _RecallModeWidgetState extends State<RecallModeWidget> {
+  static const double _cardHeight = 200; // Fixed height for both Meaning and Term cards
+
   int _currentIndex = 0;
-  final TextEditingController _answerController = TextEditingController();
   int _timeRemaining = 30; // 30 seconds
   Timer? _timer;
   final Map<int, bool> _results = {};
-  bool _isAnswered = false;
+  bool _isAnswerShown = false; // Whether user clicked "Show" button
+  List<Flashcard> _notMasteredQueue = []; // Queue for flashcards not mastered
+  List<Flashcard> _currentFlashcards = []; // Current flashcards being studied
 
   @override
   void initState() {
     super.initState();
+    _currentFlashcards = List.from(widget.flashcards);
     _startTimer();
   }
 
   @override
   void dispose() {
     _timer?.cancel();
-    _answerController.dispose();
     super.dispose();
   }
 
   void _startTimer() {
     _timer?.cancel();
     _timeRemaining = 30;
+    _isAnswerShown = false;
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
         setState(() {
-          if (_timeRemaining > 0 && !_isAnswered) {
+          if (_timeRemaining > 0 && !_isAnswerShown) {
             _timeRemaining--;
           } else {
             timer.cancel();
-            if (_timeRemaining == 0 && !_isAnswered) {
-              _checkAnswer();
+            if (_timeRemaining == 0 && !_isAnswerShown) {
+              // Time's up - auto show answer and add to queue
+              _showAnswer();
             }
           }
         });
@@ -61,50 +65,83 @@ class _RecallModeWidgetState extends State<RecallModeWidget> {
     });
   }
 
-  void _checkAnswer() {
-    if (_isAnswered) return;
-
-    final currentCard = widget.flashcards[_currentIndex];
-    final handler = RecallStudyHandler();
-    final isCorrect = handler.validateAnswer(
-      flashcard: currentCard,
-      userAnswer: _answerController.text,
-    );
+  void _showAnswer() {
+    if (_isAnswerShown) return;
 
     setState(() {
-      _isAnswered = true;
-      _results[_currentIndex] = isCorrect;
+      _isAnswerShown = true;
+      _timer?.cancel();
+      // Add to not mastered queue when time's up or shown manually
+      final currentCard = _currentFlashcards[_currentIndex];
+      if (!_notMasteredQueue.any((card) => card.id == currentCard.id)) {
+        _notMasteredQueue.add(currentCard);
+      }
     });
-    _timer?.cancel();
+  }
 
-    // Auto-advance to next card if answer is correct
-    if (isCorrect) {
-      Future.delayed(const Duration(milliseconds: 1000), () {
-        if (mounted) {
-          if (_currentIndex >= widget.flashcards.length - 1) {
-            // All cards completed
+  void _markAsRemembered() {
+    final currentCard = _currentFlashcards[_currentIndex];
+    // Remove from queue if it was there
+    _notMasteredQueue.removeWhere((card) => card.id == currentCard.id);
+
+    setState(() {
+      _results[_currentIndex] = true;
+    });
+
+    // Move to next card
+    _moveToNextCard();
+  }
+
+  void _markAsForgot() {
+    final currentCard = _currentFlashcards[_currentIndex];
+    // Ensure it's in the queue
+    if (!_notMasteredQueue.any((card) => card.id == currentCard.id)) {
+      _notMasteredQueue.add(currentCard);
+    }
+
+    // Move to next card
+    _moveToNextCard();
+  }
+
+  void _moveToNextCard() {
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        if (_currentIndex >= _currentFlashcards.length - 1) {
+          // Finished current batch - check if queue has items
+          if (_notMasteredQueue.isEmpty) {
+            // No more cards to study - complete mode
             widget.onComplete();
           } else {
+            // Start studying from queue
             setState(() {
-              _currentIndex++;
-              _answerController.clear();
-              _isAnswered = false;
+              _currentFlashcards = List.from(_notMasteredQueue);
+              _notMasteredQueue.clear();
+              _currentIndex = 0;
+              _isAnswerShown = false;
+              _results.clear();
               _startTimer();
             });
           }
+        } else {
+          // Move to next card in current batch
+          setState(() {
+            _currentIndex++;
+            _isAnswerShown = false;
+            _startTimer();
+          });
         }
-      });
-    }
+      }
+    });
   }
+
 
   @override
   Widget build(BuildContext context) {
-    if (widget.flashcards.isEmpty) {
+    if (_currentFlashcards.isEmpty) {
       return const Center(child: Text('No flashcards in this batch'));
     }
 
-    final currentCard = widget.flashcards[_currentIndex];
-    final isCorrect = _results[_currentIndex] ?? false;
+    final currentCard = _currentFlashcards[_currentIndex];
 
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -112,7 +149,7 @@ class _RecallModeWidgetState extends State<RecallModeWidget> {
         children: [
           // Progress indicator
           LinearProgressIndicator(
-            value: (_currentIndex + 1) / widget.flashcards.length,
+            value: (_currentIndex + 1) / _currentFlashcards.length,
             minHeight: 4,
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -122,9 +159,16 @@ class _RecallModeWidgetState extends State<RecallModeWidget> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '${_currentIndex + 1} / ${widget.flashcards.length}',
+                '${_currentIndex + 1} / ${_currentFlashcards.length}',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
+              if (_notMasteredQueue.isNotEmpty)
+                Text(
+                  'Queue: ${_notMasteredQueue.length}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                ),
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md,
@@ -149,12 +193,12 @@ class _RecallModeWidgetState extends State<RecallModeWidget> {
           ),
           const SizedBox(height: AppSpacing.xl),
 
-          // Term displayed
+          // Meaning displayed
           Card(
             elevation: 4,
             margin: EdgeInsets.zero, // Remove default card margin
             child: Container(
-              height: 200, // Fixed height to prevent layout shifts
+              height: _cardHeight, // Fixed height to match Term card
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.xl,
                 vertical: AppSpacing.xl,
@@ -163,7 +207,7 @@ class _RecallModeWidgetState extends State<RecallModeWidget> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Term',
+                    'Meaning',
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -172,7 +216,7 @@ class _RecallModeWidgetState extends State<RecallModeWidget> {
                   Expanded(
                     child: Center(
                       child: Text(
-                        currentCard.question,
+                        currentCard.answer,
                         style: Theme.of(context).textTheme.bodyLarge, // No bold
                         textAlign: TextAlign.center,
                       ),
@@ -182,66 +226,97 @@ class _RecallModeWidgetState extends State<RecallModeWidget> {
               ),
             ),
           ),
-          const SizedBox(height: AppSpacing.xl),
-
-          // Answer input
-          TextField(
-            controller: _answerController,
-            enabled: !_isAnswered,
-            decoration: InputDecoration(
-              labelText: 'Type the meaning',
-              hintText: 'Enter your answer',
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.xl,
-                vertical: AppSpacing.md,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-              ),
-              suffixIcon: _isAnswered
-                  ? Icon(
-                      isCorrect ? Icons.check_circle : Icons.cancel,
-                      color: isCorrect
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.error,
-                    )
-                  : null,
-            ),
-            onSubmitted: (_) => _checkAnswer(),
-          ),
-
-          if (_isAnswered) ...[
-            const SizedBox(height: AppSpacing.md),
-            // Show correct answer
+          // Term displayed (same design as Meaning) - shown when answer is revealed
+          if (_isAnswerShown) ...[
+            const SizedBox(height: AppSpacing.xl),
             Card(
-              color: isCorrect
-                  ? Theme.of(context).colorScheme.primaryContainer
-                  : Theme.of(context).colorScheme.errorContainer,
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: Row(
+              elevation: 4,
+              margin: EdgeInsets.zero, // Remove default card margin
+              child: Container(
+                height: _cardHeight, // Fixed height to match Meaning card
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xl,
+                  vertical: AppSpacing.xl,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      isCorrect ? Icons.check_circle : Icons.cancel,
-                      color: isCorrect
-                          ? Theme.of(context).colorScheme.onPrimaryContainer
-                          : Theme.of(context).colorScheme.onErrorContainer,
+                    Text(
+                      'Term',
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
                     ),
-                    const SizedBox(width: AppSpacing.sm),
+                    const SizedBox(height: AppSpacing.sm),
                     Expanded(
-                      child: Text(
-                        'Correct answer: ${currentCard.answer}',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: isCorrect
-                                  ? Theme.of(context).colorScheme.onPrimaryContainer
-                                  : Theme.of(context).colorScheme.onErrorContainer,
-                            ),
+                      child: Center(
+                        child: Text(
+                          currentCard.question,
+                          style: Theme.of(context).textTheme.bodyLarge, // No bold
+                          textAlign: TextAlign.center,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
             ),
+          ],
+          const Spacer(),
+
+          // Show button at bottom center
+          if (!_isAnswerShown && _timeRemaining > 0)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+              child: FilledButton.icon(
+                onPressed: _showAnswer,
+                icon: const Icon(Icons.visibility),
+                label: const Text('Show'),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xl,
+                    vertical: AppSpacing.md,
+                  ),
+                ),
+              ),
+            ),
+
+          // Remembered/Forgot buttons
+          if (_isAnswerShown) ...[
+            const SizedBox(height: AppSpacing.lg),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _markAsForgot,
+                    icon: const Icon(Icons.close),
+                    label: const Text('Forgot'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.error,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.xl,
+                        vertical: AppSpacing.md,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: _markAsRemembered,
+                    icon: const Icon(Icons.check),
+                    label: const Text('Remembered'),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.xl,
+                        vertical: AppSpacing.md,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
           ],
         ],
       ),
