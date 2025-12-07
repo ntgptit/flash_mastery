@@ -188,6 +188,10 @@
 					<url>jdbc:postgresql://localhost:5432/flash_mastery</url>
 					<user>${flyway.user:giapnt}</user>
 					<password>${flyway.password:abcd1234}</password>
+					<schemas>
+						<schema>flash_mastery</schema>
+					</schemas>
+					<defaultSchema>flash_mastery</defaultSchema>
 					<locations>
 						<location>classpath:db/migration</location>
 					</locations>

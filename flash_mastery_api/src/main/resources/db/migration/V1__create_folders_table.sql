@@ -1,3 +1,6 @@
+-- Create flash_mastery schema if not exists
+CREATE SCHEMA IF NOT EXISTS flash_mastery;
+
 -- Enable UUID extension if not exists
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
