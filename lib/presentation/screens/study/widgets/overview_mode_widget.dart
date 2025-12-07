@@ -2,6 +2,7 @@ import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
 import 'package:flash_mastery/domain/entities/study_session.dart';
 import 'package:flash_mastery/presentation/screens/study/widgets/common/study_progress_indicator.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -67,8 +68,8 @@ class _OverviewModeWidgetState extends State<OverviewModeWidget> {
   void _goToPrevious() {
     if (_currentIndex > 0) {
       _pageController.previousPage(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOutCubic,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
       );
     }
   }
@@ -76,8 +77,8 @@ class _OverviewModeWidgetState extends State<OverviewModeWidget> {
   void _goToNext() {
     if (_currentIndex < widget.flashcards.length - 1) {
       _pageController.nextPage(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOutCubic,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
       );
     } else {
       widget.onComplete();
@@ -112,29 +113,14 @@ class _OverviewModeWidgetState extends State<OverviewModeWidget> {
             child: KeyboardListener(
               focusNode: _focusNode,
               onKeyEvent: _handleKeyEvent,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onHorizontalDragEnd: (details) {
-                  // Swipe left (negative velocity) = next card
-                  // Swipe right (positive velocity) = previous card
-                  if (details.primaryVelocity != null) {
-                    // Lower threshold for easier triggering on web
-                    final threshold = 200.0;
-                    if (details.primaryVelocity! < -threshold) {
-                      // Swipe left - go to next
-                      _goToNext();
-                    } else if (details.primaryVelocity! > threshold) {
-                      // Swipe right - go to previous
-                      _goToPrevious();
-                    }
-                  }
-                },
+              child: ScrollConfiguration(
+                behavior: ScrollConfiguration.of(
+                  context,
+                ).copyWith(dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse}),
                 child: PageView.builder(
                   controller: _pageController,
                   onPageChanged: _onPageChanged,
                   itemCount: widget.flashcards.length,
-                  physics: const PageScrollPhysics(), // Smooth page scrolling
-                  scrollDirection: Axis.horizontal,
                   itemBuilder: (context, index) {
                     final card = widget.flashcards[index];
                     return _buildFlashcardCard(context, card);
