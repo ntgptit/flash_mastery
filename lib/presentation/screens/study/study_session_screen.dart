@@ -18,8 +18,13 @@ import 'package:go_router/go_router.dart';
 
 class StudySessionScreen extends ConsumerStatefulWidget {
   final String deckId;
+  final bool testMode;
 
-  const StudySessionScreen({super.key, required this.deckId});
+  const StudySessionScreen({
+    super.key,
+    required this.deckId,
+    this.testMode = false,
+  });
 
   @override
   ConsumerState<StudySessionScreen> createState() => _StudySessionScreenState();
@@ -144,7 +149,7 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
         final flashcards = _flashcards.where((f) => session.flashcardIds.contains(f.id)).toList();
         return Scaffold(
           appBar: AppBar(
-            title: Text('Study - ${session.currentMode.displayName}'),
+            title: Text(widget.testMode ? 'Test Mode' : 'Study - ${session.currentMode.displayName}'),
             actions: [
               IconButton(
                 icon: const Icon(Icons.close),
@@ -168,6 +173,15 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
   Widget _buildModeWidget(StudySession session, List<Flashcard> flashcards) {
     final batch = session.getCurrentBatch();
     final batchFlashcards = flashcards.where((f) => batch.contains(f.id)).toList();
+
+    // If test mode, only show FillInBlank mode
+    if (widget.testMode) {
+      return FillInBlankModeWidget(
+        session: session,
+        flashcards: batchFlashcards,
+        onComplete: () => _completeSession(),
+      );
+    }
 
     switch (session.currentMode) {
       case StudyMode.overview:
@@ -251,8 +265,10 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
     final shouldExit = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Exit Study Session?'),
-        content: const Text('Your progress will be saved. Are you sure you want to exit?'),
+        title: Text(widget.testMode ? 'Exit Test?' : 'Exit Study Session?'),
+        content: Text(widget.testMode
+            ? 'Are you sure you want to exit the test?'
+            : 'Your progress will be saved. Are you sure you want to exit?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),

@@ -180,7 +180,7 @@ class _FlashcardListScreenState extends ConsumerState<_FlashcardListBody> {
                       const SizedBox(height: AppSpacing.md),
                       FlashcardActionList(
                         onStudy: () => context.push('/study/${widget.deck.id}'),
-                        onTest: () {},
+                        onTest: () => context.push('/study/${widget.deck.id}?testMode=true'),
                       ),
                       const SizedBox(height: AppSpacing.lg),
                       FlashcardProgressOverview(total: total),

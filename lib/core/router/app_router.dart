@@ -135,7 +135,8 @@ class AppRouter {
         name: 'studySession',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return StudySessionScreen(deckId: id);
+          final testMode = state.uri.queryParameters['testMode'] == 'true';
+          return StudySessionScreen(deckId: id, testMode: testMode);
         },
       ),
       GoRoute(
