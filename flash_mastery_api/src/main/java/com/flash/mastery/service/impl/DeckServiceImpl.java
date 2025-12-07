@@ -8,7 +8,6 @@ import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.MessageSource;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -17,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.flash.mastery.constant.MessageKeys;
 import com.flash.mastery.constant.NumberConstants;
+import com.flash.mastery.dto.criteria.DeckSearchCriteria;
 import com.flash.mastery.dto.request.DeckCreateRequest;
 import com.flash.mastery.dto.request.DeckUpdateRequest;
 import com.flash.mastery.dto.response.DeckResponse;
@@ -32,6 +32,7 @@ import com.flash.mastery.repository.FolderRepository;
 import com.flash.mastery.service.BaseService;
 import com.flash.mastery.service.DeckService;
 import com.flash.mastery.util.DeckSortOption;
+import com.flash.mastery.util.NaturalOrderComparator;
 import com.flash.mastery.util.SortMapper;
 import com.flash.mastery.util.importer.ImportResult;
 import com.flash.mastery.util.importer.ImporterFactory;
@@ -65,48 +66,92 @@ public class DeckServiceImpl extends BaseService implements DeckService {
     @Transactional(readOnly = true)
     public List<DeckResponse> getDecks(UUID folderId, String sort, int page, int size, String query) {
         final var sortOption = DeckSortOption.from(sort);
-        final Pageable pageable = PageRequest.of(page, size, SortMapper.toSort(sortOption));
-        Page<Deck> deckPage;
-        final var hasQuery = (query != null) && !query.isBlank();
-        if (folderId == null) {
-            deckPage = hasQuery
-                    ? this.deckRepository.findByNameContainingIgnoreCase(query, pageable)
-                    : this.deckRepository.findAll(pageable);
-            return deckPage.stream().map(this.deckMapper::toResponse).toList();
+        final var isNameSort = (sortOption == DeckSortOption.NAME_ASC) || (sortOption == DeckSortOption.NAME_DESC);
+
+        // Build search criteria
+        final var criteria = DeckSearchCriteria.builder()
+                .folderId(folderId)
+                .query(query)
+                .build();
+
+        // For name sorting, we need to fetch all data and sort in memory with natural
+        // order
+        // For other sorts, use database sorting
+        Pageable pageable = PageRequest.of(page, size, SortMapper.toSort(sortOption));
+        if (isNameSort) {
+            // Fetch without pagination to sort all data
+            pageable = Pageable.unpaged();
         }
 
-        if (hasQuery) {
-            deckPage = this.deckRepository.findByFolderIdAndNameContainingIgnoreCase(folderId, query, pageable);
-            return deckPage.stream().map(this.deckMapper::toResponse).toList();
+        // Execute search based on criteria
+        final var deckPage = this.deckRepository.findByCriteria(criteria, pageable);
+        var decks = deckPage.getContent();
+
+        // Apply natural order sorting for name sorts
+        if (isNameSort) {
+            decks = applyNaturalOrderSort(decks, sortOption);
+            decks = applyPagination(decks, page, size);
         }
 
-        deckPage = this.deckRepository.findByFolderId(folderId, pageable);
-        return deckPage.stream().map(this.deckMapper::toResponse).toList();
+        return decks.stream().map(this.deckMapper::toResponse).toList();
+    }
+
+    /**
+     * Apply natural order sorting for name sorts.
+     */
+    private List<Deck> applyNaturalOrderSort(List<Deck> decks, DeckSortOption sortOption) {
+        final var comparator = NaturalOrderComparator.comparing(Deck::getName);
+        if (sortOption == DeckSortOption.NAME_DESC) {
+            return decks.stream()
+                    .sorted(comparator.reversed())
+                    .toList();
+        }
+        if (sortOption == DeckSortOption.NAME_ASC) {
+            return decks.stream()
+                    .sorted(comparator)
+                    .toList();
+        }
+        return decks;
+    }
+
+    /**
+     * Apply pagination manually after sorting.
+     */
+    private List<Deck> applyPagination(List<Deck> decks, int page, int size) {
+        final int start = page * size;
+        final int end = Math.min(start + size, decks.size());
+        if (start >= decks.size()) {
+            return List.of();
+        }
+        return decks.subList(start, end);
     }
 
     @Override
     @Transactional(readOnly = true)
     public DeckResponse getDeck(UUID id) {
-        final var deck = this.deckRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_DECK)));
+        final var deck = findByIdOrThrow(
+                this.deckRepository.findById(id),
+                MessageKeys.ERROR_NOT_FOUND_DECK);
         return this.deckMapper.toResponse(deck);
     }
 
     @Override
     public DeckResponse create(DeckCreateRequest request) {
-        final var folder = this.folderRepository.findById(request.getFolderId())
-                .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FOLDER)));
+        final var folder = findByIdOrThrow(
+                this.folderRepository.findById(request.getFolderId()),
+                MessageKeys.ERROR_NOT_FOUND_FOLDER);
         final var deck = this.deckMapper.fromCreate(request, folder);
         final var saved = this.deckRepository.save(deck);
-        folder.setDeckCount(folder.getDeckCount() + NumberConstants.ONE);
+        folder.setDeckCount(incrementCount(folder.getDeckCount(), NumberConstants.ONE));
         this.folderRepository.save(folder);
         return this.deckMapper.toResponse(saved);
     }
 
     @Override
     public DeckResponse update(UUID id, DeckUpdateRequest request) {
-        final var deck = this.deckRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_DECK)));
+        final var deck = findByIdOrThrow(
+                this.deckRepository.findById(id),
+                MessageKeys.ERROR_NOT_FOUND_DECK);
         var folder = deck.getFolder();
         if (request.getFolderId() != null) {
             folder = this.folderRepository.findById(request.getFolderId())
@@ -122,16 +167,16 @@ public class DeckServiceImpl extends BaseService implements DeckService {
 
     @Override
     public void delete(UUID id) {
-        final var deck = this.deckRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_DECK)));
+        final var deck = findByIdOrThrow(
+                this.deckRepository.findById(id),
+                MessageKeys.ERROR_NOT_FOUND_DECK);
         this.deckRepository.delete(deck);
         final var folder = deck.getFolder();
         if ((folder != null) && (folder.getDeckCount() > NumberConstants.ZERO)) {
-            folder.setDeckCount(folder.getDeckCount() - NumberConstants.ONE);
+            folder.setDeckCount(decrementCount(folder.getDeckCount(), NumberConstants.ONE));
             this.folderRepository.save(folder);
         }
     }
-
 
     @Override
     public ImportResult<ImportRow> importDecks(UUID folderId, MultipartFile file, FlashcardType type,

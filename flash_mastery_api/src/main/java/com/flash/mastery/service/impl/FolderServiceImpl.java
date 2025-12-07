@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.flash.mastery.constant.MessageKeys;
+import com.flash.mastery.dto.criteria.FolderSearchCriteria;
 import com.flash.mastery.dto.request.FolderCreateRequest;
 import com.flash.mastery.dto.request.FolderUpdateRequest;
 import com.flash.mastery.dto.response.FolderResponse;
@@ -40,23 +41,27 @@ public class FolderServiceImpl extends BaseService implements FolderService {
     @Override
     @Transactional(readOnly = true)
     public List<FolderResponse> getFolders(UUID parentId) {
-        List<Folder> folders;
-        if (parentId == null) {
-            folders = this.folderRepository.findAll();
-        } else {
-            this.folderRepository
-                    .findById(parentId)
-                    .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FOLDER)));
-            folders = this.folderRepository.findByParentId(parentId);
+        final var criteria = FolderSearchCriteria.builder()
+                .parentId(parentId)
+                .build();
+
+        // Validate parent exists if filter is applied
+        if (criteria.hasParentFilter()) {
+            findByIdOrThrow(
+                    this.folderRepository.findById(criteria.getParentId()),
+                    MessageKeys.ERROR_NOT_FOUND_FOLDER);
         }
+
+        final var folders = this.folderRepository.findByCriteria(criteria);
         return folders.stream().map(this::toResponseWithPath).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public FolderResponse getFolder(UUID id) {
-        final var folder = this.folderRepository.findById(id).orElseThrow(() -> new NotFoundException(msg(
-                MessageKeys.ERROR_NOT_FOUND_FOLDER)));
+        final var folder = findByIdOrThrow(
+                this.folderRepository.findById(id),
+                MessageKeys.ERROR_NOT_FOUND_FOLDER);
         return toResponseWithPath(folder);
     }
 
@@ -75,8 +80,9 @@ public class FolderServiceImpl extends BaseService implements FolderService {
 
     @Override
     public FolderResponse update(UUID id, FolderUpdateRequest request) {
-        final var folder = this.folderRepository.findById(id).orElseThrow(() -> new NotFoundException(msg(
-                MessageKeys.ERROR_NOT_FOUND_FOLDER)));
+        final var folder = findByIdOrThrow(
+                this.folderRepository.findById(id),
+                MessageKeys.ERROR_NOT_FOUND_FOLDER);
         if (request.getParentId() != null) {
             if (id.equals(request.getParentId())) {
                 throw new IllegalArgumentException("Folder cannot reference itself as parent");
@@ -94,8 +100,9 @@ public class FolderServiceImpl extends BaseService implements FolderService {
 
     @Override
     public void delete(UUID id) {
-        final var folder = this.folderRepository.findById(id).orElseThrow(() -> new NotFoundException(msg(
-                MessageKeys.ERROR_NOT_FOUND_FOLDER)));
+        final var folder = findByIdOrThrow(
+                this.folderRepository.findById(id),
+                MessageKeys.ERROR_NOT_FOUND_FOLDER);
         // Recursively delete all subfolders and their contents
         deleteRecursively(folder);
     }
@@ -109,7 +116,6 @@ public class FolderServiceImpl extends BaseService implements FolderService {
         // (cascade will handle decks due to JPA relationship)
         this.folderRepository.delete(folder);
     }
-
 
     private void validateParent(Folder folder, Folder newParent) {
         var current = newParent;

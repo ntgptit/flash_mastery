@@ -19,7 +19,6 @@ import com.flash.mastery.entity.Flashcard;
 import com.flash.mastery.entity.StudySession;
 import com.flash.mastery.entity.enums.StudyMode;
 import com.flash.mastery.entity.enums.StudySessionStatus;
-import com.flash.mastery.exception.NotFoundException;
 import com.flash.mastery.mapper.StudySessionMapper;
 import com.flash.mastery.repository.DeckRepository;
 import com.flash.mastery.repository.FlashcardRepository;
@@ -51,8 +50,9 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
 
     @Override
     public StudySessionResponse startSession(StudySessionCreateRequest request) {
-        final var deck = this.deckRepository.findById(request.getDeckId())
-                .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_DECK)));
+        final var deck = findByIdOrThrow(
+                this.deckRepository.findById(request.getDeckId()),
+                MessageKeys.ERROR_NOT_FOUND_DECK);
 
         // Use provided flashcard IDs if available (for custom selection)
         if ((request.getFlashcardIds() != null) && !request.getFlashcardIds().isEmpty()) {
@@ -119,15 +119,17 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
     @Override
     @Transactional(readOnly = true)
     public StudySessionResponse getSession(UUID sessionId) {
-        final var session = this.studySessionRepository.findById(sessionId)
-                .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_SESSION)));
+        final var session = findByIdOrThrow(
+                this.studySessionRepository.findById(sessionId),
+                MessageKeys.ERROR_NOT_FOUND_SESSION);
         return this.studySessionMapper.toResponse(session);
     }
 
     @Override
     public StudySessionResponse updateSession(UUID sessionId, StudySessionUpdateRequest request) {
-        final var session = this.studySessionRepository.findById(sessionId)
-                .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_SESSION)));
+        final var session = findByIdOrThrow(
+                this.studySessionRepository.findById(sessionId),
+                MessageKeys.ERROR_NOT_FOUND_SESSION);
 
         if (request.getCurrentMode() != null) {
             session.setCurrentMode(request.getCurrentMode());
@@ -145,8 +147,9 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
 
     @Override
     public void completeSession(UUID sessionId) {
-        final var session = this.studySessionRepository.findById(sessionId)
-                .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_SESSION)));
+        final var session = findByIdOrThrow(
+                this.studySessionRepository.findById(sessionId),
+                MessageKeys.ERROR_NOT_FOUND_SESSION);
         session.setCompletedAt(LocalDateTime.now());
         session.setStatus(StudySessionStatus.SUCCESS);
         this.studySessionRepository.save(session);
@@ -154,8 +157,9 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
 
     @Override
     public void cancelSession(UUID sessionId) {
-        final var session = this.studySessionRepository.findById(sessionId)
-                .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_SESSION)));
+        final var session = findByIdOrThrow(
+                this.studySessionRepository.findById(sessionId),
+                MessageKeys.ERROR_NOT_FOUND_SESSION);
         session.setStatus(StudySessionStatus.CANCEL);
         this.studySessionRepository.save(session);
     }
