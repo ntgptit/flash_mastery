@@ -207,14 +207,18 @@ class _FillInBlankModeWidgetState extends State<FillInBlankModeWidget> {
           ),
 
           if (_isAnswered) ...[
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.xl),
             // Show correct answer
             Card(
               color: isCorrect
                   ? Theme.of(context).colorScheme.primaryContainer
                   : Theme.of(context).colorScheme.errorContainer,
+              margin: EdgeInsets.zero, // Match other cards
               child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.md),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xl,
+                  vertical: AppSpacing.md,
+                ),
                 child: Row(
                   children: [
                     Icon(
