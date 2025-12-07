@@ -181,6 +181,9 @@ class _RecallModeWidgetState extends State<RecallModeWidget> {
               label: 'Term',
               content: currentCard.question,
               height: _cardHeight,
+              contentStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontSize: Theme.of(context).textTheme.headlineSmall?.fontSize,
+                  ),
             ),
           ],
           const Spacer(),

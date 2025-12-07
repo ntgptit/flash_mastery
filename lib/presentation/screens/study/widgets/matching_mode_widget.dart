@@ -26,7 +26,8 @@ class _MatchingModeWidgetState extends State<MatchingModeWidget> {
   String? _selectedTermId;
   String? _selectedMeaningId;
   final Map<String, String> _matches = {}; // termId -> meaningId
-  final Set<String> _wrongMatchIds = {}; // IDs for the single wrong pair being highlighted
+  String? _wrongTermId; // ID of wrong term being highlighted
+  String? _wrongMeaningId; // ID of wrong meaning being highlighted
   final Set<String> _correctMatchIds =
       {}; // IDs of cards showing correct match feedback before removal
   Timer? _wrongMatchTimer; // Timer to clear wrong match feedback
@@ -43,31 +44,6 @@ class _MatchingModeWidgetState extends State<MatchingModeWidget> {
   void dispose() {
     _wrongMatchTimer?.cancel();
     super.dispose();
-  }
-
-  void _setWrongPair(String termId, String meaningId) {
-    // Ensure only one pair is highlighted at a time
-    _wrongMatchTimer?.cancel();
-    setState(() {
-      _wrongMatchIds
-        ..clear()
-        ..add(termId)
-        ..add(meaningId);
-    });
-    _wrongMatchTimer = Timer(const Duration(milliseconds: 1000), () {
-      if (mounted) {
-        _clearWrongMatch();
-      }
-    });
-  }
-
-  void _clearWrongMatch() {
-    _wrongMatchTimer?.cancel();
-    setState(() {
-      _selectedTermId = null;
-      _selectedMeaningId = null;
-      _wrongMatchIds.clear();
-    });
   }
 
   @override
@@ -119,7 +95,7 @@ class _MatchingModeWidgetState extends State<MatchingModeWidget> {
         const SizedBox(height: AppSpacing.md),
         ...terms.map((card) {
           final isSelected = _selectedTermId == card.id;
-          final isWrongMatch = _wrongMatchIds.contains(card.id);
+          final isWrongMatch = _wrongTermId == card.id;
           final isCorrectMatch = _correctMatchIds.contains(card.id);
 
           return Padding(
@@ -127,14 +103,20 @@ class _MatchingModeWidgetState extends State<MatchingModeWidget> {
             child: InkWell(
               onTap: () {
                 setState(() {
+                  // Clear any wrong match highlight when selecting new term
+                  _wrongMatchTimer?.cancel();
+                  _wrongTermId = null;
+                  _wrongMeaningId = null;
+
+                  // Deselect if clicking the same term again
                   if (_selectedTermId == card.id) {
                     _selectedTermId = null;
-                  } else {
-                    _selectedTermId = card.id;
-                    _selectedMeaningId = null;
-                    _wrongMatchTimer?.cancel(); // Cancel any pending wrong match clear
-                    _wrongMatchIds.clear(); // Clear wrong match feedback when selecting new term
+                    return;
                   }
+
+                  // Select new term
+                  _selectedTermId = card.id;
+                  _selectedMeaningId = null;
                 });
               },
               child: Container(
@@ -190,80 +172,91 @@ class _MatchingModeWidgetState extends State<MatchingModeWidget> {
         const SizedBox(height: AppSpacing.md),
         ...meanings.map((card) {
           final isSelected = _selectedMeaningId == card.id;
-          final isWrongMatch = _wrongMatchIds.contains(card.id);
+          final isWrongMatch = _wrongMeaningId == card.id;
           final isCorrectMatch = _correctMatchIds.contains(card.id);
 
           return Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
             child: InkWell(
               onTap: () {
+                // Clear any wrong match highlight and timer
+                _wrongMatchTimer?.cancel();
+
                 setState(() {
+                  _wrongTermId = null;
+                  _wrongMeaningId = null;
+
+                  // Deselect if clicking the same meaning again
                   if (_selectedMeaningId == card.id) {
                     _selectedMeaningId = null;
-                    _wrongMatchIds.clear(); // Clear wrong match when deselecting
-                  } else {
-                    // Cancel any pending wrong match clear timer
-                    _wrongMatchTimer?.cancel();
-                    // Always clear wrong match when selecting a new meaning
-                    _wrongMatchIds.clear();
-                    _selectedMeaningId = card.id;
-
-                    if (_selectedTermId != null) {
-                      // Check if match is correct
-                      final termCard = widget.flashcards.firstWhere((f) => f.id == _selectedTermId);
-                      if (termCard.id == card.id) {
-                        // Correct match - show success highlight first
-                        final matchedTermId = _selectedTermId!;
-                        final matchedMeaningId = card.id;
-
-                        setState(() {
-                          _correctMatchIds.add(matchedTermId);
-                          _correctMatchIds.add(matchedMeaningId);
-                          _selectedTermId = null;
-                          _selectedMeaningId = null;
-                          _wrongMatchIds.clear();
-                        });
-
-                        // After showing success feedback, add to matches and remove from display
-                        Future.delayed(const Duration(milliseconds: 500), () {
-                          if (mounted) {
-                            setState(() {
-                              _matches[matchedTermId] = matchedMeaningId;
-                              _correctMatchIds.clear();
-                            });
-
-                            // Check if all matches are complete
-                            if (_matches.length == widget.flashcards.length) {
-                              // Auto-advance to next mode after a brief delay
-                              Future.delayed(const Duration(milliseconds: 300), () {
-                                if (mounted) {
-                                  widget.onComplete();
-                                }
-                              });
-                            }
-                          }
-                        });
-                      } else {
-                        // Wrong match - show dangerous color feedback for only this pair
-                        // Ensure only 1 pair is highlighted by clearing first
-                        _setWrongPair(_selectedTermId!, card.id);
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Incorrect match. Try again.'),
-                            duration: Duration(seconds: 1),
-                          ),
-                        );
-
-                        // Reset selection and clear wrong match feedback after delay
-                        _wrongMatchTimer = Timer(const Duration(milliseconds: 1000), () {
-                          if (mounted) {
-                            _clearWrongMatch();
-                          }
-                        });
-                      }
-                    }
+                    return;
                   }
+
+                  // Select this meaning
+                  _selectedMeaningId = card.id;
+
+                  // No term selected yet, just wait for user to select one
+                  if (_selectedTermId == null) {
+                    return;
+                  }
+
+                  // Check if match is correct
+                  final termCard = widget.flashcards.firstWhere((f) => f.id == _selectedTermId);
+
+                  // Correct match - show success highlight first
+                  if (termCard.id == card.id) {
+                    final matchedTermId = _selectedTermId!;
+                    final matchedMeaningId = card.id;
+
+                    _correctMatchIds.add(matchedTermId);
+                    _correctMatchIds.add(matchedMeaningId);
+                    _selectedTermId = null;
+                    _selectedMeaningId = null;
+
+                    // After showing success feedback, add to matches and remove from display
+                    Future.delayed(const Duration(milliseconds: 500), () {
+                      if (mounted) {
+                        setState(() {
+                          _matches[matchedTermId] = matchedMeaningId;
+                          _correctMatchIds.clear();
+                        });
+
+                        // Check if all matches are complete
+                        if (_matches.length == widget.flashcards.length) {
+                          // Auto-advance to next mode after a brief delay
+                          Future.delayed(const Duration(milliseconds: 300), () {
+                            if (mounted) {
+                              widget.onComplete();
+                            }
+                          });
+                        }
+                      }
+                    });
+                    return;
+                  }
+
+                  // Wrong match - show dangerous color feedback
+                  _wrongTermId = _selectedTermId;
+                  _wrongMeaningId = card.id;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Incorrect match. Try again.'),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+
+                  // Auto clear wrong match after 1 second
+                  _wrongMatchTimer = Timer(const Duration(milliseconds: 1000), () {
+                    if (mounted) {
+                      setState(() {
+                        _selectedTermId = null;
+                        _selectedMeaningId = null;
+                        _wrongTermId = null;
+                        _wrongMeaningId = null;
+                      });
+                    }
+                  });
                 });
               },
               child: Container(
