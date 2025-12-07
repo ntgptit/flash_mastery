@@ -12,6 +12,7 @@ export 'error/error_handler.dart';
 // ==================== ERROR HANDLING ====================
 export 'exceptions/exceptions.dart';
 export 'exceptions/failures.dart';
+export 'extensions/color_scheme_extensions.dart';
 export 'extensions/context_extensions.dart';
 export 'extensions/date_time_extensions.dart';
 export 'extensions/num_extensions.dart';

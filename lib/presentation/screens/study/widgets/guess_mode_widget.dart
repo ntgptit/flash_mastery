@@ -1,4 +1,4 @@
-import 'package:flash_mastery/core/constants/constants.dart';
+import 'package:flash_mastery/core/core.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
 import 'package:flash_mastery/domain/entities/study_session.dart';
 import 'package:flash_mastery/domain/factories/study_mode_factory.dart';
@@ -126,17 +126,17 @@ class _GuessModeWidgetState extends State<GuessModeWidget> {
                       decoration: BoxDecoration(
                         color: showResult
                             ? (isOptionCorrect
-                                  ? Theme.of(context).colorScheme.primaryContainer
-                                  : Theme.of(context).colorScheme.errorContainer)
+                                  ? Theme.of(context).colorScheme.successContainer
+                                  : Theme.of(context).colorScheme.dangerousContainer)
                             : isSelected
-                            ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
+                            ? Theme.of(context).colorScheme.success.withOpacity(0.2)
                             : Theme.of(context).colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
                         border: isSelected
                             ? Border.all(
                                 color: wasWrong
-                                    ? Theme.of(context).colorScheme.error
-                                    : Theme.of(context).colorScheme.primary,
+                                    ? Theme.of(context).colorScheme.dangerous
+                                    : Theme.of(context).colorScheme.success,
                                 width: 2,
                               )
                             : null,
@@ -153,8 +153,8 @@ class _GuessModeWidgetState extends State<GuessModeWidget> {
                             Icon(
                               isOptionCorrect ? Icons.check_circle : Icons.cancel,
                               color: isOptionCorrect
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.error,
+                                  ? Theme.of(context).colorScheme.success
+                                  : Theme.of(context).colorScheme.dangerous,
                             ),
                         ],
                       ),

@@ -1,4 +1,4 @@
-import 'package:flash_mastery/core/constants/constants.dart';
+import 'package:flash_mastery/core/core.dart';
 import 'package:flutter/material.dart';
 
 /// Common card widget for displaying study results (correct/incorrect)
@@ -18,8 +18,8 @@ class StudyResultCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       color: isCorrect
-          ? Theme.of(context).colorScheme.primaryContainer
-          : Theme.of(context).colorScheme.errorContainer,
+          ? Theme.of(context).colorScheme.successContainer
+          : Theme.of(context).colorScheme.dangerousContainer,
       margin: EdgeInsets.zero, // Match other cards
       child: Padding(
         padding: const EdgeInsets.symmetric(
@@ -31,8 +31,8 @@ class StudyResultCard extends StatelessWidget {
             Icon(
               isCorrect ? Icons.check_circle : icon,
               color: isCorrect
-                  ? Theme.of(context).colorScheme.onPrimaryContainer
-                  : Theme.of(context).colorScheme.onErrorContainer,
+                  ? Theme.of(context).colorScheme.onSuccessContainer
+                  : Theme.of(context).colorScheme.onDangerousContainer,
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
@@ -40,8 +40,8 @@ class StudyResultCard extends StatelessWidget {
                 message,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: isCorrect
-                          ? Theme.of(context).colorScheme.onPrimaryContainer
-                          : Theme.of(context).colorScheme.onErrorContainer,
+                          ? Theme.of(context).colorScheme.onSuccessContainer
+                          : Theme.of(context).colorScheme.onDangerousContainer,
                     ),
               ),
             ),

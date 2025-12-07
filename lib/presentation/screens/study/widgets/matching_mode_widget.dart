@@ -1,6 +1,7 @@
+import 'dart:async';
 import 'dart:math';
 
-import 'package:flash_mastery/core/constants/constants.dart';
+import 'package:flash_mastery/core/core.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
 import 'package:flash_mastery/domain/entities/study_session.dart';
 import 'package:flutter/material.dart';
@@ -25,11 +26,48 @@ class _MatchingModeWidgetState extends State<MatchingModeWidget> {
   String? _selectedTermId;
   String? _selectedMeaningId;
   final Map<String, String> _matches = {}; // termId -> meaningId
+  final Set<String> _wrongMatchIds = {}; // IDs for the single wrong pair being highlighted
+  final Set<String> _correctMatchIds =
+      {}; // IDs of cards showing correct match feedback before removal
+  Timer? _wrongMatchTimer; // Timer to clear wrong match feedback
+  late final List<Flashcard> _shuffledMeanings;
 
   @override
   void initState() {
     super.initState();
-    // Shuffle flashcards for matching
+    // Shuffle meanings only once to avoid reordering each build
+    _shuffledMeanings = List<Flashcard>.from(widget.flashcards)..shuffle(Random());
+  }
+
+  @override
+  void dispose() {
+    _wrongMatchTimer?.cancel();
+    super.dispose();
+  }
+
+  void _setWrongPair(String termId, String meaningId) {
+    // Ensure only one pair is highlighted at a time
+    _wrongMatchTimer?.cancel();
+    setState(() {
+      _wrongMatchIds
+        ..clear()
+        ..add(termId)
+        ..add(meaningId);
+    });
+    _wrongMatchTimer = Timer(const Duration(milliseconds: 1000), () {
+      if (mounted) {
+        _clearWrongMatch();
+      }
+    });
+  }
+
+  void _clearWrongMatch() {
+    _wrongMatchTimer?.cancel();
+    setState(() {
+      _selectedTermId = null;
+      _selectedMeaningId = null;
+      _wrongMatchIds.clear();
+    });
   }
 
   @override
@@ -38,10 +76,13 @@ class _MatchingModeWidgetState extends State<MatchingModeWidget> {
       return const Center(child: Text('No flashcards in this batch'));
     }
 
-    // Filter out matched cards
-    final unmatchedTerms = widget.flashcards.where((f) => !_matches.containsKey(f.id)).toList();
-    final unmatchedMeanings =
-        widget.flashcards.where((f) => !_matches.values.contains(f.id)).toList()..shuffle(Random());
+    // Filter out matched cards (but include cards showing correct match feedback)
+    final unmatchedTerms = widget.flashcards
+        .where((f) => !_matches.containsKey(f.id) || _correctMatchIds.contains(f.id))
+        .toList();
+    final unmatchedMeanings = _shuffledMeanings
+        .where((f) => !_matches.values.contains(f.id) || _correctMatchIds.contains(f.id))
+        .toList();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -78,6 +119,8 @@ class _MatchingModeWidgetState extends State<MatchingModeWidget> {
         const SizedBox(height: AppSpacing.md),
         ...terms.map((card) {
           final isSelected = _selectedTermId == card.id;
+          final isWrongMatch = _wrongMatchIds.contains(card.id);
+          final isCorrectMatch = _correctMatchIds.contains(card.id);
 
           return Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -89,6 +132,8 @@ class _MatchingModeWidgetState extends State<MatchingModeWidget> {
                   } else {
                     _selectedTermId = card.id;
                     _selectedMeaningId = null;
+                    _wrongMatchTimer?.cancel(); // Cancel any pending wrong match clear
+                    _wrongMatchIds.clear(); // Clear wrong match feedback when selecting new term
                   }
                 });
               },
@@ -96,12 +141,20 @@ class _MatchingModeWidgetState extends State<MatchingModeWidget> {
                 height: 150, // Same height as meanings column
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
+                  color: isCorrectMatch
+                      ? Theme.of(context).colorScheme.successContainer
+                      : isWrongMatch
+                      ? Theme.of(context).colorScheme.dangerousContainer
+                      : isSelected
+                      ? Theme.of(context).colorScheme.success.withOpacity(0.2)
                       : Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                  border: isSelected
-                      ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2)
+                  border: isCorrectMatch
+                      ? Border.all(color: Theme.of(context).colorScheme.success, width: 2)
+                      : isWrongMatch
+                      ? Border.all(color: Theme.of(context).colorScheme.dangerous, width: 2)
+                      : isSelected
+                      ? Border.all(color: Theme.of(context).colorScheme.success, width: 2)
                       : null,
                 ),
                 child: Row(
@@ -137,6 +190,8 @@ class _MatchingModeWidgetState extends State<MatchingModeWidget> {
         const SizedBox(height: AppSpacing.md),
         ...meanings.map((card) {
           final isSelected = _selectedMeaningId == card.id;
+          final isWrongMatch = _wrongMatchIds.contains(card.id);
+          final isCorrectMatch = _correctMatchIds.contains(card.id);
 
           return Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -145,36 +200,67 @@ class _MatchingModeWidgetState extends State<MatchingModeWidget> {
                 setState(() {
                   if (_selectedMeaningId == card.id) {
                     _selectedMeaningId = null;
+                    _wrongMatchIds.clear(); // Clear wrong match when deselecting
                   } else {
+                    // Cancel any pending wrong match clear timer
+                    _wrongMatchTimer?.cancel();
+                    // Always clear wrong match when selecting a new meaning
+                    _wrongMatchIds.clear();
                     _selectedMeaningId = card.id;
+
                     if (_selectedTermId != null) {
                       // Check if match is correct
                       final termCard = widget.flashcards.firstWhere((f) => f.id == _selectedTermId);
                       if (termCard.id == card.id) {
-                        // Correct match
-                        _matches[_selectedTermId!] = card.id;
-                        _selectedTermId = null;
-                        _selectedMeaningId = null;
+                        // Correct match - show success highlight first
+                        final matchedTermId = _selectedTermId!;
+                        final matchedMeaningId = card.id;
 
-                        // Check if all matches are complete
-                        if (_matches.length == widget.flashcards.length) {
-                          // Auto-advance to next mode after a brief delay
-                          Future.delayed(const Duration(milliseconds: 500), () {
-                            if (mounted) {
-                              widget.onComplete();
+                        setState(() {
+                          _correctMatchIds.add(matchedTermId);
+                          _correctMatchIds.add(matchedMeaningId);
+                          _selectedTermId = null;
+                          _selectedMeaningId = null;
+                          _wrongMatchIds.clear();
+                        });
+
+                        // After showing success feedback, add to matches and remove from display
+                        Future.delayed(const Duration(milliseconds: 500), () {
+                          if (mounted) {
+                            setState(() {
+                              _matches[matchedTermId] = matchedMeaningId;
+                              _correctMatchIds.clear();
+                            });
+
+                            // Check if all matches are complete
+                            if (_matches.length == widget.flashcards.length) {
+                              // Auto-advance to next mode after a brief delay
+                              Future.delayed(const Duration(milliseconds: 300), () {
+                                if (mounted) {
+                                  widget.onComplete();
+                                }
+                              });
                             }
-                          });
-                        }
+                          }
+                        });
                       } else {
-                        // Wrong match - show error briefly
+                        // Wrong match - show dangerous color feedback for only this pair
+                        // Ensure only 1 pair is highlighted by clearing first
+                        _setWrongPair(_selectedTermId!, card.id);
+
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Incorrect match. Try again.'),
                             duration: Duration(seconds: 1),
                           ),
                         );
-                        _selectedTermId = null;
-                        _selectedMeaningId = null;
+
+                        // Reset selection and clear wrong match feedback after delay
+                        _wrongMatchTimer = Timer(const Duration(milliseconds: 1000), () {
+                          if (mounted) {
+                            _clearWrongMatch();
+                          }
+                        });
                       }
                     }
                   }
@@ -184,12 +270,20 @@ class _MatchingModeWidgetState extends State<MatchingModeWidget> {
                 height: 150, // Taller height for meanings column due to longer text
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
+                  color: isCorrectMatch
+                      ? Theme.of(context).colorScheme.successContainer
+                      : isWrongMatch
+                      ? Theme.of(context).colorScheme.dangerousContainer
+                      : isSelected
+                      ? Theme.of(context).colorScheme.success.withOpacity(0.2)
                       : Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                  border: isSelected
-                      ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2)
+                  border: isCorrectMatch
+                      ? Border.all(color: Theme.of(context).colorScheme.success, width: 2)
+                      : isWrongMatch
+                      ? Border.all(color: Theme.of(context).colorScheme.dangerous, width: 2)
+                      : isSelected
+                      ? Border.all(color: Theme.of(context).colorScheme.success, width: 2)
                       : null,
                 ),
                 child: Row(

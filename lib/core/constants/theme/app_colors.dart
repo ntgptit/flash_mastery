@@ -96,6 +96,33 @@ class AppColors {
   /// Success color for success states
   static const Color success = Color(0xFF388E3C);
 
+  /// Success color for dark theme
+  static const Color successDark = Color(0xFF66BB6A);
+
+  /// On success color for dark theme
+  static const Color onSuccessDark = Color(0xFF1B5E20);
+
+  /// Success container for dark theme
+  static const Color successContainerDark = Color(0xFF2E7D32);
+
+  /// On success container for dark theme
+  static const Color onSuccessContainerDark = Color(0xFFC8E6C9);
+
+  /// Dangerous color for dangerous states (darker red than error)
+  static const Color dangerous = Color(0xFFC62828);
+
+  /// Dangerous color for dark theme
+  static const Color dangerousDark = Color(0xFFEF5350);
+
+  /// On dangerous color for dark theme
+  static const Color onDangerousDark = Color(0xFF3A1A12);
+
+  /// Dangerous container for dark theme
+  static const Color dangerousContainerDark = Color(0xFF8E2727);
+
+  /// On dangerous container for dark theme
+  static const Color onDangerousContainerDark = Color(0xFFFFCDD2);
+
   /// Info color for informational messages
   static const Color info = Color(0xFF1976D2);
 

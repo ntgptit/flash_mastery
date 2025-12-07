@@ -1,4 +1,4 @@
-import 'package:flash_mastery/core/constants/constants.dart';
+import 'package:flash_mastery/core/core.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
 import 'package:flash_mastery/domain/entities/study_session.dart';
 import 'package:flash_mastery/domain/strategies/study_strategies.dart';
@@ -153,8 +153,8 @@ class _FillInBlankModeWidgetState extends State<FillInBlankModeWidget> {
                   ? Icon(
                       isCorrect ? Icons.check_circle : Icons.cancel,
                       color: isCorrect
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.error,
+                          ? Theme.of(context).colorScheme.success
+                          : Theme.of(context).colorScheme.dangerous,
                     )
                   : IconButton(
                       icon: const Icon(Icons.check),

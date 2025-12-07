@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flash_mastery/core/constants/constants.dart';
+import 'package:flash_mastery/core/core.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
 import 'package:flash_mastery/domain/entities/study_session.dart';
 import 'package:flash_mastery/presentation/screens/study/widgets/common/study_card.dart';
@@ -213,7 +213,7 @@ class _RecallModeWidgetState extends State<RecallModeWidget> {
                     icon: const Icon(Icons.close),
                     label: const Text('Forgot'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Theme.of(context).colorScheme.error,
+                      foregroundColor: Theme.of(context).colorScheme.dangerous,
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.xl,
                         vertical: AppSpacing.md,
