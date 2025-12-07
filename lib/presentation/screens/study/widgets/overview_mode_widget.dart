@@ -67,8 +67,8 @@ class _OverviewModeWidgetState extends State<OverviewModeWidget> {
   void _goToPrevious() {
     if (_currentIndex > 0) {
       _pageController.previousPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
       );
     }
   }
@@ -76,8 +76,8 @@ class _OverviewModeWidgetState extends State<OverviewModeWidget> {
   void _goToNext() {
     if (_currentIndex < widget.flashcards.length - 1) {
       _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
       );
     } else {
       widget.onComplete();
@@ -113,14 +113,17 @@ class _OverviewModeWidgetState extends State<OverviewModeWidget> {
               focusNode: _focusNode,
               onKeyEvent: _handleKeyEvent,
               child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onHorizontalDragEnd: (details) {
                   // Swipe left (negative velocity) = next card
                   // Swipe right (positive velocity) = previous card
                   if (details.primaryVelocity != null) {
-                    if (details.primaryVelocity! < -500) {
+                    // Lower threshold for easier triggering on web
+                    final threshold = 200.0;
+                    if (details.primaryVelocity! < -threshold) {
                       // Swipe left - go to next
                       _goToNext();
-                    } else if (details.primaryVelocity! > 500) {
+                    } else if (details.primaryVelocity! > threshold) {
                       // Swipe right - go to previous
                       _goToPrevious();
                     }
@@ -130,7 +133,8 @@ class _OverviewModeWidgetState extends State<OverviewModeWidget> {
                   controller: _pageController,
                   onPageChanged: _onPageChanged,
                   itemCount: widget.flashcards.length,
-                  physics: const BouncingScrollPhysics(), // Better feel on web
+                  physics: const PageScrollPhysics(), // Smooth page scrolling
+                  scrollDirection: Axis.horizontal,
                   itemBuilder: (context, index) {
                     final card = widget.flashcards[index];
                     return _buildFlashcardCard(context, card);
