@@ -48,10 +48,14 @@ class FlashcardCardList extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
             child: Card(
               elevation: AppSpacing.elevationLow,
+              margin: EdgeInsets.zero, // Remove default card margin for consistency
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLarge)),
               color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
               child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xl,
+                  vertical: AppSpacing.xl,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -61,7 +65,9 @@ class FlashcardCardList extends StatelessWidget {
                         Expanded(
                           child: Text(
                             card.question,
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                  fontSize: Theme.of(context).textTheme.titleLarge?.fontSize,
+                                ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -105,19 +111,15 @@ class FlashcardCardList extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        TextButton.icon(
+                        IconButton(
+                          icon: const Icon(Icons.edit),
                           onPressed: () => onEdit(card),
-                          icon: const Icon(Icons.edit, size: AppSpacing.iconSmallMedium),
-                          label: const Text('Edit'),
+                          tooltip: 'Edit',
                         ),
-                        const SizedBox(width: AppSpacing.sm),
-                        TextButton.icon(
+                        IconButton(
+                          icon: Icon(Icons.delete, color: colorScheme.error),
                           onPressed: () => onDelete(card),
-                          icon: Icon(Icons.delete, size: AppSpacing.iconSmallMedium, color: colorScheme.error),
-                          label: Text(
-                            'Delete',
-                            style: TextStyle(color: colorScheme.error),
-                          ),
+                          tooltip: 'Delete',
                         ),
                       ],
                     ),
