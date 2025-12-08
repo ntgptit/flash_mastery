@@ -3,32 +3,32 @@ package com.flash.mastery.repository;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
-import com.flash.mastery.dto.criteria.FlashcardSearchCriteria;
+import com.flash.mastery.constant.RepositoryConstants;
 import com.flash.mastery.entity.Flashcard;
 
-public interface FlashcardRepository extends JpaRepository<Flashcard, UUID> {
-    List<Flashcard> findByDeckId(UUID deckId);
+@Mapper
+public interface FlashcardRepository {
 
-    Page<Flashcard> findByDeckId(UUID deckId, Pageable pageable);
+    Flashcard findById(@Param(RepositoryConstants.PARAM_ID) UUID id);
 
-    /**
-     * Find flashcards based on search criteria.
-     */
-    default List<Flashcard> findByCriteria(FlashcardSearchCriteria criteria) {
-        if (!criteria.hasPagination()) {
-            return findByDeckId(criteria.getDeckId());
-        }
+    List<Flashcard> findByDeckId(@Param(RepositoryConstants.PARAM_DECK_ID) UUID deckId);
 
-        final var pageable = PageRequest.of(
-                criteria.getPage(),
-                criteria.getSize(),
-                Sort.by(Sort.Direction.DESC, "createdAt"));
-        return findByDeckId(criteria.getDeckId(), pageable).getContent();
-    }
+    List<Flashcard> findByDeckIdWithPagination(@Param(RepositoryConstants.PARAM_DECK_ID) UUID deckId,
+            @Param(RepositoryConstants.PARAM_OFFSET) int offset,
+            @Param(RepositoryConstants.PARAM_LIMIT) int limit);
+
+    List<Flashcard> findByIdIn(@Param(RepositoryConstants.PARAM_IDS) List<UUID> ids);
+
+    void insert(Flashcard flashcard);
+
+    void update(Flashcard flashcard);
+
+    void deleteById(@Param(RepositoryConstants.PARAM_ID) UUID id);
+
+    void deleteByDeckId(@Param(RepositoryConstants.PARAM_DECK_ID) UUID deckId);
+
+    long countByDeckId(@Param(RepositoryConstants.PARAM_DECK_ID) UUID deckId);
 }

@@ -11,7 +11,7 @@ import com.flash.mastery.entity.StudySession;
 @Mapper(componentModel = "spring", uses = { DeckMapper.class })
 public interface StudySessionMapper {
     @Mapping(target = "id", source = "id")
-    @Mapping(target = "deckId", source = "deck.id")
+    @Mapping(target = "deckId", source = "deckId")
     @Mapping(target = "startedAt", source = "createdAt")
     @Mapping(target = "completedAt", source = "completedAt")
     @Mapping(target = "currentBatchIndex", source = "currentBatchIndex")
@@ -24,6 +24,7 @@ public interface StudySessionMapper {
     StudySessionResponse toResponse(StudySession session);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "deckId", ignore = true)
     @Mapping(target = "deck", ignore = true)
     @Mapping(target = "flashcardIds", ignore = true)
     @Mapping(target = "status", ignore = true)

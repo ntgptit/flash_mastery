@@ -49,7 +49,20 @@ public class FlashcardServiceImpl extends BaseService implements FlashcardServic
 
         // Normalize pagination parameters
         final var normalizedCriteria = normalizePagination(criteria);
-        final var flashcards = this.flashcardRepository.findByCriteria(normalizedCriteria);
+
+        // Execute search based on criteria
+        final List<com.flash.mastery.entity.Flashcard> flashcards;
+        if (!normalizedCriteria.hasPagination()) {
+            flashcards = this.flashcardRepository.findByDeckId(normalizedCriteria.getDeckId());
+        } else {
+            final int offset = normalizedCriteria.getPage() * normalizedCriteria.getSize();
+            final int limit = normalizedCriteria.getSize();
+            flashcards = this.flashcardRepository.findByDeckIdWithPagination(
+                    normalizedCriteria.getDeckId(),
+                    offset,
+                    limit);
+        }
+
         return flashcards.stream().map(this.flashcardMapper::toResponse).toList();
     }
 
@@ -73,9 +86,10 @@ public class FlashcardServiceImpl extends BaseService implements FlashcardServic
     @Override
     @Transactional(readOnly = true)
     public FlashcardResponse getById(UUID id) {
-        final var card = findByIdOrThrow(
-                this.flashcardRepository.findById(id),
-                MessageKeys.ERROR_NOT_FOUND_FLASHCARD);
+        final var card = this.flashcardRepository.findById(id);
+        if (card == null) {
+            throw new com.flash.mastery.exception.NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FLASHCARD));
+        }
         return this.flashcardMapper.toResponse(card);
     }
 
@@ -84,9 +98,11 @@ public class FlashcardServiceImpl extends BaseService implements FlashcardServic
         if (request.getDeckId() == null) {
             throw new IllegalArgumentException("Deck ID must not be null when creating flashcard");
         }
-        final var deck = findByIdOrThrow(
-                this.deckRepository.findById(request.getDeckId()),
-                MessageKeys.ERROR_NOT_FOUND_DECK);
+        final var deck = this.deckRepository.findById(request.getDeckId());
+        if (deck == null) {
+            throw new com.flash.mastery.exception.NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_DECK));
+        }
+
         final var deckType = deck.getType() != null ? deck.getType() : request.getType();
         final var requestedType = request.getType() != null ? request.getType() : deckType;
         if ((deckType != null) && (requestedType != null) && (deckType != requestedType)) {
@@ -95,22 +111,34 @@ public class FlashcardServiceImpl extends BaseService implements FlashcardServic
         if (requestedType != null) {
             request.setType(requestedType);
         }
+
         final var card = this.flashcardMapper.fromCreate(request, deck);
-        final var saved = this.flashcardRepository.save(card);
+        card.setDeckId(request.getDeckId());
+        card.onCreate();
+        this.flashcardRepository.insert(card);
+
+        // Update deck card count
         deck.setCardCount(incrementCount(deck.getCardCount(), NumberConstants.ONE));
-        this.deckRepository.save(deck);
-        return this.flashcardMapper.toResponse(saved);
+        deck.onUpdate();
+        this.deckRepository.update(deck);
+
+        return this.flashcardMapper.toResponse(card);
     }
 
     @Override
     public FlashcardResponse update(UUID id, FlashcardUpdateRequest request) {
-        final var card = findByIdOrThrow(
-                this.flashcardRepository.findById(id),
-                MessageKeys.ERROR_NOT_FOUND_FLASHCARD);
+        final var card = this.flashcardRepository.findById(id);
+        if (card == null) {
+            throw new com.flash.mastery.exception.NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FLASHCARD));
+        }
+
         this.flashcardMapper.update(card, request);
-        final var deck = card.getDeck();
+
+        // Load deck to validate type
+        final var deck = card.getDeckId() != null ? this.deckRepository.findById(card.getDeckId()) : null;
         final var deckType = deck != null ? deck.getType() : null;
         final var targetType = request.getType() != null ? request.getType() : card.getType();
+
         if ((deckType != null) && (targetType != null) && (deckType != targetType)) {
             throw new IllegalArgumentException("Flashcard type must match deck type");
         }
@@ -120,20 +148,30 @@ public class FlashcardServiceImpl extends BaseService implements FlashcardServic
         if ((targetType == null) && (deckType != null)) {
             card.setType(deckType);
         }
-        final var saved = this.flashcardRepository.save(card);
-        return this.flashcardMapper.toResponse(saved);
+
+        card.onUpdate();
+        this.flashcardRepository.update(card);
+
+        return this.flashcardMapper.toResponse(card);
     }
 
     @Override
     public void delete(UUID id) {
-        final var card = findByIdOrThrow(
-                this.flashcardRepository.findById(id),
-                MessageKeys.ERROR_NOT_FOUND_FLASHCARD);
-        this.flashcardRepository.delete(card);
-        final var deck = card.getDeck();
-        if ((deck != null) && (deck.getCardCount() > NumberConstants.ZERO)) {
-            deck.setCardCount(decrementCount(deck.getCardCount(), NumberConstants.ONE));
-            this.deckRepository.save(deck);
+        final var card = this.flashcardRepository.findById(id);
+        if (card == null) {
+            throw new com.flash.mastery.exception.NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FLASHCARD));
+        }
+
+        this.flashcardRepository.deleteById(id);
+
+        // Update deck card count
+        if (card.getDeckId() != null) {
+            final var deck = this.deckRepository.findById(card.getDeckId());
+            if ((deck != null) && (deck.getCardCount() > NumberConstants.ZERO)) {
+                deck.setCardCount(decrementCount(deck.getCardCount(), NumberConstants.ONE));
+                deck.onUpdate();
+                this.deckRepository.update(deck);
+            }
         }
     }
 

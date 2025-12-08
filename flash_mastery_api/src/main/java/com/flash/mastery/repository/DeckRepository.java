@@ -1,46 +1,49 @@
 package com.flash.mastery.repository;
 
+import java.util.List;
 import java.util.UUID;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
-import com.flash.mastery.dto.criteria.DeckSearchCriteria;
+import com.flash.mastery.constant.RepositoryConstants;
 import com.flash.mastery.entity.Deck;
 
-public interface DeckRepository extends JpaRepository<Deck, UUID> {
-    Page<Deck> findByFolderId(UUID folderId, Pageable pageable);
+@Mapper
+public interface DeckRepository {
 
-    Page<Deck> findByNameContainingIgnoreCase(String name, Pageable pageable);
+    Deck findById(@Param(RepositoryConstants.PARAM_ID) UUID id);
 
-    Page<Deck> findByFolderIdAndNameContainingIgnoreCase(UUID folderId, String name, Pageable pageable);
+    List<Deck> findAll(@Param(RepositoryConstants.PARAM_OFFSET) int offset,
+            @Param(RepositoryConstants.PARAM_LIMIT) int limit);
 
-    boolean existsByFolderIdAndNameIgnoreCase(UUID folderId, String name);
+    List<Deck> findByFolderId(@Param(RepositoryConstants.PARAM_FOLDER_ID) UUID folderId,
+            @Param(RepositoryConstants.PARAM_OFFSET) int offset,
+            @Param(RepositoryConstants.PARAM_LIMIT) int limit);
 
-    /**
-     * Find decks based on search criteria.
-     */
-    default Page<Deck> findByCriteria(DeckSearchCriteria criteria, Pageable pageable) {
-        if (!criteria.hasAnyFilter()) {
-            return findAll(pageable);
-        }
+    List<Deck> findByNameContainingIgnoreCase(@Param(RepositoryConstants.PARAM_NAME) String name,
+            @Param(RepositoryConstants.PARAM_OFFSET) int offset,
+            @Param(RepositoryConstants.PARAM_LIMIT) int limit);
 
-        if (criteria.hasFolderFilter() && criteria.hasQueryFilter()) {
-            return findByFolderIdAndNameContainingIgnoreCase(
-                    criteria.getFolderId(),
-                    criteria.getQuery(),
-                    pageable);
-        }
+    List<Deck> findByFolderIdAndNameContainingIgnoreCase(@Param(RepositoryConstants.PARAM_FOLDER_ID) UUID folderId,
+            @Param(RepositoryConstants.PARAM_NAME) String name,
+            @Param(RepositoryConstants.PARAM_OFFSET) int offset, @Param(RepositoryConstants.PARAM_LIMIT) int limit);
 
-        if (criteria.hasFolderFilter()) {
-            return findByFolderId(criteria.getFolderId(), pageable);
-        }
+    boolean existsByFolderIdAndNameIgnoreCase(@Param(RepositoryConstants.PARAM_FOLDER_ID) UUID folderId,
+            @Param(RepositoryConstants.PARAM_NAME) String name);
 
-        if (criteria.hasQueryFilter()) {
-            return findByNameContainingIgnoreCase(criteria.getQuery(), pageable);
-        }
+    long count();
 
-        return findAll(pageable);
-    }
+    long countByFolderId(@Param(RepositoryConstants.PARAM_FOLDER_ID) UUID folderId);
+
+    long countByNameContainingIgnoreCase(@Param(RepositoryConstants.PARAM_NAME) String name);
+
+    long countByFolderIdAndNameContainingIgnoreCase(@Param(RepositoryConstants.PARAM_FOLDER_ID) UUID folderId,
+            @Param(RepositoryConstants.PARAM_NAME) String name);
+
+    void insert(Deck deck);
+
+    void update(Deck deck);
+
+    void deleteById(@Param(RepositoryConstants.PARAM_ID) UUID id);
 }

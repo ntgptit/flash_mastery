@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.flash.mastery.repository.FlashcardRepository">
+
+    <resultMap id="FlashcardResultMap" type="com.flash.mastery.entity.Flashcard">
+        <id property="id" column="id" />
+        <result property="deckId" column="deck_id" />
+        <result property="question" column="question" />
+        <result property="answer" column="answer" />
+        <result property="hint" column="hint" />
+        <result property="type" column="type" />
+        <result property="createdAt" column="created_at" />
+        <result property="updatedAt" column="updated_at" />
+    </resultMap>
+
+    <select id="findById" resultMap="FlashcardResultMap">
+        SELECT * FROM flash_mastery.flashcards WHERE id = #{id}
+    </select>
+
+    <select id="findByDeckId" resultMap="FlashcardResultMap">
+        SELECT * FROM flash_mastery.flashcards
+        WHERE deck_id = #{deckId}
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findByDeckIdWithPagination" resultMap="FlashcardResultMap">
+        SELECT * FROM flash_mastery.flashcards
+        WHERE deck_id = #{deckId}
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="findByIdIn" resultMap="FlashcardResultMap">
+        SELECT * FROM flash_mastery.flashcards
+        WHERE id IN
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="countByDeckId" resultType="long">
+        SELECT COUNT(*) FROM flash_mastery.flashcards WHERE deck_id = #{deckId}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO flash_mastery.flashcards (id, deck_id, question, answer, hint, type, created_at, updated_at)
+        VALUES (#{id}, #{deckId}, #{question}, #{answer}, #{hint}, #{type}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="update">
+        UPDATE flash_mastery.flashcards
+        SET deck_id = #{deckId},
+            question = #{question},
+            answer = #{answer},
+            hint = #{hint},
+            type = #{type},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM flash_mastery.flashcards WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByDeckId">
+        DELETE FROM flash_mastery.flashcards WHERE deck_id = #{deckId}
+    </delete>
+
+</mapper>

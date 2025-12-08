@@ -8,21 +8,21 @@ import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.MessageSource;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.flash.mastery.constant.MessageKeys;
 import com.flash.mastery.constant.NumberConstants;
+import com.flash.mastery.constant.RepositoryConstants;
+import com.flash.mastery.constant.ValidationConstants;
 import com.flash.mastery.dto.criteria.DeckSearchCriteria;
 import com.flash.mastery.dto.request.DeckCreateRequest;
 import com.flash.mastery.dto.request.DeckUpdateRequest;
 import com.flash.mastery.dto.response.DeckResponse;
 import com.flash.mastery.entity.Deck;
 import com.flash.mastery.entity.Flashcard;
-import com.flash.mastery.entity.FlashcardType;
+import com.flash.mastery.entity.enums.FlashcardType;
 import com.flash.mastery.entity.Folder;
 import com.flash.mastery.exception.NotFoundException;
 import com.flash.mastery.mapper.DeckMapper;
@@ -31,9 +31,8 @@ import com.flash.mastery.repository.FlashcardRepository;
 import com.flash.mastery.repository.FolderRepository;
 import com.flash.mastery.service.BaseService;
 import com.flash.mastery.service.DeckService;
-import com.flash.mastery.util.DeckSortOption;
+import com.flash.mastery.entity.enums.DeckSortOption;
 import com.flash.mastery.util.NaturalOrderComparator;
-import com.flash.mastery.util.SortMapper;
 import com.flash.mastery.util.importer.ImportResult;
 import com.flash.mastery.util.importer.ImporterFactory;
 import com.flash.mastery.util.importer.RowContext;
@@ -42,7 +41,6 @@ import com.flash.mastery.util.importer.RowContext;
 @Transactional
 public class DeckServiceImpl extends BaseService implements DeckService {
 
-    private static final int TEXT_LIMIT = 255;
 
     private final DeckRepository deckRepository;
     private final FlashcardRepository flashcardRepository;
@@ -74,26 +72,60 @@ public class DeckServiceImpl extends BaseService implements DeckService {
                 .query(query)
                 .build();
 
-        // For name sorting, we need to fetch all data and sort in memory with natural
-        // order
-        // For other sorts, use database sorting
-        Pageable pageable = PageRequest.of(page, size, SortMapper.toSort(sortOption));
-        if (isNameSort) {
-            // Fetch without pagination to sort all data
-            pageable = Pageable.unpaged();
-        }
-
         // Execute search based on criteria
-        final var deckPage = this.deckRepository.findByCriteria(criteria, pageable);
-        var decks = deckPage.getContent();
-
-        // Apply natural order sorting for name sorts
+        List<Deck> decks;
         if (isNameSort) {
+            // For name sorting, fetch all data to sort in memory with natural order
+            decks = fetchAllDecksForCriteria(criteria);
             decks = applyNaturalOrderSort(decks, sortOption);
             decks = applyPagination(decks, page, size);
+        } else {
+            // For other sorts, use database sorting with pagination
+            final int offset = page * size;
+            final int limit = size;
+            decks = fetchDecksForCriteriaWithPagination(criteria, offset, limit);
         }
 
         return decks.stream().map(this.deckMapper::toResponse).toList();
+    }
+
+    private List<Deck> fetchAllDecksForCriteria(DeckSearchCriteria criteria) {
+        final boolean hasFolder = criteria.hasFolderFilter();
+        final boolean hasQuery = criteria.hasQueryFilter();
+
+        if (hasFolder && hasQuery) {
+            // Get all with default offset and max limit
+            return this.deckRepository.findByFolderIdAndNameContainingIgnoreCase(
+                    criteria.getFolderId(),
+                    criteria.getQuery(),
+                    RepositoryConstants.DEFAULT_OFFSET,
+                    RepositoryConstants.MAX_LIMIT);
+        } else if (hasFolder) {
+            return this.deckRepository.findByFolderId(criteria.getFolderId(), RepositoryConstants.DEFAULT_OFFSET, RepositoryConstants.MAX_LIMIT);
+        } else if (hasQuery) {
+            return this.deckRepository.findByNameContainingIgnoreCase(criteria.getQuery(), RepositoryConstants.DEFAULT_OFFSET, RepositoryConstants.MAX_LIMIT);
+        } else {
+            return this.deckRepository.findAll(RepositoryConstants.DEFAULT_OFFSET, RepositoryConstants.MAX_LIMIT);
+        }
+    }
+
+    private List<Deck> fetchDecksForCriteriaWithPagination(DeckSearchCriteria criteria, int offset, int limit) {
+        final boolean hasFolder = criteria.hasFolderFilter();
+        final boolean hasQuery = criteria.hasQueryFilter();
+
+        if (hasFolder && hasQuery) {
+            return this.deckRepository.findByFolderIdAndNameContainingIgnoreCase(
+                    criteria.getFolderId(),
+                    criteria.getQuery(),
+                    offset,
+                    limit);
+        } else if (hasFolder) {
+            return this.deckRepository.findByFolderId(criteria.getFolderId(), offset, limit);
+        } else if (hasQuery) {
+            return this.deckRepository.findByNameContainingIgnoreCase(criteria.getQuery(), offset, limit);
+        } else {
+            return this.deckRepository.findAll(offset, limit);
+        }
     }
 
     /**
@@ -129,66 +161,97 @@ public class DeckServiceImpl extends BaseService implements DeckService {
     @Override
     @Transactional(readOnly = true)
     public DeckResponse getDeck(UUID id) {
-        final var deck = findByIdOrThrow(
-                this.deckRepository.findById(id),
-                MessageKeys.ERROR_NOT_FOUND_DECK);
+        final var deck = this.deckRepository.findById(id);
+        if (deck == null) {
+            throw new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_DECK));
+        }
         return this.deckMapper.toResponse(deck);
     }
 
     @Override
     public DeckResponse create(DeckCreateRequest request) {
-        final var folder = findByIdOrThrow(
-                this.folderRepository.findById(request.getFolderId()),
-                MessageKeys.ERROR_NOT_FOUND_FOLDER);
+        final var folder = this.folderRepository.findById(request.getFolderId());
+        if (folder == null) {
+            throw new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FOLDER));
+        }
+
         final var deck = this.deckMapper.fromCreate(request, folder);
-        final var saved = this.deckRepository.save(deck);
+        deck.setFolderId(request.getFolderId());
+        deck.onCreate();
+        this.deckRepository.insert(deck);
+
+        // Update folder deck count
         folder.setDeckCount(incrementCount(folder.getDeckCount(), NumberConstants.ONE));
-        this.folderRepository.save(folder);
-        return this.deckMapper.toResponse(saved);
+        folder.onUpdate();
+        this.folderRepository.update(folder);
+
+        return this.deckMapper.toResponse(deck);
     }
 
     @Override
     public DeckResponse update(UUID id, DeckUpdateRequest request) {
-        final var deck = findByIdOrThrow(
-                this.deckRepository.findById(id),
-                MessageKeys.ERROR_NOT_FOUND_DECK);
-        var folder = deck.getFolder();
-        if (request.getFolderId() != null) {
-            folder = this.folderRepository.findById(request.getFolderId())
-                    .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FOLDER)));
+        final var deck = this.deckRepository.findById(id);
+        if (deck == null) {
+            throw new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_DECK));
         }
+
+        // Load folder if needed
+        Folder folder = null;
+        if (request.getFolderId() != null) {
+            folder = this.folderRepository.findById(request.getFolderId());
+            if (folder == null) {
+                throw new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FOLDER));
+            }
+            deck.setFolderId(request.getFolderId());
+        }
+
         this.deckMapper.update(deck, request, folder);
         if (request.getType() != null) {
             deck.setType(request.getType());
         }
-        final var saved = this.deckRepository.save(deck);
-        return this.deckMapper.toResponse(saved);
+
+        deck.onUpdate();
+        this.deckRepository.update(deck);
+
+        return this.deckMapper.toResponse(deck);
     }
 
     @Override
     public void delete(UUID id) {
-        final var deck = findByIdOrThrow(
-                this.deckRepository.findById(id),
-                MessageKeys.ERROR_NOT_FOUND_DECK);
-        this.deckRepository.delete(deck);
-        final var folder = deck.getFolder();
-        if ((folder != null) && (folder.getDeckCount() > NumberConstants.ZERO)) {
-            folder.setDeckCount(decrementCount(folder.getDeckCount(), NumberConstants.ONE));
-            this.folderRepository.save(folder);
+        final var deck = this.deckRepository.findById(id);
+        if (deck == null) {
+            throw new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_DECK));
+        }
+
+        this.deckRepository.deleteById(id);
+
+        // Update folder deck count
+        if (deck.getFolderId() != null) {
+            final var folder = this.folderRepository.findById(deck.getFolderId());
+            if ((folder != null) && (folder.getDeckCount() > NumberConstants.ZERO)) {
+                folder.setDeckCount(decrementCount(folder.getDeckCount(), NumberConstants.ONE));
+                folder.onUpdate();
+                this.folderRepository.update(folder);
+            }
         }
     }
 
     @Override
     public ImportResult<ImportRow> importDecks(UUID folderId, MultipartFile file, FlashcardType type,
             boolean skipHeader) throws java.io.IOException {
-        final var folder = this.folderRepository.findById(folderId)
-                .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FOLDER)));
+        final var folder = this.folderRepository.findById(folderId);
+        if (folder == null) {
+            throw new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FOLDER));
+        }
+
         final var importer = ImporterFactory.<ImportRow>forFilename(file.getOriginalFilename());
-        final var parsed = importer.importStream(file.getInputStream(), this::mapRow,
-                skipHeader);
+        final var parsed = importer.importStream(file.getInputStream(), this::mapRow, skipHeader);
+
+        // Get all existing deck names in this folder
         final Set<String> existingDeckNames = new HashSet<>();
-        this.deckRepository.findByFolderId(folderId, Pageable.unpaged())
-                .forEach(deck -> existingDeckNames.add(StringUtils.lowerCase(deck.getName())));
+        final var existingDecks = this.deckRepository.findByFolderId(folderId, RepositoryConstants.DEFAULT_OFFSET, RepositoryConstants.MAX_LIMIT);
+        existingDecks.forEach(deck -> existingDeckNames.add(StringUtils.lowerCase(deck.getName())));
+
         persistRows(parsed, folder, type, existingDeckNames);
         return parsed;
     }
@@ -223,7 +286,6 @@ public class DeckServiceImpl extends BaseService implements DeckService {
             Set<String> existingDeckNames) {
         final List<Flashcard> buffer = new ArrayList<>();
         Deck currentDeck = null;
-        final var batchSize = 500;
         final Set<String> currentTerms = new HashSet<>();
         var skipCurrentDeck = false;
         var defaultDeckSkipLogged = false;
@@ -272,14 +334,14 @@ public class DeckServiceImpl extends BaseService implements DeckService {
             }
             buffer.add(
                     Flashcard.builder()
+                            .deckId(currentDeck.getId())
                             .question(row.vocab)
                             .answer(row.meaning)
                             .type(defaultType)
-                            .deck(currentDeck)
                             .build());
             currentTerms.add(termKey);
             summary.addCardImported();
-            if (buffer.size() >= batchSize) {
+            if (buffer.size() >= RepositoryConstants.BATCH_SIZE) {
                 flushBatch(buffer, currentDeck);
             }
         }
@@ -290,9 +352,18 @@ public class DeckServiceImpl extends BaseService implements DeckService {
         if ((currentDeck == null) || buffer.isEmpty()) {
             return;
         }
-        this.flashcardRepository.saveAll(buffer);
+
+        // Insert all flashcards in batch
+        for (Flashcard flashcard : buffer) {
+            flashcard.onCreate();
+            this.flashcardRepository.insert(flashcard);
+        }
+
+        // Update deck card count
         currentDeck.setCardCount(currentDeck.getCardCount() + buffer.size());
-        this.deckRepository.save(currentDeck);
+        currentDeck.onUpdate();
+        this.deckRepository.update(currentDeck);
+
         buffer.clear();
     }
 
@@ -300,21 +371,27 @@ public class DeckServiceImpl extends BaseService implements DeckService {
         final var deck = Deck.builder()
                 .name(clamp(name))
                 .description("Imported deck")
-                .folder(folder)
+                .folderId(folder.getId())
                 .cardCount(0)
                 .type(type)
                 .build();
-        final var saved = this.deckRepository.save(deck);
+
+        deck.onCreate();
+        this.deckRepository.insert(deck);
+
+        // Update folder deck count
         folder.setDeckCount(folder.getDeckCount() + 1);
-        this.folderRepository.save(folder);
-        return saved;
+        folder.onUpdate();
+        this.folderRepository.update(folder);
+
+        return deck;
     }
 
     private String clamp(String value) {
         if (value == null) {
             return null;
         }
-        return value.length() > TEXT_LIMIT ? value.substring(0, TEXT_LIMIT) : value;
+        return value.length() > ValidationConstants.NAME_MAX_LENGTH ? value.substring(0, ValidationConstants.NAME_MAX_LENGTH) : value;
     }
 
     private record ImportRow(int rowIndex, Kind kind, String deckName, String vocab, String meaning) {

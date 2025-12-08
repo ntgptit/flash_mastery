@@ -3,7 +3,7 @@ package com.flash.mastery.dto.request;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.flash.mastery.entity.FlashcardType;
+import com.flash.mastery.entity.enums.FlashcardType;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

@@ -1,13 +1,16 @@
 package com.flash.mastery.util;
 
-import org.springframework.data.domain.Sort;
-
+import com.flash.mastery.entity.enums.SortableOption;
 import lombok.experimental.UtilityClass;
 
+/**
+ * Utility class for sort mapping - no longer needed with MyBatis.
+ * Kept for potential future use.
+ */
 @UtilityClass
 public final class SortMapper {
 
-    public static Sort toSort(SortableOption option) {
-        return Sort.by(option.getDirection(), option.getField());
+    public static String toOrderByClause(SortableOption option) {
+        return option.getField() + " " + option.getDirection().name();
     }
 }

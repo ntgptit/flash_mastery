@@ -3,7 +3,7 @@ package com.flash.mastery.service;
 import com.flash.mastery.dto.request.DeckCreateRequest;
 import com.flash.mastery.dto.request.DeckUpdateRequest;
 import com.flash.mastery.dto.response.DeckResponse;
-import com.flash.mastery.entity.FlashcardType;
+import com.flash.mastery.entity.enums.FlashcardType;
 import com.flash.mastery.util.importer.ImportResult;
 import java.util.List;
 import java.util.UUID;

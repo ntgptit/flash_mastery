@@ -13,15 +13,15 @@ import com.flash.mastery.dto.response.FlashcardResponse;
 import com.flash.mastery.entity.Deck;
 import com.flash.mastery.entity.Flashcard;
 
-@Mapper(componentModel = "spring", uses = { DeckMapper.class }, builder = @Builder(disableBuilder = true))
+@Mapper(componentModel = "spring", uses = { DeckMapper.class }, builder = @Builder(disableBuilder = true), imports = com.flash.mastery.entity.enums.FlashcardType.class)
 public interface FlashcardMapper {
 
-    @Mapping(target = "deckId", source = "deck.id")
-    @Mapping(target = "type", expression = "java(entity.getType() != null ? entity.getType() : com.flash.mastery.entity.FlashcardType.VOCABULARY)")
+    @Mapping(target = "deckId", source = "deckId")
+    @Mapping(target = "type", expression = "java(entity.getType() != null ? entity.getType() : FlashcardType.VOCABULARY)")
     FlashcardResponse toResponse(Flashcard entity);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "deck", source = "deck")
+    @Mapping(target = "deckId", ignore = true)
     @Mapping(target = "question", source = "request.question")
     @Mapping(target = "answer", source = "request.answer")
     @Mapping(target = "hint", source = "request.hint")
@@ -32,6 +32,7 @@ public interface FlashcardMapper {
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "deckId", ignore = true)
     @Mapping(target = "deck", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)

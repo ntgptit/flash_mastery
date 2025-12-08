@@ -50,9 +50,10 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
 
     @Override
     public StudySessionResponse startSession(StudySessionCreateRequest request) {
-        final var deck = findByIdOrThrow(
-                this.deckRepository.findById(request.getDeckId()),
-                MessageKeys.ERROR_NOT_FOUND_DECK);
+        final var deck = this.deckRepository.findById(request.getDeckId());
+        if (deck == null) {
+            throw new com.flash.mastery.exception.NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_DECK));
+        }
 
         // Use provided flashcard IDs if available (for custom selection)
         if ((request.getFlashcardIds() != null) && !request.getFlashcardIds().isEmpty()) {
@@ -72,8 +73,7 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
         final var allFlashcardIds = flashcards.stream()
                 .map(Flashcard::getId).toList();
 
-        // Get completed sessions (SUCCESS status) for this deck to find already studied
-        // flashcards
+        // Get completed sessions (SUCCESS status) for this deck to find already studied flashcards
         final var completedSessions = this.studySessionRepository
                 .findByDeckIdAndStatus(request.getDeckId(), StudySessionStatus.SUCCESS);
 
@@ -105,31 +105,41 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
 
     private StudySessionResponse createSession(com.flash.mastery.entity.Deck deck, List<UUID> flashcardIds) {
         final var session = StudySession.builder()
-                .deck(deck)
+                .deckId(deck.getId())
                 .flashcardIds(flashcardIds)
                 .currentMode(StudyMode.OVERVIEW)
                 .currentBatchIndex(0)
                 .status(StudySessionStatus.IN_PROGRESS)
                 .build();
 
-        final var saved = this.studySessionRepository.save(session);
-        return this.studySessionMapper.toResponse(saved);
+        // Initialize entity and insert
+        session.onCreate();
+        this.studySessionRepository.insert(session);
+
+        // Insert flashcard IDs into junction table
+        if (!flashcardIds.isEmpty()) {
+            this.studySessionRepository.insertFlashcardIds(session.getId(), flashcardIds);
+        }
+
+        return this.studySessionMapper.toResponse(session);
     }
 
     @Override
     @Transactional(readOnly = true)
     public StudySessionResponse getSession(UUID sessionId) {
-        final var session = findByIdOrThrow(
-                this.studySessionRepository.findById(sessionId),
-                MessageKeys.ERROR_NOT_FOUND_SESSION);
+        final var session = this.studySessionRepository.findById(sessionId);
+        if (session == null) {
+            throw new com.flash.mastery.exception.NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_SESSION));
+        }
         return this.studySessionMapper.toResponse(session);
     }
 
     @Override
     public StudySessionResponse updateSession(UUID sessionId, StudySessionUpdateRequest request) {
-        final var session = findByIdOrThrow(
-                this.studySessionRepository.findById(sessionId),
-                MessageKeys.ERROR_NOT_FOUND_SESSION);
+        final var session = this.studySessionRepository.findById(sessionId);
+        if (session == null) {
+            throw new com.flash.mastery.exception.NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_SESSION));
+        }
 
         if (request.getCurrentMode() != null) {
             session.setCurrentMode(request.getCurrentMode());
@@ -137,30 +147,53 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
         if (request.getCurrentBatchIndex() != null) {
             session.setCurrentBatchIndex(request.getCurrentBatchIndex());
         }
+
+        // Handle progress data updates
         if (request.getProgressData() != null) {
-            session.getProgressData().putAll(request.getProgressData());
+            for (var entry : request.getProgressData().entrySet()) {
+                final var flashcardId = entry.getKey();
+                final var progressData = entry.getValue();
+
+                // Update or insert progress data
+                if (session.getProgressData().containsKey(flashcardId)) {
+                    this.studySessionRepository.updateProgressData(sessionId, flashcardId, progressData);
+                } else {
+                    this.studySessionRepository.insertProgressData(sessionId, flashcardId, progressData);
+                }
+
+                // Update in-memory map
+                session.getProgressData().put(flashcardId, progressData);
+            }
         }
 
-        final var saved = this.studySessionRepository.save(session);
-        return this.studySessionMapper.toResponse(saved);
+        session.onUpdate();
+        this.studySessionRepository.update(session);
+
+        return this.studySessionMapper.toResponse(session);
     }
 
     @Override
     public void completeSession(UUID sessionId) {
-        final var session = findByIdOrThrow(
-                this.studySessionRepository.findById(sessionId),
-                MessageKeys.ERROR_NOT_FOUND_SESSION);
+        final var session = this.studySessionRepository.findById(sessionId);
+        if (session == null) {
+            throw new com.flash.mastery.exception.NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_SESSION));
+        }
+
         session.setCompletedAt(LocalDateTime.now());
         session.setStatus(StudySessionStatus.SUCCESS);
-        this.studySessionRepository.save(session);
+        session.onUpdate();
+        this.studySessionRepository.update(session);
     }
 
     @Override
     public void cancelSession(UUID sessionId) {
-        final var session = findByIdOrThrow(
-                this.studySessionRepository.findById(sessionId),
-                MessageKeys.ERROR_NOT_FOUND_SESSION);
+        final var session = this.studySessionRepository.findById(sessionId);
+        if (session == null) {
+            throw new com.flash.mastery.exception.NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_SESSION));
+        }
+
         session.setStatus(StudySessionStatus.CANCEL);
-        this.studySessionRepository.save(session);
+        session.onUpdate();
+        this.studySessionRepository.update(session);
     }
 }

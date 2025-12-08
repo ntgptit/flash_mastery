@@ -17,20 +17,21 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
     componentModel = "spring",
     uses = {FolderMapper.class},
     builder = @Builder(disableBuilder = true),
-    imports = NumberConstants.class)
+    imports = {NumberConstants.class, com.flash.mastery.entity.enums.FlashcardType.class})
 public interface DeckMapper {
 
-  @Mapping(target = "folderId", source = "folder.id")
+  @Mapping(target = "folderId", source = "folderId")
   @Mapping(target = "cardCount", source = "cardCount")
-  @Mapping(target = "type", expression = "java(entity.getType() != null ? entity.getType() : com.flash.mastery.entity.FlashcardType.VOCABULARY)")
+  @Mapping(target = "type", expression = "java(entity.getType() != null ? entity.getType() : FlashcardType.VOCABULARY)")
   DeckResponse toResponse(Deck entity);
 
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "name", source = "request.name")
   @Mapping(target = "description", source = "request.description")
   @Mapping(target = "cardCount", expression = "java(NumberConstants.ZERO)")
-  @Mapping(target = "type", expression = "java(request.getType() != null ? request.getType() : com.flash.mastery.entity.FlashcardType.VOCABULARY)")
-  @Mapping(target = "folder", source = "folder")
+  @Mapping(target = "type", expression = "java(request.getType() != null ? request.getType() : FlashcardType.VOCABULARY)")
+  @Mapping(target = "folderId", ignore = true)
+  @Mapping(target = "folder", ignore = true)
   @Mapping(target = "flashcards", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
@@ -40,7 +41,8 @@ public interface DeckMapper {
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "name", source = "request.name")
   @Mapping(target = "description", source = "request.description")
-  @Mapping(target = "folder", source = "folder")
+  @Mapping(target = "folderId", ignore = true)
+  @Mapping(target = "folder", ignore = true)
   @Mapping(target = "cardCount", ignore = true)
   @Mapping(target = "type", ignore = true)
   @Mapping(target = "flashcards", ignore = true)

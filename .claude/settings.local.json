@@ -21,7 +21,10 @@
       "Bash(mvn spring-boot:run:*)",
       "Bash(timeout:*)",
       "Bash(dart run build_runner build:*)",
-      "Bash(dart analyze:*)"
+      "Bash(dart analyze:*)",
+      "Bash(find:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(powershell:*)"
     ],
     "deny": [],
     "ask": []

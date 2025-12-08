@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.flash.mastery.repository.DeckRepository">
+
+    <resultMap id="DeckResultMap" type="com.flash.mastery.entity.Deck">
+        <id property="id" column="id" />
+        <result property="name" column="name" />
+        <result property="description" column="description" />
+        <result property="cardCount" column="card_count" />
+        <result property="type" column="type" />
+        <result property="folderId" column="folder_id" />
+        <result property="createdAt" column="created_at" />
+        <result property="updatedAt" column="updated_at" />
+    </resultMap>
+
+    <select id="findById" resultMap="DeckResultMap">
+        SELECT * FROM flash_mastery.decks WHERE id = #{id}
+    </select>
+
+    <select id="findAll" resultMap="DeckResultMap">
+        SELECT * FROM flash_mastery.decks
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="findByFolderId" resultMap="DeckResultMap">
+        SELECT * FROM flash_mastery.decks
+        WHERE folder_id = #{folderId}
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="findByNameContainingIgnoreCase" resultMap="DeckResultMap">
+        SELECT * FROM flash_mastery.decks
+        WHERE LOWER(name) LIKE LOWER(CONCAT('%', #{name}, '%'))
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="findByFolderIdAndNameContainingIgnoreCase" resultMap="DeckResultMap">
+        SELECT * FROM flash_mastery.decks
+        WHERE folder_id = #{folderId}
+        AND LOWER(name) LIKE LOWER(CONCAT('%', #{name}, '%'))
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="existsByFolderIdAndNameIgnoreCase" resultType="boolean">
+        SELECT EXISTS(
+            SELECT 1 FROM flash_mastery.decks
+            WHERE folder_id = #{folderId}
+            AND LOWER(name) = LOWER(#{name})
+        )
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM flash_mastery.decks
+    </select>
+
+    <select id="countByFolderId" resultType="long">
+        SELECT COUNT(*) FROM flash_mastery.decks WHERE folder_id = #{folderId}
+    </select>
+
+    <select id="countByNameContainingIgnoreCase" resultType="long">
+        SELECT COUNT(*) FROM flash_mastery.decks
+        WHERE LOWER(name) LIKE LOWER(CONCAT('%', #{name}, '%'))
+    </select>
+
+    <select id="countByFolderIdAndNameContainingIgnoreCase" resultType="long">
+        SELECT COUNT(*) FROM flash_mastery.decks
+        WHERE folder_id = #{folderId}
+        AND LOWER(name) LIKE LOWER(CONCAT('%', #{name}, '%'))
+    </select>
+
+    <insert id="insert">
+        INSERT INTO flash_mastery.decks (id, name, description, card_count, type, folder_id, created_at, updated_at)
+        VALUES (#{id}, #{name}, #{description}, #{cardCount}, #{type}, #{folderId}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="update">
+        UPDATE flash_mastery.decks
+        SET name = #{name},
+            description = #{description},
+            card_count = #{cardCount},
+            type = #{type},
+            folder_id = #{folderId},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM flash_mastery.decks WHERE id = #{id}
+    </delete>
+
+</mapper>

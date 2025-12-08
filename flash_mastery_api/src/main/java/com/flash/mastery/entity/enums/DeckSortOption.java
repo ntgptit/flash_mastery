@@ -1,19 +1,17 @@
-package com.flash.mastery.util;
-
-import org.springframework.data.domain.Sort;
+package com.flash.mastery.entity.enums;
 
 public enum DeckSortOption implements SortableOption {
-    LATEST("latest", "createdAt", Sort.Direction.DESC),
-    NAME_ASC("name,asc", "name", Sort.Direction.ASC),
-    NAME_DESC("name,desc", "name", Sort.Direction.DESC),
-    CARD_COUNT_ASC("cardCount,asc", "cardCount", Sort.Direction.ASC),
-    CARD_COUNT_DESC("cardCount,desc", "cardCount", Sort.Direction.DESC);
+    LATEST("latest", "createdAt", SortDirection.DESC),
+    NAME_ASC("name,asc", "name", SortDirection.ASC),
+    NAME_DESC("name,desc", "name", SortDirection.DESC),
+    CARD_COUNT_ASC("cardCount,asc", "cardCount", SortDirection.ASC),
+    CARD_COUNT_DESC("cardCount,desc", "cardCount", SortDirection.DESC);
 
     private final String key;
     private final String field;
-    private final Sort.Direction direction;
+    private final SortDirection direction;
 
-    DeckSortOption(String key, String field, Sort.Direction direction) {
+    DeckSortOption(String key, String field, SortDirection direction) {
         this.key = key;
         this.field = field;
         this.direction = direction;
@@ -30,7 +28,7 @@ public enum DeckSortOption implements SortableOption {
     }
 
     @Override
-    public Sort.Direction getDirection() {
+    public SortDirection getDirection() {
         return this.direction;
     }
 

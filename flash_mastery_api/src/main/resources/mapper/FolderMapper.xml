@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.flash.mastery.repository.FolderRepository">
+
+    <resultMap id="FolderResultMap" type="com.flash.mastery.entity.Folder">
+        <id property="id" column="id" />
+        <result property="name" column="name" />
+        <result property="description" column="description" />
+        <result property="color" column="color" />
+        <result property="deckCount" column="deck_count" />
+        <result property="parentId" column="parent_id" />
+        <result property="createdAt" column="created_at" />
+        <result property="updatedAt" column="updated_at" />
+    </resultMap>
+
+    <select id="findById" resultMap="FolderResultMap">
+        SELECT * FROM flash_mastery.folders WHERE id = #{id}
+    </select>
+
+    <select id="findAll" resultMap="FolderResultMap">
+        SELECT * FROM flash_mastery.folders ORDER BY created_at DESC
+    </select>
+
+    <select id="findByParentId" resultMap="FolderResultMap">
+        SELECT * FROM flash_mastery.folders
+        WHERE parent_id = #{parentId}
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findByParentIsNull" resultMap="FolderResultMap">
+        SELECT * FROM flash_mastery.folders
+        WHERE parent_id IS NULL
+        ORDER BY created_at DESC
+    </select>
+
+    <insert id="insert">
+        INSERT INTO flash_mastery.folders (id, name, description, color, deck_count, parent_id, created_at, updated_at)
+        VALUES (#{id}, #{name}, #{description}, #{color}, #{deckCount}, #{parentId}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="update">
+        UPDATE flash_mastery.folders
+        SET name = #{name},
+            description = #{description},
+            color = #{color},
+            deck_count = #{deckCount},
+            parent_id = #{parentId},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM flash_mastery.folders WHERE id = #{id}
+    </delete>
+
+</mapper>

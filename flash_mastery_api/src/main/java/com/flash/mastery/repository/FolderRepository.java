@@ -1,29 +1,28 @@
 package com.flash.mastery.repository;
 
-import com.flash.mastery.entity.Folder;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.flash.mastery.dto.criteria.FolderSearchCriteria;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
-public interface FolderRepository extends JpaRepository<Folder, UUID> {
-    List<Folder> findByParentId(UUID parentId);
+import com.flash.mastery.constant.RepositoryConstants;
+import com.flash.mastery.entity.Folder;
+
+@Mapper
+public interface FolderRepository {
+
+    Folder findById(@Param(RepositoryConstants.PARAM_ID) UUID id);
+
+    List<Folder> findAll();
+
+    List<Folder> findByParentId(@Param(RepositoryConstants.PARAM_PARENT_ID) UUID parentId);
 
     List<Folder> findByParentIsNull();
 
-    /**
-     * Find folders based on search criteria.
-     */
-    default List<Folder> findByCriteria(FolderSearchCriteria criteria) {
-        if (criteria.isRootFolders()) {
-            return findByParentIsNull();
-        }
+    void insert(Folder folder);
 
-        if (criteria.hasParentFilter()) {
-            return findByParentId(criteria.getParentId());
-        }
+    void update(Folder folder);
 
-        return findByParentIsNull();
-    }
+    void deleteById(@Param(RepositoryConstants.PARAM_ID) UUID id);
 }

@@ -2,7 +2,7 @@ package com.flash.mastery.dto.response;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
-import com.flash.mastery.entity.FlashcardType;
+import com.flash.mastery.entity.enums.FlashcardType;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

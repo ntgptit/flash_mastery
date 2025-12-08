@@ -2,7 +2,6 @@ package com.flash.mastery.service.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
@@ -11,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.flash.mastery.constant.MessageKeys;
+import com.flash.mastery.constant.RepositoryConstants;
 import com.flash.mastery.dto.criteria.FolderSearchCriteria;
 import com.flash.mastery.dto.request.FolderCreateRequest;
 import com.flash.mastery.dto.request.FolderUpdateRequest;
@@ -47,21 +47,32 @@ public class FolderServiceImpl extends BaseService implements FolderService {
 
         // Validate parent exists if filter is applied
         if (criteria.hasParentFilter()) {
-            findByIdOrThrow(
-                    this.folderRepository.findById(criteria.getParentId()),
-                    MessageKeys.ERROR_NOT_FOUND_FOLDER);
+            final var parent = this.folderRepository.findById(criteria.getParentId());
+            if (parent == null) {
+                throw new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FOLDER));
+            }
         }
 
-        final var folders = this.folderRepository.findByCriteria(criteria);
+        // Execute search based on criteria
+        final List<Folder> folders;
+        if (criteria.isRootFolders()) {
+            folders = this.folderRepository.findByParentIsNull();
+        } else if (criteria.hasParentFilter()) {
+            folders = this.folderRepository.findByParentId(criteria.getParentId());
+        } else {
+            folders = this.folderRepository.findByParentIsNull();
+        }
+
         return folders.stream().map(this::toResponseWithPath).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public FolderResponse getFolder(UUID id) {
-        final var folder = findByIdOrThrow(
-                this.folderRepository.findById(id),
-                MessageKeys.ERROR_NOT_FOUND_FOLDER);
+        final var folder = this.folderRepository.findById(id);
+        if (folder == null) {
+            throw new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FOLDER));
+        }
         return toResponseWithPath(folder);
     }
 
@@ -69,61 +80,87 @@ public class FolderServiceImpl extends BaseService implements FolderService {
     public FolderResponse create(FolderCreateRequest request) {
         final var folder = this.folderMapper.fromCreate(request);
         if (request.getParentId() != null) {
-            final var parent = this.folderRepository
-                    .findById(request.getParentId())
-                    .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FOLDER)));
+            final var parent = this.folderRepository.findById(request.getParentId());
+            if (parent == null) {
+                throw new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FOLDER));
+            }
+            folder.setParentId(request.getParentId());
             folder.setParent(parent);
         }
-        final var saved = this.folderRepository.save(folder);
-        return toResponseWithPath(saved);
+
+        // Initialize entity
+        folder.onCreate();
+        this.folderRepository.insert(folder);
+
+        return toResponseWithPath(folder);
     }
 
     @Override
     public FolderResponse update(UUID id, FolderUpdateRequest request) {
-        final var folder = findByIdOrThrow(
-                this.folderRepository.findById(id),
-                MessageKeys.ERROR_NOT_FOUND_FOLDER);
+        final var folder = this.folderRepository.findById(id);
+        if (folder == null) {
+            throw new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FOLDER));
+        }
+
         if (request.getParentId() != null) {
             if (id.equals(request.getParentId())) {
                 throw new IllegalArgumentException("Folder cannot reference itself as parent");
             }
-            final var parent = this.folderRepository
-                    .findById(request.getParentId())
-                    .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FOLDER)));
+            final var parent = this.folderRepository.findById(request.getParentId());
+            if (parent == null) {
+                throw new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FOLDER));
+            }
             validateParent(folder, parent);
+            folder.setParentId(request.getParentId());
             folder.setParent(parent);
         }
+
         this.folderMapper.update(folder, request);
-        final var saved = this.folderRepository.save(folder);
-        return toResponseWithPath(saved);
+        folder.onUpdate();
+        this.folderRepository.update(folder);
+
+        return toResponseWithPath(folder);
     }
 
     @Override
     public void delete(UUID id) {
-        final var folder = findByIdOrThrow(
-                this.folderRepository.findById(id),
-                MessageKeys.ERROR_NOT_FOUND_FOLDER);
+        final var folder = this.folderRepository.findById(id);
+        if (folder == null) {
+            throw new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FOLDER));
+        }
         // Recursively delete all subfolders and their contents
-        deleteRecursively(folder);
+        deleteRecursively(id);
     }
 
-    private void deleteRecursively(Folder folder) {
+    private void deleteRecursively(UUID folderId) {
+        // Load children folders
+        final var children = this.folderRepository.findByParentId(folderId);
+
         // Delete all children folders recursively
-        for (final var child : new HashSet<>(folder.getChildren())) {
-            deleteRecursively(child);
+        for (final var child : children) {
+            deleteRecursively(child.getId());
         }
+
         // After all children are deleted, delete this folder
-        // (cascade will handle decks due to JPA relationship)
-        this.folderRepository.delete(folder);
+        // Note: In MyBatis, we need to handle cascade delete manually
+        // The database foreign key constraint should handle deck deletion
+        this.folderRepository.deleteById(folderId);
     }
 
     private void validateParent(Folder folder, Folder newParent) {
         var current = newParent;
-        while (current != null) {
+        var guard = 0;
+        while (current != null && guard < RepositoryConstants.MAX_RECURSION_DEPTH) {
             if ((folder.getId() != null) && folder.getId().equals(current.getId())) {
                 throw new IllegalArgumentException("Parent folder cannot be a descendant of the folder");
             }
-            current = current.getParent();
+            // Load parent manually for MyBatis
+            if (current.getParentId() != null) {
+                current = this.folderRepository.findById(current.getParentId());
+            } else {
+                current = null;
+            }
+            guard++;
         }
     }
 
@@ -138,9 +175,14 @@ public class FolderServiceImpl extends BaseService implements FolderService {
         final List<String> path = new ArrayList<>();
         var current = folder;
         var guard = 0;
-        while ((current != null) && (guard < 100)) {
+        while ((current != null) && (guard < RepositoryConstants.MAX_RECURSION_DEPTH)) {
             path.add(current.getName());
-            current = current.getParent();
+            // Load parent manually for MyBatis
+            if (current.getParentId() != null) {
+                current = this.folderRepository.findById(current.getParentId());
+            } else {
+                current = null;
+            }
             guard++;
         }
         Collections.reverse(path);

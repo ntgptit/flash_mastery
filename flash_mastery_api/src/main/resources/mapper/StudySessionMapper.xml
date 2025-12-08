@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.flash.mastery.repository.StudySessionRepository">
+
+    <resultMap id="StudySessionResultMap" type="com.flash.mastery.entity.StudySession">
+        <id property="id" column="id" />
+        <result property="deckId" column="deck_id" />
+        <result property="currentMode" column="current_mode" />
+        <result property="currentBatchIndex" column="current_batch_index" />
+        <result property="status" column="status" />
+        <result property="completedAt" column="completed_at" />
+        <result property="createdAt" column="created_at" />
+        <result property="updatedAt" column="updated_at" />
+        <collection property="flashcardIds" ofType="java.util.UUID" select="findFlashcardIdsBySessionId" column="id"/>
+    </resultMap>
+
+    <select id="findById" resultMap="StudySessionResultMap">
+        SELECT * FROM flash_mastery.study_sessions WHERE id = #{id}
+    </select>
+
+    <select id="findByDeckId" resultMap="StudySessionResultMap">
+        SELECT * FROM flash_mastery.study_sessions
+        WHERE deck_id = #{deckId}
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findByDeckIdAndStatus" resultMap="StudySessionResultMap">
+        SELECT * FROM flash_mastery.study_sessions
+        WHERE deck_id = #{deckId}
+        AND status = #{status}
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findFlashcardIdsBySessionId" resultType="java.util.UUID">
+        SELECT flashcard_id FROM flash_mastery.study_session_flashcard_ids
+        WHERE session_id = #{id}
+        ORDER BY flashcard_id
+    </select>
+
+    <insert id="insert">
+        INSERT INTO flash_mastery.study_sessions
+        (id, deck_id, current_mode, current_batch_index, status, completed_at, created_at, updated_at)
+        VALUES (#{id}, #{deckId}, #{currentMode}, #{currentBatchIndex}, #{status}, #{completedAt}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="update">
+        UPDATE flash_mastery.study_sessions
+        SET deck_id = #{deckId},
+            current_mode = #{currentMode},
+            current_batch_index = #{currentBatchIndex},
+            status = #{status},
+            completed_at = #{completedAt},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM flash_mastery.study_sessions WHERE id = #{id}
+    </delete>
+
+    <insert id="insertFlashcardIds">
+        INSERT INTO flash_mastery.study_session_flashcard_ids (session_id, flashcard_id)
+        VALUES
+        <foreach item="flashcardId" collection="flashcardIds" separator=",">
+            (#{sessionId}, #{flashcardId})
+        </foreach>
+    </insert>
+
+    <delete id="deleteFlashcardIdsBySessionId">
+        DELETE FROM flash_mastery.study_session_flashcard_ids WHERE session_id = #{sessionId}
+    </delete>
+
+    <insert id="insertProgressData">
+        INSERT INTO flash_mastery.study_session_progress (session_id, flashcard_id, progress_data)
+        VALUES (#{sessionId}, #{flashcardId}, #{progressData})
+    </insert>
+
+    <update id="updateProgressData">
+        UPDATE flash_mastery.study_session_progress
+        SET progress_data = #{progressData}
+        WHERE session_id = #{sessionId}
+        AND flashcard_id = #{flashcardId}
+    </update>
+
+    <delete id="deleteProgressDataBySessionId">
+        DELETE FROM flash_mastery.study_session_progress WHERE session_id = #{sessionId}
+    </delete>
+
+</mapper>

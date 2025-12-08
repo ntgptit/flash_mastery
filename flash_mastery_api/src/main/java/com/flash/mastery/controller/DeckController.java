@@ -4,7 +4,7 @@ import com.flash.mastery.dto.request.DeckCreateRequest;
 import com.flash.mastery.dto.request.DeckUpdateRequest;
 import com.flash.mastery.dto.response.DeckResponse;
 import com.flash.mastery.dto.response.ImportSummaryResponse;
-import com.flash.mastery.entity.FlashcardType;
+import com.flash.mastery.entity.enums.FlashcardType;
 import com.flash.mastery.service.DeckService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

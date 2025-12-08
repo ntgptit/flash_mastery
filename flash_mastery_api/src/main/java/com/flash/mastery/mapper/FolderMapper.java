@@ -16,7 +16,7 @@ import com.flash.mastery.entity.Folder;
 @Mapper(componentModel = "spring", builder = @Builder(disableBuilder = true), imports = NumberConstants.class)
 public interface FolderMapper {
 
-    @Mapping(target = "parentId", expression = "java(entity.getParent() != null ? entity.getParent().getId() : null)")
+    @Mapping(target = "parentId", source = "parentId")
     @Mapping(target = "subFolderCount", expression = "java(entity.getChildren() != null ? entity.getChildren().size() : NumberConstants.ZERO)")
     @Mapping(target = "path", ignore = true)
     @Mapping(target = "level", ignore = true)
@@ -27,6 +27,7 @@ public interface FolderMapper {
     @Mapping(target = "description", source = "request.description")
     @Mapping(target = "color", source = "request.color")
     @Mapping(target = "deckCount", expression = "java(NumberConstants.ZERO)")
+    @Mapping(target = "parentId", ignore = true)
     @Mapping(target = "parent", ignore = true)
     @Mapping(target = "decks", ignore = true)
     @Mapping(target = "children", ignore = true)
@@ -39,6 +40,7 @@ public interface FolderMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "deckCount", ignore = true)
+    @Mapping(target = "parentId", ignore = true)
     @Mapping(target = "parent", ignore = true)
     @Mapping(target = "decks", ignore = true)
     @Mapping(target = "children", ignore = true)
