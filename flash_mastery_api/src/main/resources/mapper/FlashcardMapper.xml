@@ -13,21 +13,22 @@
         <result property="type" column="type" />
         <result property="createdAt" column="created_at" />
         <result property="updatedAt" column="updated_at" />
+        <result property="deletedAt" column="deleted_at" />
     </resultMap>
 
     <select id="findById" resultMap="FlashcardResultMap">
-        SELECT * FROM flash_mastery.flashcards WHERE id = #{id}
+        SELECT * FROM flash_mastery.flashcards WHERE id = #{id} AND deleted_at IS NULL
     </select>
 
     <select id="findByDeckId" resultMap="FlashcardResultMap">
         SELECT * FROM flash_mastery.flashcards
-        WHERE deck_id = #{deckId}
+        WHERE deck_id = #{deckId} AND deleted_at IS NULL
         ORDER BY created_at DESC
     </select>
 
     <select id="findByDeckIdWithPagination" resultMap="FlashcardResultMap">
         SELECT * FROM flash_mastery.flashcards
-        WHERE deck_id = #{deckId}
+        WHERE deck_id = #{deckId} AND deleted_at IS NULL
         ORDER BY created_at DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>
@@ -38,16 +39,17 @@
         <foreach item="id" collection="ids" open="(" separator="," close=")">
             #{id}
         </foreach>
+        AND deleted_at IS NULL
         ORDER BY created_at DESC
     </select>
 
     <select id="countByDeckId" resultType="long">
-        SELECT COUNT(*) FROM flash_mastery.flashcards WHERE deck_id = #{deckId}
+        SELECT COUNT(*) FROM flash_mastery.flashcards WHERE deck_id = #{deckId} AND deleted_at IS NULL
     </select>
 
     <insert id="insert">
-        INSERT INTO flash_mastery.flashcards (id, deck_id, question, answer, hint, type, created_at, updated_at)
-        VALUES (#{id}, #{deckId}, #{question}, #{answer}, #{hint}, #{type}, #{createdAt}, #{updatedAt})
+        INSERT INTO flash_mastery.flashcards (id, deck_id, question, answer, hint, type, created_at, updated_at, deleted_at)
+        VALUES (#{id}, #{deckId}, #{question}, #{answer}, #{hint}, #{type}, #{createdAt}, #{updatedAt}, #{deletedAt})
     </insert>
 
     <update id="update">
@@ -58,15 +60,19 @@
             hint = #{hint},
             type = #{type},
             updated_at = #{updatedAt}
-        WHERE id = #{id}
+        WHERE id = #{id} AND deleted_at IS NULL
     </update>
 
-    <delete id="deleteById">
-        DELETE FROM flash_mastery.flashcards WHERE id = #{id}
-    </delete>
+    <update id="deleteById">
+        UPDATE flash_mastery.flashcards
+        SET deleted_at = NOW(), updated_at = NOW()
+        WHERE id = #{id} AND deleted_at IS NULL
+    </update>
 
-    <delete id="deleteByDeckId">
-        DELETE FROM flash_mastery.flashcards WHERE deck_id = #{deckId}
-    </delete>
+    <update id="deleteByDeckId">
+        UPDATE flash_mastery.flashcards
+        SET deleted_at = NOW(), updated_at = NOW()
+        WHERE deck_id = #{deckId} AND deleted_at IS NULL
+    </update>
 
 </mapper>

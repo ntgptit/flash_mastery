@@ -58,9 +58,6 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
         // Use provided flashcard IDs if available (for custom selection)
         if ((request.getFlashcardIds() != null) && !request.getFlashcardIds().isEmpty()) {
             final var flashcardIds = request.getFlashcardIds();
-            if (flashcardIds.isEmpty()) {
-                throw new IllegalArgumentException("No flashcards available for study");
-            }
             return createSession(deck, flashcardIds);
         }
 
@@ -73,7 +70,8 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
         final var allFlashcardIds = flashcards.stream()
                 .map(Flashcard::getId).toList();
 
-        // Get completed sessions (SUCCESS status) for this deck to find already studied flashcards
+        // Get completed sessions (SUCCESS status) for this deck to find already studied
+        // flashcards
         final var completedSessions = this.studySessionRepository
                 .findByDeckIdAndStatus(request.getDeckId(), StudySessionStatus.SUCCESS);
 
@@ -131,6 +129,8 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
         if (session == null) {
             throw new com.flash.mastery.exception.NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_SESSION));
         }
+        // Load progressData from database
+        loadProgressData(session);
         return this.studySessionMapper.toResponse(session);
     }
 
@@ -140,6 +140,9 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
         if (session == null) {
             throw new com.flash.mastery.exception.NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_SESSION));
         }
+
+        // Load progressData from database before checking/updating
+        loadProgressData(session);
 
         if (request.getCurrentMode() != null) {
             session.setCurrentMode(request.getCurrentMode());
@@ -154,7 +157,7 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
                 final var flashcardId = entry.getKey();
                 final var progressData = entry.getValue();
 
-                // Update or insert progress data
+                // Update or insert progress data based on whether it exists in database
                 if (session.getProgressData().containsKey(flashcardId)) {
                     this.studySessionRepository.updateProgressData(sessionId, flashcardId, progressData);
                 } else {
@@ -195,5 +198,22 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
         session.setStatus(StudySessionStatus.CANCEL);
         session.onUpdate();
         this.studySessionRepository.update(session);
+    }
+
+    /**
+     * Load progressData from database into the session entity.
+     * MyBatis doesn't automatically populate Map fields, so we need to load it
+     * manually.
+     */
+    private void loadProgressData(StudySession session) {
+        final var progressDataList = this.studySessionRepository.findProgressDataBySessionId(session.getId());
+        session.getProgressData().clear();
+        for (final var row : progressDataList) {
+            final var flashcardId = (UUID) row.get("flashcard_id");
+            final var progressData = (String) row.get("progress_data");
+            if (flashcardId != null && progressData != null) {
+                session.getProgressData().put(flashcardId, progressData);
+            }
+        }
     }
 }

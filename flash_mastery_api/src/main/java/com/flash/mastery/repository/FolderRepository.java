@@ -20,6 +20,8 @@ public interface FolderRepository {
 
     List<Folder> findByParentIsNull();
 
+    long countByParentId(@Param(RepositoryConstants.PARAM_PARENT_ID) UUID parentId);
+
     void insert(Folder folder);
 
     void update(Folder folder);

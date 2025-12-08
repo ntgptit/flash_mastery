@@ -42,4 +42,10 @@ public interface StudySessionRepository {
             @Param(RepositoryConstants.PARAM_PROGRESS_DATA) String progressData);
 
     void deleteProgressDataBySessionId(@Param(RepositoryConstants.PARAM_SESSION_ID) UUID sessionId);
+
+    /**
+     * Find all progress data entries for a session.
+     * Returns a list of maps with flashcard_id and progress_data.
+     */
+    List<java.util.Map<String, Object>> findProgressDataBySessionId(@Param(RepositoryConstants.PARAM_SESSION_ID) UUID sessionId);
 }

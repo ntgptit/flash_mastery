@@ -18,6 +18,7 @@ import com.flash.mastery.dto.response.FolderResponse;
 import com.flash.mastery.entity.Folder;
 import com.flash.mastery.exception.NotFoundException;
 import com.flash.mastery.mapper.FolderMapper;
+import com.flash.mastery.repository.DeckRepository;
 import com.flash.mastery.repository.FolderRepository;
 import com.flash.mastery.service.BaseService;
 import com.flash.mastery.service.FolderService;
@@ -27,14 +28,17 @@ import com.flash.mastery.service.FolderService;
 public class FolderServiceImpl extends BaseService implements FolderService {
 
     private final FolderRepository folderRepository;
+    private final DeckRepository deckRepository;
     private final FolderMapper folderMapper;
 
     public FolderServiceImpl(
             FolderRepository folderRepository,
+            DeckRepository deckRepository,
             FolderMapper folderMapper,
             MessageSource messageSource) {
         super(messageSource);
         this.folderRepository = folderRepository;
+        this.deckRepository = deckRepository;
         this.folderMapper = folderMapper;
     }
 
@@ -141,9 +145,11 @@ public class FolderServiceImpl extends BaseService implements FolderService {
             deleteRecursively(child.getId());
         }
 
-        // After all children are deleted, delete this folder
-        // Note: In MyBatis, we need to handle cascade delete manually
-        // The database foreign key constraint should handle deck deletion
+        // Soft delete all decks in this folder before deleting the folder
+        // This prevents foreign key constraint violations
+        this.deckRepository.deleteByFolderId(folderId);
+
+        // Soft delete this folder (sets deleted_at timestamp)
         this.folderRepository.deleteById(folderId);
     }
 
@@ -168,7 +174,10 @@ public class FolderServiceImpl extends BaseService implements FolderService {
         final var base = this.folderMapper.toResponse(folder);
         final var path = buildPath(folder);
         final var level = Math.max(0, path.size() - 1);
-        return base.toBuilder().path(path).level(level).build();
+        // Calculate subFolderCount from database since MyBatis doesn't load
+        // relationships
+        final var subFolderCount = (int) this.folderRepository.countByParentId(folder.getId());
+        return base.toBuilder().path(path).level(level).subFolderCount(subFolderCount).build();
     }
 
     private List<String> buildPath(Folder folder) {

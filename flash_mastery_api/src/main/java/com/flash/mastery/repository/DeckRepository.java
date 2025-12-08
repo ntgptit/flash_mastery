@@ -46,4 +46,6 @@ public interface DeckRepository {
     void update(Deck deck);
 
     void deleteById(@Param(RepositoryConstants.PARAM_ID) UUID id);
+
+    void deleteByFolderId(@Param(RepositoryConstants.PARAM_FOLDER_ID) UUID folderId);
 }

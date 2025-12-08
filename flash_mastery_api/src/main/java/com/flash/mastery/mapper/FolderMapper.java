@@ -17,7 +17,7 @@ import com.flash.mastery.entity.Folder;
 public interface FolderMapper {
 
     @Mapping(target = "parentId", source = "parentId")
-    @Mapping(target = "subFolderCount", expression = "java(entity.getChildren() != null ? entity.getChildren().size() : NumberConstants.ZERO)")
+    @Mapping(target = "subFolderCount", ignore = true)
     @Mapping(target = "path", ignore = true)
     @Mapping(target = "level", ignore = true)
     FolderResponse toResponse(Folder entity);
