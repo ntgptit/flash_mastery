@@ -108,7 +108,7 @@ public class FolderServiceImpl extends BaseService implements FolderService {
 
         if (request.getParentId() != null) {
             if (id.equals(request.getParentId())) {
-                throw new IllegalArgumentException("Folder cannot reference itself as parent");
+                throw new IllegalArgumentException(msg(MessageKeys.ERROR_FOLDER_CANNOT_REFERENCE_ITSELF));
             }
             final var parent = this.folderRepository.findById(request.getParentId());
             if (parent == null) {
@@ -158,7 +158,7 @@ public class FolderServiceImpl extends BaseService implements FolderService {
         var guard = 0;
         while (current != null && guard < RepositoryConstants.MAX_RECURSION_DEPTH) {
             if ((folder.getId() != null) && folder.getId().equals(current.getId())) {
-                throw new IllegalArgumentException("Parent folder cannot be a descendant of the folder");
+                throw new IllegalArgumentException(msg(MessageKeys.ERROR_FOLDER_PARENT_DESCENDANT));
             }
             // Load parent manually for MyBatis
             if (current.getParentId() != null) {

@@ -64,7 +64,7 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
         // Get all flashcards from deck
         final var flashcards = this.flashcardRepository.findByDeckId(request.getDeckId());
         if (flashcards.isEmpty()) {
-            throw new IllegalArgumentException("No flashcards available for study");
+            throw new IllegalArgumentException(msg(MessageKeys.ERROR_NO_FLASHCARDS_AVAILABLE));
         }
 
         final var allFlashcardIds = flashcards.stream()
@@ -86,8 +86,7 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
                 .collect(Collectors.toList());
 
         if (unstudiedFlashcardIds.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "All flashcards have been studied. Please add more flashcards to the deck.");
+            throw new IllegalArgumentException(msg(MessageKeys.ERROR_ALL_FLASHCARDS_STUDIED));
         }
 
         // Shuffle to randomize order

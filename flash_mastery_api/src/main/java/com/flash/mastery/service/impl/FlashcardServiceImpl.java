@@ -96,7 +96,7 @@ public class FlashcardServiceImpl extends BaseService implements FlashcardServic
     @Override
     public FlashcardResponse create(FlashcardCreateRequest request) {
         if (request.getDeckId() == null) {
-            throw new IllegalArgumentException("Deck ID must not be null when creating flashcard");
+            throw new IllegalArgumentException(msg(MessageKeys.ERROR_DECK_ID_NULL));
         }
         final var deck = this.deckRepository.findById(request.getDeckId());
         if (deck == null) {
@@ -106,7 +106,7 @@ public class FlashcardServiceImpl extends BaseService implements FlashcardServic
         final var deckType = deck.getType() != null ? deck.getType() : request.getType();
         final var requestedType = request.getType() != null ? request.getType() : deckType;
         if ((deckType != null) && (requestedType != null) && (deckType != requestedType)) {
-            throw new IllegalArgumentException("Flashcard type must match deck type");
+            throw new IllegalArgumentException(msg(MessageKeys.ERROR_FLASHCARD_TYPE_MISMATCH));
         }
         if (requestedType != null) {
             request.setType(requestedType);
@@ -140,7 +140,7 @@ public class FlashcardServiceImpl extends BaseService implements FlashcardServic
         final var targetType = request.getType() != null ? request.getType() : card.getType();
 
         if ((deckType != null) && (targetType != null) && (deckType != targetType)) {
-            throw new IllegalArgumentException("Flashcard type must match deck type");
+            throw new IllegalArgumentException(msg(MessageKeys.ERROR_FLASHCARD_TYPE_MISMATCH));
         }
         if (targetType != null) {
             card.setType(targetType);

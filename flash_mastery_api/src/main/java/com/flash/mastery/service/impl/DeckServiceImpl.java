@@ -22,8 +22,9 @@ import com.flash.mastery.dto.request.DeckUpdateRequest;
 import com.flash.mastery.dto.response.DeckResponse;
 import com.flash.mastery.entity.Deck;
 import com.flash.mastery.entity.Flashcard;
-import com.flash.mastery.entity.enums.FlashcardType;
 import com.flash.mastery.entity.Folder;
+import com.flash.mastery.entity.enums.DeckSortOption;
+import com.flash.mastery.entity.enums.FlashcardType;
 import com.flash.mastery.exception.NotFoundException;
 import com.flash.mastery.mapper.DeckMapper;
 import com.flash.mastery.repository.DeckRepository;
@@ -31,7 +32,6 @@ import com.flash.mastery.repository.FlashcardRepository;
 import com.flash.mastery.repository.FolderRepository;
 import com.flash.mastery.service.BaseService;
 import com.flash.mastery.service.DeckService;
-import com.flash.mastery.entity.enums.DeckSortOption;
 import com.flash.mastery.util.NaturalOrderComparator;
 import com.flash.mastery.util.importer.ImportResult;
 import com.flash.mastery.util.importer.ImporterFactory;
@@ -40,7 +40,6 @@ import com.flash.mastery.util.importer.RowContext;
 @Service
 @Transactional
 public class DeckServiceImpl extends BaseService implements DeckService {
-
 
     private final DeckRepository deckRepository;
     private final FlashcardRepository flashcardRepository;
@@ -81,8 +80,8 @@ public class DeckServiceImpl extends BaseService implements DeckService {
             decks = applyPagination(decks, page, size);
         } else {
             // For other sorts, use database sorting with pagination
-            final int offset = page * size;
-            final int limit = size;
+            final var offset = page * size;
+            final var limit = size;
             decks = fetchDecksForCriteriaWithPagination(criteria, offset, limit);
         }
 
@@ -90,8 +89,8 @@ public class DeckServiceImpl extends BaseService implements DeckService {
     }
 
     private List<Deck> fetchAllDecksForCriteria(DeckSearchCriteria criteria) {
-        final boolean hasFolder = criteria.hasFolderFilter();
-        final boolean hasQuery = criteria.hasQueryFilter();
+        final var hasFolder = criteria.hasFolderFilter();
+        final var hasQuery = criteria.hasQueryFilter();
 
         if (hasFolder && hasQuery) {
             // Get all with default offset and max limit
@@ -100,18 +99,21 @@ public class DeckServiceImpl extends BaseService implements DeckService {
                     criteria.getQuery(),
                     RepositoryConstants.DEFAULT_OFFSET,
                     RepositoryConstants.MAX_LIMIT);
-        } else if (hasFolder) {
-            return this.deckRepository.findByFolderId(criteria.getFolderId(), RepositoryConstants.DEFAULT_OFFSET, RepositoryConstants.MAX_LIMIT);
-        } else if (hasQuery) {
-            return this.deckRepository.findByNameContainingIgnoreCase(criteria.getQuery(), RepositoryConstants.DEFAULT_OFFSET, RepositoryConstants.MAX_LIMIT);
-        } else {
-            return this.deckRepository.findAll(RepositoryConstants.DEFAULT_OFFSET, RepositoryConstants.MAX_LIMIT);
         }
+        if (hasFolder) {
+            return this.deckRepository.findByFolderId(criteria.getFolderId(), RepositoryConstants.DEFAULT_OFFSET,
+                    RepositoryConstants.MAX_LIMIT);
+        }
+        if (hasQuery) {
+            return this.deckRepository.findByNameContainingIgnoreCase(criteria.getQuery(),
+                    RepositoryConstants.DEFAULT_OFFSET, RepositoryConstants.MAX_LIMIT);
+        }
+        return this.deckRepository.findAll(RepositoryConstants.DEFAULT_OFFSET, RepositoryConstants.MAX_LIMIT);
     }
 
     private List<Deck> fetchDecksForCriteriaWithPagination(DeckSearchCriteria criteria, int offset, int limit) {
-        final boolean hasFolder = criteria.hasFolderFilter();
-        final boolean hasQuery = criteria.hasQueryFilter();
+        final var hasFolder = criteria.hasFolderFilter();
+        final var hasQuery = criteria.hasQueryFilter();
 
         if (hasFolder && hasQuery) {
             return this.deckRepository.findByFolderIdAndNameContainingIgnoreCase(
@@ -119,13 +121,14 @@ public class DeckServiceImpl extends BaseService implements DeckService {
                     criteria.getQuery(),
                     offset,
                     limit);
-        } else if (hasFolder) {
-            return this.deckRepository.findByFolderId(criteria.getFolderId(), offset, limit);
-        } else if (hasQuery) {
-            return this.deckRepository.findByNameContainingIgnoreCase(criteria.getQuery(), offset, limit);
-        } else {
-            return this.deckRepository.findAll(offset, limit);
         }
+        if (hasFolder) {
+            return this.deckRepository.findByFolderId(criteria.getFolderId(), offset, limit);
+        }
+        if (hasQuery) {
+            return this.deckRepository.findByNameContainingIgnoreCase(criteria.getQuery(), offset, limit);
+        }
+        return this.deckRepository.findAll(offset, limit);
     }
 
     /**
@@ -150,8 +153,8 @@ public class DeckServiceImpl extends BaseService implements DeckService {
      * Apply pagination manually after sorting.
      */
     private List<Deck> applyPagination(List<Deck> decks, int page, int size) {
-        final int start = page * size;
-        final int end = Math.min(start + size, decks.size());
+        final var start = page * size;
+        final var end = Math.min(start + size, decks.size());
         if (start >= decks.size()) {
             return List.of();
         }
@@ -249,7 +252,8 @@ public class DeckServiceImpl extends BaseService implements DeckService {
 
         // Get all existing deck names in this folder
         final Set<String> existingDeckNames = new HashSet<>();
-        final var existingDecks = this.deckRepository.findByFolderId(folderId, RepositoryConstants.DEFAULT_OFFSET, RepositoryConstants.MAX_LIMIT);
+        final var existingDecks = this.deckRepository.findByFolderId(folderId, RepositoryConstants.DEFAULT_OFFSET,
+                RepositoryConstants.MAX_LIMIT);
         existingDecks.forEach(deck -> existingDeckNames.add(StringUtils.lowerCase(deck.getName())));
 
         persistRows(parsed, folder, type, existingDeckNames);
@@ -272,12 +276,12 @@ public class DeckServiceImpl extends BaseService implements DeckService {
             return ImportRow.deck(ctx.rowIndex(), clamp(deckName));
         }
         if (ctx.cells().size() < 2) {
-            throw new IllegalArgumentException("Missing vocabulary or meaning");
+            throw new IllegalArgumentException(msg(MessageKeys.ERROR_MISSING_VOCABULARY_OR_MEANING));
         }
         final var vocab = StringUtils.trimToNull(ctx.cell(0));
         final var meaning = StringUtils.trimToNull(ctx.cell(1));
         if ((vocab == null) || (meaning == null)) {
-            throw new IllegalArgumentException("Vocabulary/meaning is blank");
+            throw new IllegalArgumentException(msg(MessageKeys.ERROR_VOCABULARY_OR_MEANING_BLANK));
         }
         return ImportRow.card(ctx.rowIndex(), clamp(vocab), clamp(meaning));
     }
@@ -354,7 +358,7 @@ public class DeckServiceImpl extends BaseService implements DeckService {
         }
 
         // Insert all flashcards in batch
-        for (Flashcard flashcard : buffer) {
+        for (final Flashcard flashcard : buffer) {
             flashcard.onCreate();
             this.flashcardRepository.insert(flashcard);
         }
@@ -391,7 +395,8 @@ public class DeckServiceImpl extends BaseService implements DeckService {
         if (value == null) {
             return null;
         }
-        return value.length() > ValidationConstants.NAME_MAX_LENGTH ? value.substring(0, ValidationConstants.NAME_MAX_LENGTH) : value;
+        return value.length() > ValidationConstants.NAME_MAX_LENGTH ? value.substring(0,
+                ValidationConstants.NAME_MAX_LENGTH) : value;
     }
 
     private record ImportRow(int rowIndex, Kind kind, String deckName, String vocab, String meaning) {
