@@ -36,5 +36,5 @@ DROP COLUMN IF EXISTS completed_at;
 -- Step 6: Ensure all remaining sessions have IN_PROGRESS status
 UPDATE flash_mastery.study_sessions
 SET status = 'IN_PROGRESS'
-WHERE status IS NULL OR status != 'IN_PROGRESS'; 
+WHERE status IS NULL OR status != 'IN_PROGRESS';
 
