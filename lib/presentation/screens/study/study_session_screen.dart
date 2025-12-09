@@ -289,21 +289,78 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
     if (shouldSave == null || !mounted) return;
 
     if (shouldSave == true) {
-      // User wants to save - complete the session
+      // User wants to save - ensure mode is updated if needed, then complete the session
       if (_sessionId != null) {
         final viewModel = ref.read(studySessionViewModelProvider(_sessionId).notifier);
-        final error = await viewModel.completeSession(_sessionId!);
-        if (mounted) {
-          if (error != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error: $error')),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Đã lưu tiến trình học tập')),
-            );
-          }
-        }
+
+        // Reload session to get latest state
+        await viewModel.loadSession(_sessionId!);
+
+        // Get the latest session state
+        final latestState = ref.read(studySessionViewModelProvider(_sessionId));
+        latestState.maybeWhen(
+          success: (latestSession) async {
+            // Check if we need to advance mode before completing
+            // If current mode is OVERVIEW and overview is complete, advance to MATCHING
+            if (latestSession.currentMode == StudyMode.overview) {
+              final batch = latestSession.getCurrentBatch();
+              final isOverviewComplete = batch.every((id) {
+                final progress = latestSession.progress[id];
+                return progress?.modeCompletion[StudyMode.overview] == true;
+              });
+
+              if (isOverviewComplete) {
+                // Overview is complete, advance to MATCHING mode first
+                final nextMode = latestSession.getNextMode();
+                if (nextMode != null) {
+                  final updateError = await viewModel.updateSession(
+                    UpdateStudySessionParams(
+                      sessionId: latestSession.id,
+                      currentMode: studyModeToJson(nextMode),
+                      currentBatchIndex: 0,
+                    ),
+                  );
+                  if (updateError != null && mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error updating mode: $updateError')),
+                    );
+                    return;
+                  }
+                }
+              }
+            }
+
+            // Now complete the session
+            final error = await viewModel.completeSession(_sessionId!);
+            if (mounted) {
+              if (error != null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error: $error')),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Đã lưu tiến trình học tập')),
+                );
+              }
+            }
+          },
+          orElse: () {
+            // If we can't get the session state, just try to complete it
+            viewModel.completeSession(_sessionId!).then((error) {
+              if (mounted) {
+                if (error != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $error')),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Đã lưu tiến trình học tập')),
+                  );
+                }
+              }
+            });
+          },
+        );
       }
       if (mounted) {
         context.pop();

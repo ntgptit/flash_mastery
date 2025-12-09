@@ -75,9 +75,21 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
         final var completedSessions = this.studySessionRepository
                 .findByDeckIdAndStatus(request.getDeckId(), StudySessionStatus.SUCCESS);
 
-        // Collect all flashcard IDs that have been studied (from completed sessions)
+        // Load progressData for all completed sessions and collect flashcard IDs that have
+        // completed ALL study modes (OVERVIEW, MATCHING, GUESS, RECALL, FILL_IN_BLANK)
         final var studiedFlashcardIds = completedSessions.stream()
-                .flatMap(session -> session.getFlashcardIds().stream())
+                .flatMap(session -> {
+                    // Load progressData for this session
+                    loadProgressData(session);
+                    // Check each flashcard in this session
+                    return session.getFlashcardIds().stream()
+                            .filter(flashcardId -> {
+                                final var progressData = session.getProgressData().get(flashcardId);
+                                // A flashcard is considered fully studied only if it has completed
+                                // all 5 study modes
+                                return progressData != null && isFullyStudied(progressData);
+                            });
+                })
                 .collect(Collectors.toSet());
 
         // Filter out already studied flashcards - only get unstudied ones
@@ -214,5 +226,30 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
                 session.getProgressData().put(flashcardId, progressData);
             }
         }
+    }
+
+    /**
+     * Check if a flashcard has been fully studied (completed all 5 study modes).
+     * Progress data format: "OVERVIEW:true,MATCHING:true,GUESS:true,RECALL:true,FILL_IN_BLANK:true"
+     *
+     * @param progressData The progress data string for the flashcard
+     * @return true if all 5 modes are completed, false otherwise
+     */
+    private boolean isFullyStudied(String progressData) {
+        if (progressData == null || progressData.isEmpty()) {
+            return false;
+        }
+
+        // Check that all 5 study modes are present and completed (true)
+        final var requiredModes = new String[] { "OVERVIEW:true", "MATCHING:true", "GUESS:true",
+                "RECALL:true", "FILL_IN_BLANK:true" };
+
+        for (final var mode : requiredModes) {
+            if (!progressData.contains(mode)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
