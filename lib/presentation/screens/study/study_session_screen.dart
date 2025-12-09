@@ -157,7 +157,7 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
             actions: [
               IconButton(
                 icon: const Icon(Icons.close),
-                onPressed: () => _showExitDialog(context, session),
+                onPressed: () => context.pop(),
               ),
             ],
           ),
@@ -183,7 +183,7 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
       return FillInBlankModeWidget(
         session: session,
         flashcards: batchFlashcards,
-        onComplete: () => _completeSession(),
+        onComplete: () => context.pop(),
       );
     }
 
@@ -231,8 +231,10 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
   Future<void> _handleModeComplete(StudySession session) async {
     final nextMode = session.getNextMode();
     if (nextMode == null) {
-      // All modes completed
-      await _completeSession();
+      // All modes completed - just exit
+      if (mounted) {
+        context.pop();
+      }
       return;
     }
 
@@ -245,147 +247,6 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
         currentBatchIndex: 0,
       ),
     );
-  }
-
-  Future<void> _completeSession() async {
-    if (_sessionId == null) return;
-
-    final viewModel = ref.read(studySessionViewModelProvider(_sessionId).notifier);
-    final error = await viewModel.completeSession(_sessionId!);
-
-    if (mounted) {
-      if (error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $error')));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Study session completed!')),
-        );
-        context.pop();
-      }
-    }
-  }
-
-  Future<void> _showExitDialog(BuildContext context, StudySession session) async {
-    final shouldSave = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(widget.testMode ? 'Exit Test?' : 'Exit Study Session?'),
-        content: Text(widget.testMode
-            ? 'Do you want to save your progress?'
-            : 'Do you want to save your progress?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Không'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Có'),
-          ),
-        ],
-      ),
-    );
-
-    if (shouldSave == null || !mounted) return;
-
-    if (shouldSave == true) {
-      // User wants to save - ensure mode is updated if needed, then complete the session
-      if (_sessionId != null) {
-        final viewModel = ref.read(studySessionViewModelProvider(_sessionId).notifier);
-
-        // Reload session to get latest state
-        await viewModel.loadSession(_sessionId!);
-
-        // Get the latest session state
-        final latestState = ref.read(studySessionViewModelProvider(_sessionId));
-        latestState.maybeWhen(
-          success: (latestSession) async {
-            // Check if we need to advance mode before completing
-            // If current mode is OVERVIEW and overview is complete, advance to MATCHING
-            if (latestSession.currentMode == StudyMode.overview) {
-              final batch = latestSession.getCurrentBatch();
-              final isOverviewComplete = batch.every((id) {
-                final progress = latestSession.progress[id];
-                return progress?.modeCompletion[StudyMode.overview] == true;
-              });
-
-              if (isOverviewComplete) {
-                // Overview is complete, advance to MATCHING mode first
-                final nextMode = latestSession.getNextMode();
-                if (nextMode != null) {
-                  final updateError = await viewModel.updateSession(
-                    UpdateStudySessionParams(
-                      sessionId: latestSession.id,
-                      currentMode: studyModeToJson(nextMode),
-                      currentBatchIndex: 0,
-                    ),
-                  );
-                  if (updateError != null && mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error updating mode: $updateError')),
-                    );
-                    return;
-                  }
-                }
-              }
-            }
-
-            // Now complete the session
-            final error = await viewModel.completeSession(_sessionId!);
-            if (mounted) {
-              if (error != null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error: $error')),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Đã lưu tiến trình học tập')),
-                );
-              }
-            }
-          },
-          orElse: () {
-            // If we can't get the session state, just try to complete it
-            viewModel.completeSession(_sessionId!).then((error) {
-              if (mounted) {
-                if (error != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: $error')),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đã lưu tiến trình học tập')),
-                  );
-                }
-              }
-            });
-          },
-        );
-      }
-      if (mounted) {
-        context.pop();
-      }
-    } else {
-      // User doesn't want to save - cancel the session
-      if (_sessionId != null) {
-        final viewModel = ref.read(studySessionViewModelProvider(_sessionId).notifier);
-        final error = await viewModel.cancelSession(_sessionId!);
-        if (mounted) {
-          if (error != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error: $error')),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Đã hủy phiên học tập')),
-            );
-          }
-        }
-      }
-      if (mounted) {
-        context.pop();
-      }
-    }
   }
 }
 

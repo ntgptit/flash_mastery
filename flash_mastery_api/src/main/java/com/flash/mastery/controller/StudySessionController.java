@@ -62,29 +62,5 @@ public class StudySessionController {
             @Valid @RequestBody StudySessionUpdateRequest request) {
         return studySessionService.updateSession(id, request);
     }
-
-    @PostMapping("/{id}/complete")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(
-            summary = "Complete study session",
-            responses = {
-                    @ApiResponse(responseCode = "204", description = "Study session completed"),
-                    @ApiResponse(responseCode = "404", description = "Study session not found", content = @Content(schema = @Schema(hidden = true)))
-            })
-    public void completeSession(@PathVariable UUID id) {
-        studySessionService.completeSession(id);
-    }
-
-    @PostMapping("/{id}/cancel")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(
-            summary = "Cancel study session",
-            responses = {
-                    @ApiResponse(responseCode = "204", description = "Study session cancelled"),
-                    @ApiResponse(responseCode = "404", description = "Study session not found", content = @Content(schema = @Schema(hidden = true)))
-            })
-    public void cancelSession(@PathVariable UUID id) {
-        studySessionService.cancelSession(id);
-    }
 }
 

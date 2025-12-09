@@ -45,8 +45,6 @@ public class StudySession extends BaseAuditEntity {
     @Default
     private Map<UUID, String> progressData = new HashMap<>();
 
-    private java.time.LocalDateTime completedAt;
-
     /**
      * Ensure status is never null before persisting or updating.
      */

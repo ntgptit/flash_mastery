@@ -9,7 +9,5 @@ public interface StudySessionService {
     StudySessionResponse startSession(StudySessionCreateRequest request);
     StudySessionResponse getSession(UUID sessionId);
     StudySessionResponse updateSession(UUID sessionId, StudySessionUpdateRequest request);
-    void completeSession(UUID sessionId);
-    void cancelSession(UUID sessionId);
 }
 

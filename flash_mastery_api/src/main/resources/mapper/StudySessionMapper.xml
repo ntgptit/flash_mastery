@@ -9,7 +9,6 @@
         <result property="currentMode" column="current_mode" />
         <result property="currentBatchIndex" column="current_batch_index" />
         <result property="status" column="status" />
-        <result property="completedAt" column="completed_at" />
         <result property="createdAt" column="created_at" />
         <result property="updatedAt" column="updated_at" />
         <result property="deletedAt" column="deleted_at" />
@@ -59,7 +58,6 @@
           , current_mode
           , current_batch_index
           , status
-          , completed_at
           , created_at
           , updated_at
           , deleted_at
@@ -69,7 +67,6 @@
           , #{currentMode}
           , #{currentBatchIndex}
           , #{status}
-          , #{completedAt}
           , #{createdAt}
           , #{updatedAt}
           , #{deletedAt}
@@ -82,7 +79,6 @@
           , current_mode            = #{currentMode}
           , current_batch_index     = #{currentBatchIndex}
           , status                  = #{status}
-          , completed_at            = #{completedAt}
           , updated_at              = #{updatedAt}
         WHERE id = #{id}
           AND deleted_at IS NULL

@@ -27,7 +27,6 @@ public class StudySessionResponse {
     StudySessionStatus status;
     Map<UUID, String> progressData;
     LocalDateTime startedAt;
-    LocalDateTime completedAt;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 }

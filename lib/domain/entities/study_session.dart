@@ -10,7 +10,6 @@ class StudySession extends Equatable {
   final StudyMode currentMode;
   final int currentBatchIndex;
   final DateTime startedAt;
-  final DateTime? completedAt;
   final StudySessionStatus status;
   final Map<String, StudyProgress> progress;
 
@@ -21,7 +20,6 @@ class StudySession extends Equatable {
     required this.currentMode,
     this.currentBatchIndex = 0,
     required this.startedAt,
-    this.completedAt,
     this.status = StudySessionStatus.inProgress,
     this.progress = const {},
   });
@@ -33,7 +31,6 @@ class StudySession extends Equatable {
     StudyMode? currentMode,
     int? currentBatchIndex,
     DateTime? startedAt,
-    DateTime? completedAt,
     StudySessionStatus? status,
     Map<String, StudyProgress>? progress,
   }) {
@@ -44,7 +41,6 @@ class StudySession extends Equatable {
       currentMode: currentMode ?? this.currentMode,
       currentBatchIndex: currentBatchIndex ?? this.currentBatchIndex,
       startedAt: startedAt ?? this.startedAt,
-      completedAt: completedAt ?? this.completedAt,
       status: status ?? this.status,
       progress: progress ?? this.progress,
     );
@@ -93,7 +89,6 @@ class StudySession extends Equatable {
         currentMode,
         currentBatchIndex,
         startedAt,
-        completedAt,
         status,
         progress,
       ];

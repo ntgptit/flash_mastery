@@ -45,27 +45,6 @@ class UpdateStudySessionUseCase extends UseCase<StudySession, UpdateStudySession
   }
 }
 
-class CompleteStudySessionUseCase extends UseCase<void, String> {
-  final StudySessionRepository repository;
-
-  CompleteStudySessionUseCase(this.repository);
-
-  @override
-  Future<Either<Failure, void>> call(String sessionId) {
-    return repository.completeSession(sessionId);
-  }
-}
-
-class CancelStudySessionUseCase extends UseCase<void, String> {
-  final StudySessionRepository repository;
-
-  CancelStudySessionUseCase(this.repository);
-
-  @override
-  Future<Either<Failure, void>> call(String sessionId) {
-    return repository.cancelSession(sessionId);
-  }
-}
 
 class StartStudySessionParams {
   final String deckId;

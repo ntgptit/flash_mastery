@@ -31,15 +31,6 @@ UpdateStudySessionUseCase updateStudySessionUseCase(Ref ref) {
   return UpdateStudySessionUseCase(ref.watch(studySessionRepositoryProvider));
 }
 
-@riverpod
-CompleteStudySessionUseCase completeStudySessionUseCase(Ref ref) {
-  return CompleteStudySessionUseCase(ref.watch(studySessionRepositoryProvider));
-}
-
-@riverpod
-CancelStudySessionUseCase cancelStudySessionUseCase(Ref ref) {
-  return CancelStudySessionUseCase(ref.watch(studySessionRepositoryProvider));
-}
 
 @riverpod
 class StudySessionViewModel extends _$StudySessionViewModel {
@@ -109,40 +100,5 @@ class StudySessionViewModel extends _$StudySessionViewModel {
     }
   }
 
-  Future<String?> completeSession(String sessionId) async {
-    try {
-      final result = await ref.read(completeStudySessionUseCaseProvider).call(sessionId);
-      final message = result.fold(
-        (failure) => failure.toDisplayMessage(),
-        (_) => null,
-      );
-      if (message == null) {
-        // Reload session to get updated state
-        await loadSession(sessionId);
-      }
-      return message;
-    } catch (e) {
-      // Provider was disposed, ignore
-      return null;
-    }
-  }
-
-  Future<String?> cancelSession(String sessionId) async {
-    try {
-      final result = await ref.read(cancelStudySessionUseCaseProvider).call(sessionId);
-      final message = result.fold(
-        (failure) => failure.toDisplayMessage(),
-        (_) => null,
-      );
-      if (message == null) {
-        // Reload session to get updated state (status = CANCEL)
-        await loadSession(sessionId);
-      }
-      return message;
-    } catch (e) {
-      // Provider was disposed, ignore
-      return null;
-    }
-  }
 }
 

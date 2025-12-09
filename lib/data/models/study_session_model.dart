@@ -9,7 +9,6 @@ class StudySessionModel {
   final StudyMode currentMode;
   final int currentBatchIndex;
   final DateTime startedAt;
-  final DateTime? completedAt;
   final StudySessionStatus status;
   final Map<String, String> progressData;
   final DateTime createdAt;
@@ -22,7 +21,6 @@ class StudySessionModel {
     required this.currentMode,
     this.currentBatchIndex = 0,
     required this.startedAt,
-    this.completedAt,
     this.status = StudySessionStatus.inProgress,
     this.progressData = const {},
     required this.createdAt,
@@ -37,9 +35,6 @@ class StudySessionModel {
       currentMode: studyModeFromJson(json['currentMode'] as String),
       currentBatchIndex: json['currentBatchIndex'] as int? ?? 0,
       startedAt: DateTime.parse(json['startedAt'] as String),
-      completedAt: json['completedAt'] != null
-          ? DateTime.parse(json['completedAt'] as String)
-          : null,
       status: json['status'] != null
           ? studySessionStatusFromJson(json['status'] as String)
           : StudySessionStatus.inProgress,
@@ -76,7 +71,6 @@ class StudySessionModel {
       currentMode: currentMode,
       currentBatchIndex: currentBatchIndex,
       startedAt: startedAt,
-      completedAt: completedAt,
       status: status,
       progress: progress,
     );
@@ -99,7 +93,6 @@ class StudySessionModel {
       currentMode: session.currentMode,
       currentBatchIndex: session.currentBatchIndex,
       startedAt: session.startedAt,
-      completedAt: session.completedAt,
       status: session.status,
       progressData: progressData,
       createdAt: DateTime.now(), // These should come from backend

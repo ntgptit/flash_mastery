@@ -20,11 +20,5 @@ abstract class StudySessionRepository {
     int? currentBatchIndex,
     Map<String, String>? progressData,
   });
-
-  /// Complete a study session.
-  Future<Either<Failure, void>> completeSession(String sessionId);
-
-  /// Cancel a study session.
-  Future<Either<Failure, void>> cancelSession(String sessionId);
 }
 

@@ -1,10 +1,8 @@
 package com.flash.mastery.service.impl;
 
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
@@ -70,43 +68,12 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
         final var allFlashcardIds = flashcards.stream()
                 .map(Flashcard::getId).toList();
 
-        // Get completed sessions (SUCCESS status) for this deck to find already studied
-        // flashcards
-        final var completedSessions = this.studySessionRepository
-                .findByDeckIdAndStatus(request.getDeckId(), StudySessionStatus.SUCCESS);
-
-        // Load progressData for all completed sessions and collect flashcard IDs that have
-        // completed ALL study modes (OVERVIEW, MATCHING, GUESS, RECALL, FILL_IN_BLANK)
-        final var studiedFlashcardIds = completedSessions.stream()
-                .flatMap(session -> {
-                    // Load progressData for this session
-                    loadProgressData(session);
-                    // Check each flashcard in this session
-                    return session.getFlashcardIds().stream()
-                            .filter(flashcardId -> {
-                                final var progressData = session.getProgressData().get(flashcardId);
-                                // A flashcard is considered fully studied only if it has completed
-                                // all 5 study modes
-                                return progressData != null && isFullyStudied(progressData);
-                            });
-                })
-                .collect(Collectors.toSet());
-
-        // Filter out already studied flashcards - only get unstudied ones
-        final var unstudiedFlashcardIds = allFlashcardIds.stream()
-                .filter(id -> !studiedFlashcardIds.contains(id))
-                .collect(Collectors.toList());
-
-        if (unstudiedFlashcardIds.isEmpty()) {
-            throw new IllegalArgumentException(msg(MessageKeys.ERROR_ALL_FLASHCARDS_STUDIED));
-        }
-
         // Shuffle to randomize order
-        Collections.shuffle(unstudiedFlashcardIds);
+        Collections.shuffle(allFlashcardIds);
 
         // Select flashcards based on batch size for this session
-        final var flashcardIds = unstudiedFlashcardIds.stream()
-                .limit(Math.min(NumberConstants.STUDY_SESSION_BATCH_SIZE, unstudiedFlashcardIds.size()))
+        final var flashcardIds = allFlashcardIds.stream()
+                .limit(Math.min(NumberConstants.STUDY_SESSION_BATCH_SIZE, allFlashcardIds.size()))
                 .toList();
 
         return createSession(deck, flashcardIds);
@@ -164,7 +131,7 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
 
         // Handle progress data updates
         if (request.getProgressData() != null) {
-            for (var entry : request.getProgressData().entrySet()) {
+            for (final var entry : request.getProgressData().entrySet()) {
                 final var flashcardId = entry.getKey();
                 final var progressData = entry.getValue();
 
@@ -186,31 +153,6 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
         return this.studySessionMapper.toResponse(session);
     }
 
-    @Override
-    public void completeSession(UUID sessionId) {
-        final var session = this.studySessionRepository.findById(sessionId);
-        if (session == null) {
-            throw new com.flash.mastery.exception.NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_SESSION));
-        }
-
-        session.setCompletedAt(LocalDateTime.now());
-        session.setStatus(StudySessionStatus.SUCCESS);
-        session.onUpdate();
-        this.studySessionRepository.update(session);
-    }
-
-    @Override
-    public void cancelSession(UUID sessionId) {
-        final var session = this.studySessionRepository.findById(sessionId);
-        if (session == null) {
-            throw new com.flash.mastery.exception.NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_SESSION));
-        }
-
-        session.setStatus(StudySessionStatus.CANCEL);
-        session.onUpdate();
-        this.studySessionRepository.update(session);
-    }
-
     /**
      * Load progressData from database into the session entity.
      * MyBatis doesn't automatically populate Map fields, so we need to load it
@@ -222,34 +164,10 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
         for (final var row : progressDataList) {
             final var flashcardId = (UUID) row.get("flashcard_id");
             final var progressData = (String) row.get("progress_data");
-            if (flashcardId != null && progressData != null) {
+            if ((flashcardId != null) && (progressData != null)) {
                 session.getProgressData().put(flashcardId, progressData);
             }
         }
     }
 
-    /**
-     * Check if a flashcard has been fully studied (completed all 5 study modes).
-     * Progress data format: "OVERVIEW:true,MATCHING:true,GUESS:true,RECALL:true,FILL_IN_BLANK:true"
-     *
-     * @param progressData The progress data string for the flashcard
-     * @return true if all 5 modes are completed, false otherwise
-     */
-    private boolean isFullyStudied(String progressData) {
-        if (progressData == null || progressData.isEmpty()) {
-            return false;
-        }
-
-        // Check that all 5 study modes are present and completed (true)
-        final var requiredModes = new String[] { "OVERVIEW:true", "MATCHING:true", "GUESS:true",
-                "RECALL:true", "FILL_IN_BLANK:true" };
-
-        for (final var mode : requiredModes) {
-            if (!progressData.contains(mode)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
 }

@@ -47,20 +47,5 @@ class StudySessionRepositoryImpl implements StudySessionRepository {
     });
   }
 
-  @override
-  Future<Either<Failure, void>> completeSession(String sessionId) async {
-    return ErrorGuard.run(() async {
-      await remoteDataSource.completeSession(sessionId);
-      return;
-    });
-  }
-
-  @override
-  Future<Either<Failure, void>> cancelSession(String sessionId) async {
-    return ErrorGuard.run(() async {
-      await remoteDataSource.cancelSession(sessionId);
-      return;
-    });
-  }
 }
 
