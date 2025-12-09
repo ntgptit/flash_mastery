@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.flash.mastery.constant.MessageKeys;
 import com.flash.mastery.constant.NumberConstants;
-import com.flash.mastery.dto.criteria.FlashcardSearchCriteria;
 import com.flash.mastery.dto.request.FlashcardCreateRequest;
 import com.flash.mastery.dto.request.FlashcardUpdateRequest;
 import com.flash.mastery.dto.response.FlashcardResponse;
@@ -41,46 +40,23 @@ public class FlashcardServiceImpl extends BaseService implements FlashcardServic
     @Override
     @Transactional(readOnly = true)
     public List<FlashcardResponse> getByDeck(UUID deckId, Integer page, Integer size) {
-        final var criteria = FlashcardSearchCriteria.builder()
-                .deckId(deckId)
-                .page(page)
-                .size(size)
-                .build();
+        // Calculate offset and limit for pagination (null if no pagination)
+        final Integer offset;
+        final Integer limit;
 
-        // Normalize pagination parameters
-        final var normalizedCriteria = normalizePagination(criteria);
-
-        // Execute search based on criteria
-        final List<com.flash.mastery.entity.Flashcard> flashcards;
-        if (!normalizedCriteria.hasPagination()) {
-            flashcards = this.flashcardRepository.findByDeckId(normalizedCriteria.getDeckId());
+        if (page != null && size != null) {
+            final var safePage = Math.max(page, NumberConstants.ZERO);
+            final var safeSize = Math.max(size, NumberConstants.ONE);
+            offset = safePage * safeSize;
+            limit = safeSize;
         } else {
-            final int offset = normalizedCriteria.getPage() * normalizedCriteria.getSize();
-            final int limit = normalizedCriteria.getSize();
-            flashcards = this.flashcardRepository.findByDeckIdWithPagination(
-                    normalizedCriteria.getDeckId(),
-                    offset,
-                    limit);
+            offset = null;
+            limit = null;
         }
 
+        // Use dynamic SQL to handle both paginated and non-paginated queries
+        final var flashcards = this.flashcardRepository.searchByDeckId(deckId, offset, limit);
         return flashcards.stream().map(this.flashcardMapper::toResponse).toList();
-    }
-
-    /**
-     * Normalize pagination parameters in criteria.
-     */
-    private FlashcardSearchCriteria normalizePagination(FlashcardSearchCriteria criteria) {
-        if (!criteria.hasPagination()) {
-            return criteria;
-        }
-
-        final var safePage = Math.max(criteria.getPage(), NumberConstants.ZERO);
-        final var safeSize = Math.max(criteria.getSize(), NumberConstants.ONE);
-        return FlashcardSearchCriteria.builder()
-                .deckId(criteria.getDeckId())
-                .page(safePage)
-                .size(safeSize)
-                .build();
     }
 
     @Override

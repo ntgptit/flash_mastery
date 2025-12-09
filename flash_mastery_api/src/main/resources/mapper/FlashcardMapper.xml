@@ -1,6 +1,5 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.flash.mastery.repository.FlashcardRepository">
 
@@ -17,62 +16,96 @@
     </resultMap>
 
     <select id="findById" resultMap="FlashcardResultMap">
-        SELECT * FROM flash_mastery.flashcards WHERE id = #{id} AND deleted_at IS NULL
+        SELECT
+            *
+        FROM flash_mastery.flashcards
+        WHERE id = #{id}
+          AND deleted_at IS NULL
     </select>
 
-    <select id="findByDeckId" resultMap="FlashcardResultMap">
-        SELECT * FROM flash_mastery.flashcards
-        WHERE deck_id = #{deckId} AND deleted_at IS NULL
+    <!-- Dynamic query for flashcards by deckId with optional pagination -->
+    <select id="searchByDeckId" resultMap="FlashcardResultMap">
+        SELECT
+            *
+        FROM flash_mastery.flashcards
+        WHERE deck_id = #{deckId}
+          AND deleted_at IS NULL
         ORDER BY created_at DESC
-    </select>
-
-    <select id="findByDeckIdWithPagination" resultMap="FlashcardResultMap">
-        SELECT * FROM flash_mastery.flashcards
-        WHERE deck_id = #{deckId} AND deleted_at IS NULL
-        ORDER BY created_at DESC
+        <if test="limit != null and offset != null">
         LIMIT #{limit} OFFSET #{offset}
+        </if>
     </select>
 
     <select id="findByIdIn" resultMap="FlashcardResultMap">
-        SELECT * FROM flash_mastery.flashcards
+        SELECT
+            *
+        FROM flash_mastery.flashcards
         WHERE id IN
         <foreach item="id" collection="ids" open="(" separator="," close=")">
             #{id}
         </foreach>
-        AND deleted_at IS NULL
+          AND deleted_at IS NULL
         ORDER BY created_at DESC
     </select>
 
     <select id="countByDeckId" resultType="long">
-        SELECT COUNT(*) FROM flash_mastery.flashcards WHERE deck_id = #{deckId} AND deleted_at IS NULL
+        SELECT
+            COUNT(*)
+        FROM flash_mastery.flashcards
+        WHERE deck_id = #{deckId}
+          AND deleted_at IS NULL
     </select>
 
     <insert id="insert">
-        INSERT INTO flash_mastery.flashcards (id, deck_id, question, answer, hint, type, created_at, updated_at, deleted_at)
-        VALUES (#{id}, #{deckId}, #{question}, #{answer}, #{hint}, #{type}, #{createdAt}, #{updatedAt}, #{deletedAt})
+        INSERT INTO flash_mastery.flashcards (
+            id
+          , deck_id
+          , question
+          , answer
+          , hint
+          , type
+          , created_at
+          , updated_at
+          , deleted_at
+        ) VALUES (
+            #{id}
+          , #{deckId}
+          , #{question}
+          , #{answer}
+          , #{hint}
+          , #{type}
+          , #{createdAt}
+          , #{updatedAt}
+          , #{deletedAt}
+        )
     </insert>
 
     <update id="update">
         UPDATE flash_mastery.flashcards
-        SET deck_id = #{deckId},
-            question = #{question},
-            answer = #{answer},
-            hint = #{hint},
-            type = #{type},
-            updated_at = #{updatedAt}
-        WHERE id = #{id} AND deleted_at IS NULL
+        SET deck_id     = #{deckId}
+          , question    = #{question}
+          , answer      = #{answer}
+          , hint        = #{hint}
+          , type        = #{type}
+          , updated_at  = #{updatedAt}
+        WHERE id = #{id}
+          AND deleted_at IS NULL
     </update>
 
     <update id="deleteById">
         UPDATE flash_mastery.flashcards
-        SET deleted_at = NOW(), updated_at = NOW()
-        WHERE id = #{id} AND deleted_at IS NULL
+        SET deleted_at  = NOW()
+          , updated_at  = NOW()
+        WHERE id = #{id}
+          AND deleted_at IS NULL
     </update>
 
     <update id="deleteByDeckId">
         UPDATE flash_mastery.flashcards
-        SET deleted_at = NOW(), updated_at = NOW()
-        WHERE deck_id = #{deckId} AND deleted_at IS NULL
+        SET deleted_at  = NOW()
+          , updated_at  = NOW()
+        WHERE deck_id = #{deckId}
+          AND deleted_at IS NULL
     </update>
 
 </mapper>

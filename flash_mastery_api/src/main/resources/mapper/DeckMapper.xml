@@ -15,54 +15,187 @@
         <result property="deletedAt" column="deleted_at" />
     </resultMap>
 
-    <select id="findById" resultMap="DeckResultMap"> SELECT * FROM flash_mastery.decks WHERE id =
-        #{id} AND deleted_at IS NULL </select>
+    <select id="findById" resultMap="DeckResultMap">
+        SELECT
+            *
+        FROM flash_mastery.decks
+        WHERE id = #{id}
+          AND deleted_at IS NULL
+    </select>
 
-    <select id="findAll" resultMap="DeckResultMap"> SELECT * FROM flash_mastery.decks WHERE
-        deleted_at IS NULL ORDER BY created_at DESC LIMIT #{limit} OFFSET #{offset} </select>
+    <!-- Dynamic search query using MyBatis if tags -->
+    <select id="search" resultMap="DeckResultMap">
+        SELECT
+            *
+        FROM flash_mastery.decks
+        WHERE deleted_at IS NULL
+        <if test="folderId != null">
+          AND folder_id = #{folderId}
+        </if>
+        <if test="name != null and name != ''">
+          AND LOWER(name) LIKE LOWER('%' || #{name} || '%')
+        </if>
+        <choose>
+            <when test="sortField != null and sortField != ''">
+        ORDER BY ${sortField}
+                <if test="sortDirection != null and sortDirection != ''">
+            ${sortDirection}
+                </if>
+            </when>
+            <otherwise>
+        ORDER BY created_at DESC
+            </otherwise>
+        </choose>
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
 
-    <select id="findByFolderId" resultMap="DeckResultMap"> SELECT * FROM flash_mastery.decks WHERE
-        folder_id = #{folderId} AND deleted_at IS NULL ORDER BY created_at DESC LIMIT #{limit}
-        OFFSET #{offset} </select>
+    <!-- Dynamic count query using MyBatis if tags -->
+    <select id="countSearch" resultType="long">
+        SELECT
+            COUNT(*)
+        FROM flash_mastery.decks
+        WHERE deleted_at IS NULL
+        <if test="folderId != null">
+          AND folder_id = #{folderId}
+        </if>
+        <if test="name != null and name != ''">
+          AND LOWER(name) LIKE LOWER('%' || #{name} || '%')
+        </if>
+    </select>
 
-    <select id="findByNameContainingIgnoreCase" resultMap="DeckResultMap"> SELECT * FROM
-        flash_mastery.decks WHERE LOWER(name) LIKE LOWER('%' || #{name} || '%') AND deleted_at IS
-        NULL ORDER BY created_at DESC LIMIT #{limit} OFFSET #{offset} </select>
+    <select id="findAll" resultMap="DeckResultMap">
+        SELECT
+            *
+        FROM flash_mastery.decks
+        WHERE deleted_at IS NULL
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
 
-    <select id="findByFolderIdAndNameContainingIgnoreCase" resultMap="DeckResultMap"> SELECT * FROM
-        flash_mastery.decks WHERE folder_id = #{folderId} AND LOWER(name) LIKE LOWER('%' || #{name}
-        || '%') AND deleted_at IS NULL ORDER BY created_at DESC LIMIT #{limit} OFFSET #{offset} </select>
+    <select id="findByFolderId" resultMap="DeckResultMap">
+        SELECT
+            *
+        FROM flash_mastery.decks
+        WHERE folder_id = #{folderId}
+          AND deleted_at IS NULL
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
 
-    <select id="existsByFolderIdAndNameIgnoreCase" resultType="boolean"> SELECT EXISTS( SELECT 1
-        FROM flash_mastery.decks WHERE folder_id = #{folderId} AND LOWER(name) = LOWER(#{name}) AND
-        deleted_at IS NULL ) </select>
+    <select id="findByNameContainingIgnoreCase" resultMap="DeckResultMap">
+        SELECT
+            *
+        FROM flash_mastery.decks
+        WHERE LOWER(name) LIKE LOWER('%' || #{name} || '%')
+          AND deleted_at IS NULL
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
 
-    <select id="count" resultType="long"> SELECT COUNT(*) FROM flash_mastery.decks WHERE deleted_at
-        IS NULL </select>
+    <select id="findByFolderIdAndNameContainingIgnoreCase" resultMap="DeckResultMap">
+        SELECT
+            *
+        FROM flash_mastery.decks
+        WHERE folder_id = #{folderId}
+          AND LOWER(name) LIKE LOWER('%' || #{name} || '%')
+          AND deleted_at IS NULL
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
 
-    <select id="countByFolderId" resultType="long"> SELECT COUNT(*) FROM flash_mastery.decks WHERE
-        folder_id = #{folderId} AND deleted_at IS NULL </select>
+    <select id="existsByFolderIdAndNameIgnoreCase" resultType="boolean">
+        SELECT EXISTS(
+            SELECT
+                1
+            FROM flash_mastery.decks
+            WHERE folder_id = #{folderId}
+              AND LOWER(name) = LOWER(#{name})
+              AND deleted_at IS NULL
+        )
+    </select>
 
-    <select id="countByNameContainingIgnoreCase" resultType="long"> SELECT COUNT(*) FROM
-        flash_mastery.decks WHERE LOWER(name) LIKE LOWER('%' || #{name} || '%') AND deleted_at IS
-        NULL </select>
+    <select id="count" resultType="long">
+        SELECT
+            COUNT(*)
+        FROM flash_mastery.decks
+        WHERE deleted_at IS NULL
+    </select>
 
-    <select id="countByFolderIdAndNameContainingIgnoreCase" resultType="long"> SELECT COUNT(*) FROM
-        flash_mastery.decks WHERE folder_id = #{folderId} AND LOWER(name) LIKE LOWER('%' || #{name}
-        || '%') AND deleted_at IS NULL </select>
+    <select id="countByFolderId" resultType="long">
+        SELECT
+            COUNT(*)
+        FROM flash_mastery.decks
+        WHERE folder_id = #{folderId}
+          AND deleted_at IS NULL
+    </select>
 
-    <insert id="insert"> INSERT INTO flash_mastery.decks (id, name, description, card_count, type,
-        folder_id, created_at, updated_at, deleted_at) VALUES (#{id}, #{name}, #{description},
-        #{cardCount}, #{type}, #{folderId}, #{createdAt}, #{updatedAt}, #{deletedAt}) </insert>
+    <select id="countByNameContainingIgnoreCase" resultType="long">
+        SELECT
+            COUNT(*)
+        FROM flash_mastery.decks
+        WHERE LOWER(name) LIKE LOWER('%' || #{name} || '%')
+          AND deleted_at IS NULL
+    </select>
 
-    <update id="update"> UPDATE flash_mastery.decks SET name = #{name}, description =
-        #{description}, card_count = #{cardCount}, type = #{type}, folder_id = #{folderId},
-        updated_at = #{updatedAt} WHERE id = #{id} AND deleted_at IS NULL </update>
+    <select id="countByFolderIdAndNameContainingIgnoreCase" resultType="long">
+        SELECT
+            COUNT(*)
+        FROM flash_mastery.decks
+        WHERE folder_id = #{folderId}
+          AND LOWER(name) LIKE LOWER('%' || #{name} || '%')
+          AND deleted_at IS NULL
+    </select>
 
-    <update id="deleteById"> UPDATE flash_mastery.decks SET deleted_at = NOW(), updated_at = NOW()
-        WHERE id = #{id} AND deleted_at IS NULL </update>
+    <insert id="insert">
+        INSERT INTO flash_mastery.decks (
+            id
+          , name
+          , description
+          , card_count
+          , type
+          , folder_id
+          , created_at
+          , updated_at
+          , deleted_at
+        ) VALUES (
+            #{id}
+          , #{name}
+          , #{description}
+          , #{cardCount}
+          , #{type}
+          , #{folderId}
+          , #{createdAt}
+          , #{updatedAt}
+          , #{deletedAt}
+        )
+    </insert>
 
-    <update id="deleteByFolderId"> UPDATE flash_mastery.decks SET deleted_at = NOW(), updated_at =
-        NOW() WHERE folder_id = #{folderId} AND deleted_at IS NULL </update>
+    <update id="update">
+        UPDATE flash_mastery.decks
+        SET name            = #{name}
+          , description     = #{description}
+          , card_count      = #{cardCount}
+          , type            = #{type}
+          , folder_id       = #{folderId}
+          , updated_at      = #{updatedAt}
+        WHERE id = #{id}
+          AND deleted_at IS NULL
+    </update>
+
+    <update id="deleteById">
+        UPDATE flash_mastery.decks
+        SET deleted_at  = NOW()
+          , updated_at  = NOW()
+        WHERE id = #{id}
+          AND deleted_at IS NULL
+    </update>
+
+    <update id="deleteByFolderId">
+        UPDATE flash_mastery.decks
+        SET deleted_at  = NOW()
+          , updated_at  = NOW()
+        WHERE folder_id = #{folderId}
+          AND deleted_at IS NULL
+    </update>
 
 </mapper>

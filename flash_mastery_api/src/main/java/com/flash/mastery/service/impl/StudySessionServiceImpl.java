@@ -61,8 +61,8 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
             return createSession(deck, flashcardIds);
         }
 
-        // Get all flashcards from deck
-        final var flashcards = this.flashcardRepository.findByDeckId(request.getDeckId());
+        // Get all flashcards from deck (no pagination)
+        final var flashcards = this.flashcardRepository.searchByDeckId(request.getDeckId(), null, null);
         if (flashcards.isEmpty()) {
             throw new IllegalArgumentException(msg(MessageKeys.ERROR_NO_FLASHCARDS_AVAILABLE));
         }

@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.flash.mastery.constant.MessageKeys;
 import com.flash.mastery.constant.RepositoryConstants;
-import com.flash.mastery.dto.criteria.FolderSearchCriteria;
 import com.flash.mastery.dto.request.FolderCreateRequest;
 import com.flash.mastery.dto.request.FolderUpdateRequest;
 import com.flash.mastery.dto.response.FolderResponse;
@@ -45,28 +44,16 @@ public class FolderServiceImpl extends BaseService implements FolderService {
     @Override
     @Transactional(readOnly = true)
     public List<FolderResponse> getFolders(UUID parentId) {
-        final var criteria = FolderSearchCriteria.builder()
-                .parentId(parentId)
-                .build();
-
-        // Validate parent exists if filter is applied
-        if (criteria.hasParentFilter()) {
-            final var parent = this.folderRepository.findById(criteria.getParentId());
+        // Validate parent exists if parentId is provided
+        if (parentId != null) {
+            final var parent = this.folderRepository.findById(parentId);
             if (parent == null) {
                 throw new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FOLDER));
             }
         }
 
-        // Execute search based on criteria
-        final List<Folder> folders;
-        if (criteria.isRootFolders()) {
-            folders = this.folderRepository.findByParentIsNull();
-        } else if (criteria.hasParentFilter()) {
-            folders = this.folderRepository.findByParentId(criteria.getParentId());
-        } else {
-            folders = this.folderRepository.findByParentIsNull();
-        }
-
+        // Use dynamic SQL to handle both root (null) and child folders
+        final var folders = this.folderRepository.searchByParent(parentId);
         return folders.stream().map(this::toResponseWithPath).toList();
     }
 
@@ -137,8 +124,8 @@ public class FolderServiceImpl extends BaseService implements FolderService {
     }
 
     private void deleteRecursively(UUID folderId) {
-        // Load children folders
-        final var children = this.folderRepository.findByParentId(folderId);
+        // Load children folders using dynamic SQL
+        final var children = this.folderRepository.searchByParent(folderId);
 
         // Delete all children folders recursively
         for (final var child : children) {

@@ -14,11 +14,15 @@ public interface FlashcardRepository {
 
     Flashcard findById(@Param(RepositoryConstants.PARAM_ID) UUID id);
 
-    List<Flashcard> findByDeckId(@Param(RepositoryConstants.PARAM_DECK_ID) UUID deckId);
-
-    List<Flashcard> findByDeckIdWithPagination(@Param(RepositoryConstants.PARAM_DECK_ID) UUID deckId,
-            @Param(RepositoryConstants.PARAM_OFFSET) int offset,
-            @Param(RepositoryConstants.PARAM_LIMIT) int limit);
+    /**
+     * Search flashcards by deckId with optional pagination.
+     * If offset and limit are null, returns all results.
+     * If offset and limit are provided, applies pagination.
+     */
+    List<Flashcard> searchByDeckId(
+            @Param(RepositoryConstants.PARAM_DECK_ID) UUID deckId,
+            @Param(RepositoryConstants.PARAM_OFFSET) Integer offset,
+            @Param(RepositoryConstants.PARAM_LIMIT) Integer limit);
 
     List<Flashcard> findByIdIn(@Param(RepositoryConstants.PARAM_IDS) List<UUID> ids);
 

@@ -16,9 +16,12 @@ public interface FolderRepository {
 
     List<Folder> findAll();
 
-    List<Folder> findByParentId(@Param(RepositoryConstants.PARAM_PARENT_ID) UUID parentId);
-
-    List<Folder> findByParentIsNull();
+    /**
+     * Search folders by parentId using dynamic SQL.
+     * If parentId is null, returns root folders (parent_id IS NULL).
+     * If parentId is provided, returns child folders (parent_id = parentId).
+     */
+    List<Folder> searchByParent(@Param(RepositoryConstants.PARAM_PARENT_ID) UUID parentId);
 
     long countByParentId(@Param(RepositoryConstants.PARAM_PARENT_ID) UUID parentId);
 

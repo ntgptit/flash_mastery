@@ -15,31 +15,89 @@
         <result property="deletedAt" column="deleted_at" />
     </resultMap>
 
-    <select id="findById" resultMap="FolderResultMap"> SELECT * FROM flash_mastery.folders WHERE id
-        = #{id} AND deleted_at IS NULL </select>
+    <select id="findById" resultMap="FolderResultMap">
+        SELECT
+            *
+        FROM flash_mastery.folders
+        WHERE id = #{id}
+          AND deleted_at IS NULL
+    </select>
 
-    <select id="findAll" resultMap="FolderResultMap"> SELECT * FROM flash_mastery.folders WHERE
-        deleted_at IS NULL ORDER BY created_at DESC </select>
+    <select id="findAll" resultMap="FolderResultMap">
+        SELECT
+            *
+        FROM flash_mastery.folders
+        WHERE deleted_at IS NULL
+        ORDER BY created_at DESC
+    </select>
 
-    <select id="findByParentId" resultMap="FolderResultMap"> SELECT * FROM flash_mastery.folders
-        WHERE parent_id = #{parentId} AND deleted_at IS NULL ORDER BY created_at DESC </select>
+    <!-- Dynamic query for folders by parentId - handles both root (null) and child folders -->
+    <select id="searchByParent" resultMap="FolderResultMap">
+        SELECT
+            *
+        FROM flash_mastery.folders
+        WHERE deleted_at IS NULL
+        <choose>
+            <when test="parentId != null">
+          AND parent_id = #{parentId}
+            </when>
+            <otherwise>
+          AND parent_id IS NULL
+            </otherwise>
+        </choose>
+        ORDER BY created_at DESC
+    </select>
 
-    <select id="findByParentIsNull" resultMap="FolderResultMap"> SELECT * FROM flash_mastery.folders
-        WHERE parent_id IS NULL AND deleted_at IS NULL ORDER BY created_at DESC </select>
+    <select id="countByParentId" resultType="long">
+        SELECT
+            COUNT(*)
+        FROM flash_mastery.folders
+        WHERE parent_id = #{parentId}
+          AND deleted_at IS NULL
+    </select>
 
-    <select id="countByParentId" resultType="long"> SELECT COUNT(*) FROM flash_mastery.folders WHERE
-        parent_id = #{parentId} AND deleted_at IS NULL </select>
+    <insert id="insert">
+        INSERT INTO flash_mastery.folders (
+            id
+          , name
+          , description
+          , color
+          , deck_count
+          , parent_id
+          , created_at
+          , updated_at
+          , deleted_at
+        ) VALUES (
+            #{id}
+          , #{name}
+          , #{description}
+          , #{color}
+          , #{deckCount}
+          , #{parentId}
+          , #{createdAt}
+          , #{updatedAt}
+          , #{deletedAt}
+        )
+    </insert>
 
-    <insert id="insert"> INSERT INTO flash_mastery.folders (id, name, description, color,
-        deck_count, parent_id, created_at, updated_at, deleted_at) VALUES (#{id}, #{name},
-        #{description}, #{color}, #{deckCount}, #{parentId}, #{createdAt}, #{updatedAt},
-        #{deletedAt}) </insert>
+    <update id="update">
+        UPDATE flash_mastery.folders
+        SET name            = #{name}
+          , description     = #{description}
+          , color           = #{color}
+          , deck_count      = #{deckCount}
+          , parent_id       = #{parentId}
+          , updated_at      = #{updatedAt}
+        WHERE id = #{id}
+          AND deleted_at IS NULL
+    </update>
 
-    <update id="update"> UPDATE flash_mastery.folders SET name = #{name}, description =
-        #{description}, color = #{color}, deck_count = #{deckCount}, parent_id = #{parentId},
-        updated_at = #{updatedAt} WHERE id = #{id} AND deleted_at IS NULL </update>
-
-    <update id="deleteById"> UPDATE flash_mastery.folders SET deleted_at = NOW(), updated_at = NOW()
-        WHERE id = #{id} AND deleted_at IS NULL </update>
+    <update id="deleteById">
+        UPDATE flash_mastery.folders
+        SET deleted_at  = NOW()
+          , updated_at  = NOW()
+        WHERE id = #{id}
+          AND deleted_at IS NULL
+    </update>
 
 </mapper>

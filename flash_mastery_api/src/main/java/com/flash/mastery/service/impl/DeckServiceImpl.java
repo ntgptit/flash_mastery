@@ -82,53 +82,61 @@ public class DeckServiceImpl extends BaseService implements DeckService {
             // For other sorts, use database sorting with pagination
             final var offset = page * size;
             final var limit = size;
-            decks = fetchDecksForCriteriaWithPagination(criteria, offset, limit);
+            decks = fetchDecksForCriteriaWithPagination(criteria, offset, limit, sortOption);
         }
 
         return decks.stream().map(this.deckMapper::toResponse).toList();
     }
 
     private List<Deck> fetchAllDecksForCriteria(DeckSearchCriteria criteria) {
-        final var hasFolder = criteria.hasFolderFilter();
-        final var hasQuery = criteria.hasQueryFilter();
-
-        if (hasFolder && hasQuery) {
-            // Get all with default offset and max limit
-            return this.deckRepository.findByFolderIdAndNameContainingIgnoreCase(
-                    criteria.getFolderId(),
-                    criteria.getQuery(),
-                    RepositoryConstants.DEFAULT_OFFSET,
-                    RepositoryConstants.MAX_LIMIT);
-        }
-        if (hasFolder) {
-            return this.deckRepository.findByFolderId(criteria.getFolderId(), RepositoryConstants.DEFAULT_OFFSET,
-                    RepositoryConstants.MAX_LIMIT);
-        }
-        if (hasQuery) {
-            return this.deckRepository.findByNameContainingIgnoreCase(criteria.getQuery(),
-                    RepositoryConstants.DEFAULT_OFFSET, RepositoryConstants.MAX_LIMIT);
-        }
-        return this.deckRepository.findAll(RepositoryConstants.DEFAULT_OFFSET, RepositoryConstants.MAX_LIMIT);
+        // Use dynamic SQL with max limit to fetch all
+        return this.deckRepository.search(
+                criteria.getFolderId(),
+                criteria.getQuery(),
+                RepositoryConstants.DEFAULT_OFFSET,
+                RepositoryConstants.MAX_LIMIT,
+                null, // No sorting for name sort (will sort in memory)
+                null);
     }
 
-    private List<Deck> fetchDecksForCriteriaWithPagination(DeckSearchCriteria criteria, int offset, int limit) {
-        final var hasFolder = criteria.hasFolderFilter();
-        final var hasQuery = criteria.hasQueryFilter();
+    private List<Deck> fetchDecksForCriteriaWithPagination(DeckSearchCriteria criteria, int offset, int limit,
+            DeckSortOption sortOption) {
+        // Determine sort field and direction from sort option
+        final var sortField = getSortField(sortOption);
+        final var sortDirection = getSortDirection(sortOption);
 
-        if (hasFolder && hasQuery) {
-            return this.deckRepository.findByFolderIdAndNameContainingIgnoreCase(
-                    criteria.getFolderId(),
-                    criteria.getQuery(),
-                    offset,
-                    limit);
+        // Use dynamic SQL to build query based on criteria
+        return this.deckRepository.search(
+                criteria.getFolderId(),
+                criteria.getQuery(),
+                offset,
+                limit,
+                sortField,
+                sortDirection);
+    }
+
+    /**
+     * Get sort field name for database column.
+     */
+    private String getSortField(DeckSortOption sortOption) {
+        if (sortOption == null) {
+            return "created_at";
         }
-        if (hasFolder) {
-            return this.deckRepository.findByFolderId(criteria.getFolderId(), offset, limit);
+        return switch (sortOption) {
+            case LATEST -> "created_at";
+            case NAME_ASC, NAME_DESC -> "name";
+            case CARD_COUNT_ASC, CARD_COUNT_DESC -> "card_count";
+        };
+    }
+
+    /**
+     * Get sort direction (ASC or DESC) for database query.
+     */
+    private String getSortDirection(DeckSortOption sortOption) {
+        if (sortOption == null) {
+            return "DESC";
         }
-        if (hasQuery) {
-            return this.deckRepository.findByNameContainingIgnoreCase(criteria.getQuery(), offset, limit);
-        }
-        return this.deckRepository.findAll(offset, limit);
+        return sortOption.getDirection().name();
     }
 
     /**

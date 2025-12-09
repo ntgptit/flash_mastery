@@ -12,40 +12,60 @@ import com.flash.mastery.entity.Deck;
 @Mapper
 public interface DeckRepository {
 
-    Deck findById(@Param(RepositoryConstants.PARAM_ID) UUID id);
+        Deck findById(@Param(RepositoryConstants.PARAM_ID) UUID id);
 
-    List<Deck> findAll(@Param(RepositoryConstants.PARAM_OFFSET) int offset,
-            @Param(RepositoryConstants.PARAM_LIMIT) int limit);
+        /**
+         * Dynamic search for decks with optional folder filter and name query.
+         * Uses MyBatis dynamic SQL to build query based on provided criteria.
+         */
+        List<Deck> search(@Param(RepositoryConstants.PARAM_FOLDER_ID) UUID folderId,
+                        @Param(RepositoryConstants.PARAM_NAME) String name,
+                        @Param(RepositoryConstants.PARAM_OFFSET) int offset,
+                        @Param(RepositoryConstants.PARAM_LIMIT) int limit,
+                        @Param("sortField") String sortField,
+                        @Param("sortDirection") String sortDirection);
 
-    List<Deck> findByFolderId(@Param(RepositoryConstants.PARAM_FOLDER_ID) UUID folderId,
-            @Param(RepositoryConstants.PARAM_OFFSET) int offset,
-            @Param(RepositoryConstants.PARAM_LIMIT) int limit);
+        /**
+         * Dynamic count for decks with optional folder filter and name query.
+         * Uses MyBatis dynamic SQL to build query based on provided criteria.
+         */
+        long countSearch(@Param(RepositoryConstants.PARAM_FOLDER_ID) UUID folderId,
+                        @Param(RepositoryConstants.PARAM_NAME) String name);
 
-    List<Deck> findByNameContainingIgnoreCase(@Param(RepositoryConstants.PARAM_NAME) String name,
-            @Param(RepositoryConstants.PARAM_OFFSET) int offset,
-            @Param(RepositoryConstants.PARAM_LIMIT) int limit);
+        // Legacy methods - kept for backward compatibility
+        List<Deck> findAll(@Param(RepositoryConstants.PARAM_OFFSET) int offset,
+                        @Param(RepositoryConstants.PARAM_LIMIT) int limit);
 
-    List<Deck> findByFolderIdAndNameContainingIgnoreCase(@Param(RepositoryConstants.PARAM_FOLDER_ID) UUID folderId,
-            @Param(RepositoryConstants.PARAM_NAME) String name,
-            @Param(RepositoryConstants.PARAM_OFFSET) int offset, @Param(RepositoryConstants.PARAM_LIMIT) int limit);
+        List<Deck> findByFolderId(@Param(RepositoryConstants.PARAM_FOLDER_ID) UUID folderId,
+                        @Param(RepositoryConstants.PARAM_OFFSET) int offset,
+                        @Param(RepositoryConstants.PARAM_LIMIT) int limit);
 
-    boolean existsByFolderIdAndNameIgnoreCase(@Param(RepositoryConstants.PARAM_FOLDER_ID) UUID folderId,
-            @Param(RepositoryConstants.PARAM_NAME) String name);
+        List<Deck> findByNameContainingIgnoreCase(@Param(RepositoryConstants.PARAM_NAME) String name,
+                        @Param(RepositoryConstants.PARAM_OFFSET) int offset,
+                        @Param(RepositoryConstants.PARAM_LIMIT) int limit);
 
-    long count();
+        List<Deck> findByFolderIdAndNameContainingIgnoreCase(@Param(RepositoryConstants.PARAM_FOLDER_ID) UUID folderId,
+                        @Param(RepositoryConstants.PARAM_NAME) String name,
+                        @Param(RepositoryConstants.PARAM_OFFSET) int offset,
+                        @Param(RepositoryConstants.PARAM_LIMIT) int limit);
 
-    long countByFolderId(@Param(RepositoryConstants.PARAM_FOLDER_ID) UUID folderId);
+        boolean existsByFolderIdAndNameIgnoreCase(@Param(RepositoryConstants.PARAM_FOLDER_ID) UUID folderId,
+                        @Param(RepositoryConstants.PARAM_NAME) String name);
 
-    long countByNameContainingIgnoreCase(@Param(RepositoryConstants.PARAM_NAME) String name);
+        long count();
 
-    long countByFolderIdAndNameContainingIgnoreCase(@Param(RepositoryConstants.PARAM_FOLDER_ID) UUID folderId,
-            @Param(RepositoryConstants.PARAM_NAME) String name);
+        long countByFolderId(@Param(RepositoryConstants.PARAM_FOLDER_ID) UUID folderId);
 
-    void insert(Deck deck);
+        long countByNameContainingIgnoreCase(@Param(RepositoryConstants.PARAM_NAME) String name);
 
-    void update(Deck deck);
+        long countByFolderIdAndNameContainingIgnoreCase(@Param(RepositoryConstants.PARAM_FOLDER_ID) UUID folderId,
+                        @Param(RepositoryConstants.PARAM_NAME) String name);
 
-    void deleteById(@Param(RepositoryConstants.PARAM_ID) UUID id);
+        void insert(Deck deck);
 
-    void deleteByFolderId(@Param(RepositoryConstants.PARAM_FOLDER_ID) UUID folderId);
+        void update(Deck deck);
+
+        void deleteById(@Param(RepositoryConstants.PARAM_ID) UUID id);
+
+        void deleteByFolderId(@Param(RepositoryConstants.PARAM_FOLDER_ID) UUID folderId);
 }
