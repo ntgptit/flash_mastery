@@ -33,12 +33,14 @@ public interface FolderMapper {
     @Mapping(target = "children", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     Folder fromCreate(FolderCreateRequest request);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     @Mapping(target = "deckCount", ignore = true)
     @Mapping(target = "parentId", ignore = true)
     @Mapping(target = "parent", ignore = true)
