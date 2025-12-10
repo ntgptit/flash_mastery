@@ -4,11 +4,11 @@ import 'package:flash_mastery/domain/entities/flashcard.dart';
 import 'package:flash_mastery/domain/entities/study_mode.dart';
 import 'package:flash_mastery/domain/entities/study_session.dart';
 import 'package:flash_mastery/domain/usecases/study_sessions/study_session_usecases.dart';
-import 'package:flash_mastery/presentation/screens/study/widgets/overview_mode_widget.dart';
-import 'package:flash_mastery/presentation/screens/study/widgets/matching_mode_widget.dart';
-import 'package:flash_mastery/presentation/screens/study/widgets/guess_mode_widget.dart';
-import 'package:flash_mastery/presentation/screens/study/widgets/recall_mode_widget.dart';
 import 'package:flash_mastery/presentation/screens/study/widgets/fill_in_blank_mode_widget.dart';
+import 'package:flash_mastery/presentation/screens/study/widgets/guess_mode_widget.dart';
+import 'package:flash_mastery/presentation/screens/study/widgets/matching_mode_widget.dart';
+import 'package:flash_mastery/presentation/screens/study/widgets/overview_mode_widget.dart';
+import 'package:flash_mastery/presentation/screens/study/widgets/recall_mode_widget.dart';
 import 'package:flash_mastery/presentation/viewmodels/flashcard_view_model.dart';
 import 'package:flash_mastery/presentation/viewmodels/study_session_view_model.dart';
 import 'package:flash_mastery/presentation/widgets/common/common_widgets.dart';
@@ -43,6 +43,7 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
   Future<void> _initializeSession() async {
     // Load flashcards first
     final flashcardsResult = await ref.read(getFlashcardsUseCaseProvider).call(widget.deckId);
+    if (!mounted) return;
     flashcardsResult.fold(
       (failure) {
         if (mounted) {
@@ -252,17 +253,17 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
 
     final viewModel = ref.read(studySessionViewModelProvider(_sessionId).notifier);
     final error = await viewModel.completeSession(_sessionId!);
+    if (!mounted) return;
 
-    if (mounted) {
-      if (error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $error')));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Study session completed!')),
-        );
-        context.pop();
-      }
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $error')));
+      return;
     }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Study session completed!')),
+    );
+    context.pop();
   }
 
   Future<void> _showExitDialog(BuildContext context, StudySession session) async {
@@ -286,48 +287,44 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
       ),
     );
 
-    if (shouldSave == null || !mounted) return;
+    if (shouldSave == null || !context.mounted) return;
 
     if (shouldSave == true) {
       // User wants to save - complete the session
       if (_sessionId != null) {
         final viewModel = ref.read(studySessionViewModelProvider(_sessionId).notifier);
         final error = await viewModel.completeSession(_sessionId!);
-        if (mounted) {
-          if (error != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error: $error')),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Đã lưu tiến trình học tập')),
-            );
-          }
+        if (!context.mounted) return;
+        if (error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $error')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Đã lưu tiến trình học tập')),
+          );
         }
       }
-      if (mounted) {
-        context.pop();
-      }
+      if (!context.mounted) return;
+      context.pop();
     } else {
       // User doesn't want to save - cancel the session
       if (_sessionId != null) {
         final viewModel = ref.read(studySessionViewModelProvider(_sessionId).notifier);
         final error = await viewModel.cancelSession(_sessionId!);
-        if (mounted) {
-          if (error != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error: $error')),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Đã hủy phiên học tập')),
-            );
-          }
+        if (!context.mounted) return;
+        if (error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $error')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Đã hủy phiên học tập')),
+          );
         }
       }
-      if (mounted) {
-        context.pop();
-      }
+      if (!context.mounted) return;
+      context.pop();
     }
   }
 }

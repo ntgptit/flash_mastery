@@ -15,7 +15,7 @@ extension ColorSchemeExtensions on ColorScheme {
 
   /// Success container color
   Color get successContainer => brightness == Brightness.light
-      ? AppColors.success.withOpacity(0.1)
+      ? AppColors.success.withAlpha(26)
       : AppColors.successContainerDark;
 
   /// On success container color
@@ -35,7 +35,7 @@ extension ColorSchemeExtensions on ColorScheme {
 
   /// Dangerous container color
   Color get dangerousContainer => brightness == Brightness.light
-      ? AppColors.dangerous.withOpacity(0.1)
+      ? AppColors.dangerous.withAlpha(26)
       : AppColors.dangerousContainerDark;
 
   /// On dangerous container color
@@ -43,4 +43,3 @@ extension ColorSchemeExtensions on ColorScheme {
       ? AppColors.dangerous
       : AppColors.onDangerousContainerDark;
 }
-

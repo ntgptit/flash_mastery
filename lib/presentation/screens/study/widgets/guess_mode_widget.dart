@@ -129,7 +129,7 @@ class _GuessModeWidgetState extends State<GuessModeWidget> {
                                   ? Theme.of(context).colorScheme.successContainer
                                   : Theme.of(context).colorScheme.dangerousContainer)
                             : isSelected
-                            ? Theme.of(context).colorScheme.success.withOpacity(0.2)
+                            ? Theme.of(context).colorScheme.success.withAlpha(51)
                             : Theme.of(context).colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
                         border: isSelected

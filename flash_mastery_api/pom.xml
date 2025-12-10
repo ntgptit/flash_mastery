@@ -67,6 +67,11 @@
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<!-- SQL logging -->
 		<dependency>
 			<groupId>org.bgee.log4jdbc-log4j2</groupId>

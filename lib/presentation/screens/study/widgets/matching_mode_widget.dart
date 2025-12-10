@@ -128,7 +128,7 @@ class _MatchingModeWidgetState extends State<MatchingModeWidget> {
                       : isWrongMatch
                       ? Theme.of(context).colorScheme.dangerousContainer
                       : isSelected
-                      ? Theme.of(context).colorScheme.success.withOpacity(0.2)
+                      ? Theme.of(context).colorScheme.success.withAlpha(51)
                       : Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
                   border: isCorrectMatch
@@ -268,7 +268,7 @@ class _MatchingModeWidgetState extends State<MatchingModeWidget> {
                       : isWrongMatch
                       ? Theme.of(context).colorScheme.dangerousContainer
                       : isSelected
-                      ? Theme.of(context).colorScheme.success.withOpacity(0.2)
+                      ? Theme.of(context).colorScheme.success.withAlpha(51)
                       : Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
                   border: isCorrectMatch
