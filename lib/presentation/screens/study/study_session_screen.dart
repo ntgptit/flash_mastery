@@ -229,22 +229,45 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
   }
 
   Future<void> _handleModeComplete(StudySession session) async {
+    // Create progress updates for all flashcards in current batch
+    final batch = session.getCurrentBatch();
+    final progressUpdates = batch.map((flashcardId) {
+      return StudyProgressUpdate(
+        flashcardId: flashcardId,
+        mode: session.currentMode,
+        completed: true,
+        completedAt: DateTime.now(),
+        correctAnswers: 1, // For now, mark all as correct when mode completes
+        totalAttempts: 1,
+        lastStudiedAt: DateTime.now(),
+      );
+    }).toList();
+
     final nextMode = session.getNextMode();
     if (nextMode == null) {
-      // All modes completed - just exit
+      // All modes completed - send final progress update
+      final viewModel = ref.read(studySessionViewModelProvider(_sessionId).notifier);
+      await viewModel.updateSession(
+        UpdateStudySessionParams(
+          sessionId: session.id,
+          progressUpdates: progressUpdates,
+        ),
+      );
+
       if (mounted) {
         context.pop();
       }
       return;
     }
 
-    // Move to next mode
+    // Move to next mode with progress updates
     final viewModel = ref.read(studySessionViewModelProvider(_sessionId).notifier);
     await viewModel.updateSession(
       UpdateStudySessionParams(
         sessionId: session.id,
         currentMode: studyModeToJson(nextMode),
         currentBatchIndex: 0,
+        progressUpdates: progressUpdates,
       ),
     );
   }

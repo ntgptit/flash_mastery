@@ -15,9 +15,11 @@ import com.flash.mastery.dto.request.StudySessionUpdateRequest;
 import com.flash.mastery.dto.response.StudySessionResponse;
 import com.flash.mastery.entity.Flashcard;
 import com.flash.mastery.entity.StudySession;
+import com.flash.mastery.entity.StudySessionProgress;
 import com.flash.mastery.entity.enums.StudyMode;
 import com.flash.mastery.entity.enums.StudySessionStatus;
 import com.flash.mastery.mapper.StudySessionMapper;
+import com.flash.mastery.mapper.StudySessionProgressMapper;
 import com.flash.mastery.repository.DeckRepository;
 import com.flash.mastery.repository.FlashcardRepository;
 import com.flash.mastery.repository.StudySessionRepository;
@@ -32,18 +34,21 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
     private final DeckRepository deckRepository;
     private final FlashcardRepository flashcardRepository;
     private final StudySessionMapper studySessionMapper;
+    private final StudySessionProgressMapper studySessionProgressMapper;
 
     public StudySessionServiceImpl(
             StudySessionRepository studySessionRepository,
             DeckRepository deckRepository,
             FlashcardRepository flashcardRepository,
             StudySessionMapper studySessionMapper,
+            StudySessionProgressMapper studySessionProgressMapper,
             MessageSource messageSource) {
         super(messageSource);
         this.studySessionRepository = studySessionRepository;
         this.deckRepository = deckRepository;
         this.flashcardRepository = flashcardRepository;
         this.studySessionMapper = studySessionMapper;
+        this.studySessionProgressMapper = studySessionProgressMapper;
     }
 
     @Override
@@ -107,8 +112,7 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
         if (session == null) {
             throw new com.flash.mastery.exception.NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_SESSION));
         }
-        // Load progressData from database
-        loadProgressData(session);
+        // Progress is auto-loaded by MyBatis via nested select
         return this.studySessionMapper.toResponse(session);
     }
 
@@ -119,9 +123,7 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
             throw new com.flash.mastery.exception.NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_SESSION));
         }
 
-        // Load progressData from database before checking/updating
-        loadProgressData(session);
-
+        // Update session fields
         if (request.getCurrentMode() != null) {
             session.setCurrentMode(request.getCurrentMode());
         }
@@ -129,21 +131,37 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
             session.setCurrentBatchIndex(request.getCurrentBatchIndex());
         }
 
-        // Handle progress data updates
-        if (request.getProgressData() != null) {
-            for (final var entry : request.getProgressData().entrySet()) {
-                final var flashcardId = entry.getKey();
-                final var progressData = entry.getValue();
+        // Handle progress updates (NEW LOGIC)
+        if ((request.getProgressUpdates() != null) && !request.getProgressUpdates().isEmpty()) {
+            for (final var progressUpdateDto : request.getProgressUpdates()) {
+                // Check if progress already exists
+                final var existing = this.studySessionRepository.findProgressByKey(
+                        sessionId,
+                        progressUpdateDto.getFlashcardId(),
+                        progressUpdateDto.getMode());
 
-                // Update or insert progress data based on whether it exists in database
-                if (session.getProgressData().containsKey(flashcardId)) {
-                    this.studySessionRepository.updateProgressData(sessionId, flashcardId, progressData);
+                if (existing != null) {
+                    // Update existing progress
+                    existing.setCompleted(progressUpdateDto.getCompleted());
+                    existing.setCompletedAt(progressUpdateDto.getCompletedAt());
+                    existing.setCorrectAnswers(progressUpdateDto.getCorrectAnswers());
+                    existing.setTotalAttempts(progressUpdateDto.getTotalAttempts());
+                    existing.setLastStudiedAt(progressUpdateDto.getLastStudiedAt());
+                    existing.onUpdate();
+                    this.studySessionRepository.updateProgress(existing);
+
+                    // Update in-memory list
+                    session.addOrUpdateProgress(existing);
                 } else {
-                    this.studySessionRepository.insertProgressData(sessionId, flashcardId, progressData);
-                }
+                    // Convert DTO to entity using mapper
+                    final var newProgress = this.studySessionProgressMapper.toEntity(progressUpdateDto);
+                    newProgress.setSessionId(sessionId);
+                    newProgress.onCreate();
+                    this.studySessionRepository.insertProgress(newProgress);
 
-                // Update in-memory map
-                session.getProgressData().put(flashcardId, progressData);
+                    // Update in-memory list
+                    session.addOrUpdateProgress(newProgress);
+                }
             }
         }
 
@@ -151,23 +169,6 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
         this.studySessionRepository.update(session);
 
         return this.studySessionMapper.toResponse(session);
-    }
-
-    /**
-     * Load progressData from database into the session entity.
-     * MyBatis doesn't automatically populate Map fields, so we need to load it
-     * manually.
-     */
-    private void loadProgressData(StudySession session) {
-        final var progressDataList = this.studySessionRepository.findProgressDataBySessionId(session.getId());
-        session.getProgressData().clear();
-        for (final var row : progressDataList) {
-            final var flashcardId = (UUID) row.get("flashcard_id");
-            final var progressData = (String) row.get("progress_data");
-            if ((flashcardId != null) && (progressData != null)) {
-                session.getProgressData().put(flashcardId, progressData);
-            }
-        }
     }
 
 }

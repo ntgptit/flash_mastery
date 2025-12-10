@@ -27,7 +27,8 @@
       "Bash(powershell:*)",
       "Bash(mvn flyway:clean:*)",
       "Bash(taskkill /F /PID 11016)",
-      "Bash(\"C:\\Program Files\\PostgreSQL\\17\\bin\\psql.exe\" -U giapnt -d postgres -c \"DROP SCHEMA IF EXISTS flash_mastery CASCADE; CREATE SCHEMA flash_mastery; CREATE EXTENSION IF NOT EXISTS \"\"uuid-ossp\"\";\")"
+      "Bash(\"C:\\Program Files\\PostgreSQL\\17\\bin\\psql.exe\" -U giapnt -d postgres -c \"DROP SCHEMA IF EXISTS flash_mastery CASCADE; CREATE SCHEMA flash_mastery; CREATE EXTENSION IF NOT EXISTS \"\"uuid-ossp\"\";\")",
+      "Bash(mvn flyway:migrate:*)"
     ],
     "deny": [],
     "ask": []

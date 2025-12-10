@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:flash_mastery/core/exceptions/failures.dart';
 import 'package:flash_mastery/domain/entities/study_session.dart';
+import 'package:flash_mastery/domain/usecases/study_sessions/study_session_usecases.dart';
 
 /// Repository interface for study session operations.
 abstract class StudySessionRepository {
@@ -18,7 +19,7 @@ abstract class StudySessionRepository {
     required String sessionId,
     String? currentMode,
     int? currentBatchIndex,
-    Map<String, String>? progressData,
+    List<StudyProgressUpdate>? progressUpdates,
   });
 }
 

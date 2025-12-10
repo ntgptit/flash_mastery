@@ -1,9 +1,8 @@
 package com.flash.mastery.entity;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import com.flash.mastery.constant.NumberConstants;
@@ -43,7 +42,7 @@ public class StudySession extends BaseAuditEntity {
     private StudySessionStatus status = StudySessionStatus.IN_PROGRESS;
 
     @Default
-    private Map<UUID, String> progressData = new HashMap<>();
+    private List<StudySessionProgress> progress = new ArrayList<>();
 
     /**
      * Ensure status is never null before persisting or updating.
@@ -69,14 +68,44 @@ public class StudySession extends BaseAuditEntity {
 
     /**
      * Check if current batch is complete.
+     * All flashcards in current batch must have completed the current mode.
      */
     public boolean isCurrentBatchComplete() {
         final List<UUID> batch = getCurrentBatch();
         return batch.stream()
-                .allMatch(id -> {
-                    String progress = progressData.get(id);
-                    return progress != null && progress.contains("OVERVIEW:true");
-                });
+                .allMatch(flashcardId -> progress.stream()
+                        .anyMatch(p -> p.getFlashcardId().equals(flashcardId)
+                                && p.getMode().equals(currentMode)
+                                && Boolean.TRUE.equals(p.getCompleted())));
+    }
+
+    /**
+     * Get progress for a specific flashcard and mode.
+     *
+     * @param flashcardId the flashcard ID
+     * @param mode        the study mode
+     * @return Optional containing the progress if found
+     */
+    public Optional<StudySessionProgress> getProgressForFlashcard(final UUID flashcardId, final StudyMode mode) {
+        return progress.stream()
+                .filter(p -> p.getFlashcardId().equals(flashcardId) && p.getMode().equals(mode))
+                .findFirst();
+    }
+
+    /**
+     * Add or update progress entry.
+     * If progress already exists for the flashcard and mode, it will be replaced.
+     *
+     * @param newProgress the progress to add or update
+     */
+    public void addOrUpdateProgress(final StudySessionProgress newProgress) {
+        final Optional<StudySessionProgress> existing = getProgressForFlashcard(
+                newProgress.getFlashcardId(),
+                newProgress.getMode());
+        if (existing.isPresent()) {
+            progress.remove(existing.get());
+        }
+        progress.add(newProgress);
     }
 
     /**

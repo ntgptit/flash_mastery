@@ -14,6 +14,8 @@
         <result property="deletedAt" column="deleted_at" />
         <collection property="flashcardIds" ofType="java.util.UUID"
             select="findFlashcardIdsBySessionId" column="id" />
+        <collection property="progress" ofType="com.flash.mastery.entity.StudySessionProgress"
+            select="findProgressBySessionId" column="id" />
     </resultMap>
 
     <select id="findById" resultMap="StudySessionResultMap">
@@ -106,37 +108,5 @@
         DELETE FROM flash_mastery.study_session_flashcard_ids
         WHERE session_id = #{sessionId}
     </delete>
-
-    <insert id="insertProgressData">
-        INSERT INTO flash_mastery.study_session_progress (
-            session_id
-          , flashcard_id
-          , progress_data
-        ) VALUES (
-            #{sessionId}
-          , #{flashcardId}
-          , #{progressData}
-        )
-    </insert>
-
-    <update id="updateProgressData">
-        UPDATE flash_mastery.study_session_progress
-        SET progress_data = #{progressData}
-        WHERE session_id = #{sessionId}
-          AND flashcard_id = #{flashcardId}
-    </update>
-
-    <delete id="deleteProgressDataBySessionId">
-        DELETE FROM flash_mastery.study_session_progress
-        WHERE session_id = #{sessionId}
-    </delete>
-
-    <select id="findProgressDataBySessionId" resultType="map">
-        SELECT
-            flashcard_id
-          , progress_data
-        FROM flash_mastery.study_session_progress
-        WHERE session_id = #{sessionId}
-    </select>
 
 </mapper>

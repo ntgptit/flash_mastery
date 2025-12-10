@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.flash.mastery.repository.StudySessionRepository">
+
+    <!-- ResultMap for StudySessionProgress entity -->
+    <resultMap id="StudySessionProgressResultMap" type="com.flash.mastery.entity.StudySessionProgress">
+        <id property="id" column="id" />
+        <result property="sessionId" column="session_id" />
+        <result property="flashcardId" column="flashcard_id" />
+        <result property="mode" column="mode" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+        <result property="completed" column="completed" />
+        <result property="completedAt" column="completed_at" />
+        <result property="correctAnswers" column="correct_answers" />
+        <result property="totalAttempts" column="total_attempts" />
+        <result property="lastStudiedAt" column="last_studied_at" />
+        <result property="createdAt" column="created_at" />
+        <result property="updatedAt" column="updated_at" />
+        <result property="deletedAt" column="deleted_at" />
+    </resultMap>
+
+    <!-- Insert single progress entry -->
+    <insert id="insertProgress">
+        INSERT INTO flash_mastery.study_session_progress (
+            id
+          , session_id
+          , flashcard_id
+          , mode
+          , completed
+          , completed_at
+          , correct_answers
+          , total_attempts
+          , last_studied_at
+          , created_at
+          , updated_at
+          , deleted_at
+        ) VALUES (
+            #{id}
+          , #{sessionId}
+          , #{flashcardId}
+          , #{mode}
+          , #{completed}
+          , #{completedAt}
+          , #{correctAnswers}
+          , #{totalAttempts}
+          , #{lastStudiedAt}
+          , #{createdAt}
+          , #{updatedAt}
+          , #{deletedAt}
+        )
+    </insert>
+
+    <!-- Batch insert progress entries -->
+    <insert id="insertProgressBatch">
+        INSERT INTO flash_mastery.study_session_progress (
+            id
+          , session_id
+          , flashcard_id
+          , mode
+          , completed
+          , completed_at
+          , correct_answers
+          , total_attempts
+          , last_studied_at
+          , created_at
+          , updated_at
+          , deleted_at
+        ) VALUES
+        <foreach item="progress" collection="progressList" separator=",">
+            (
+                #{progress.id}
+              , #{sessionId}
+              , #{progress.flashcardId}
+              , #{progress.mode}
+              , #{progress.completed}
+              , #{progress.completedAt}
+              , #{progress.correctAnswers}
+              , #{progress.totalAttempts}
+              , #{progress.lastStudiedAt}
+              , #{progress.createdAt}
+              , #{progress.updatedAt}
+              , #{progress.deletedAt}
+            )
+        </foreach>
+    </insert>
+
+    <!-- Update progress entry -->
+    <update id="updateProgress">
+        UPDATE flash_mastery.study_session_progress
+        SET completed           = #{completed}
+          , completed_at        = #{completedAt}
+          , correct_answers     = #{correctAnswers}
+          , total_attempts      = #{totalAttempts}
+          , last_studied_at     = #{lastStudiedAt}
+          , updated_at          = #{updatedAt}
+        WHERE session_id = #{sessionId}
+          AND flashcard_id = #{flashcardId}
+          AND mode = #{mode}
+    </update>
+
+    <!-- Delete specific progress entry -->
+    <delete id="deleteProgress">
+        DELETE FROM flash_mastery.study_session_progress
+        WHERE session_id = #{sessionId}
+          AND flashcard_id = #{flashcardId}
+          AND mode = #{mode}
+    </delete>
+
+    <!-- Delete all progress entries for a session -->
+    <delete id="deleteAllProgressBySessionId">
+        DELETE FROM flash_mastery.study_session_progress
+        WHERE session_id = #{sessionId}
+    </delete>
+
+    <!-- Find all progress entries for a session -->
+    <select id="findProgressBySessionId" resultMap="StudySessionProgressResultMap">
+        SELECT
+            *
+        FROM flash_mastery.study_session_progress
+        WHERE session_id = #{sessionId}
+        ORDER BY flashcard_id, mode
+    </select>
+
+    <!-- Find progress entries by session and flashcard -->
+    <select id="findProgressBySessionIdAndFlashcardId" resultMap="StudySessionProgressResultMap">
+        SELECT
+            *
+        FROM flash_mastery.study_session_progress
+        WHERE session_id = #{sessionId}
+          AND flashcard_id = #{flashcardId}
+        ORDER BY mode
+    </select>
+
+    <!-- Find specific progress entry by composite key -->
+    <select id="findProgressByKey" resultMap="StudySessionProgressResultMap">
+        SELECT
+            *
+        FROM flash_mastery.study_session_progress
+        WHERE session_id = #{sessionId}
+          AND flashcard_id = #{flashcardId}
+          AND mode = #{mode}
+    </select>
+
+    <!-- Count completed progress entries for session and mode -->
+    <select id="countCompletedBySessionIdAndMode" resultType="java.lang.Integer">
+        SELECT
+            COUNT(*)
+        FROM flash_mastery.study_session_progress
+        WHERE session_id = #{sessionId}
+          AND mode = #{mode}
+          AND completed = true
+    </select>
+
+    <!-- Find all incomplete progress entries for a session -->
+    <select id="findIncompleteProgressBySessionId" resultMap="StudySessionProgressResultMap">
+        SELECT
+            *
+        FROM flash_mastery.study_session_progress
+        WHERE session_id = #{sessionId}
+          AND (completed IS NULL OR completed = false)
+        ORDER BY flashcard_id, mode
+    </select>
+
+</mapper>

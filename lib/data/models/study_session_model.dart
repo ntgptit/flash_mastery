@@ -1,3 +1,4 @@
+import 'package:flash_mastery/data/models/study_progress_model.dart';
 import 'package:flash_mastery/domain/entities/study_mode.dart';
 import 'package:flash_mastery/domain/entities/study_session.dart';
 import 'package:flash_mastery/domain/entities/study_session_status.dart';
@@ -10,7 +11,7 @@ class StudySessionModel {
   final int currentBatchIndex;
   final DateTime startedAt;
   final StudySessionStatus status;
-  final Map<String, String> progressData;
+  final List<StudyProgressModel>? progress;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -22,7 +23,7 @@ class StudySessionModel {
     this.currentBatchIndex = 0,
     required this.startedAt,
     this.status = StudySessionStatus.inProgress,
-    this.progressData = const {},
+    this.progress,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -38,30 +39,47 @@ class StudySessionModel {
       status: json['status'] != null
           ? studySessionStatusFromJson(json['status'] as String)
           : StudySessionStatus.inProgress,
-      progressData: json['progressData'] != null
-          ? Map<String, String>.from(json['progressData'] as Map)
-          : {},
+      progress: json['progress'] != null
+          ? (json['progress'] as List)
+              .map((e) => StudyProgressModel.fromJson(e as Map<String, dynamic>))
+              .toList()
+          : null,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
   }
 
   StudySession toEntity() {
-    // Convert progressData from Map<String, String> to Map<String, StudyProgress>
-    final progress = <String, StudyProgress>{};
-    for (final entry in progressData.entries) {
-      // Parse progress string (format: "MODE:true,MODE:false")
-      final modes = <StudyMode, bool>{};
-      final parts = entry.value.split(',');
-      for (final part in parts) {
-        final modeParts = part.split(':');
-        if (modeParts.length == 2) {
-          final mode = studyModeFromJson(modeParts[0]);
-          final completed = modeParts[1] == 'true';
-          modes[mode] = completed;
+    // Convert List<StudyProgressModel> to Map<String, StudyProgress>
+    final progressMap = <String, StudyProgress>{};
+
+    if (progress != null) {
+      for (final progressModel in progress!) {
+        final flashcardId = progressModel.flashcardId;
+        final existing = progressMap[flashcardId];
+
+        if (existing != null) {
+          // Merge mode completion for same flashcard - recreate with copyWith
+          final updatedModeCompletion = Map<StudyMode, bool>.from(existing.modeCompletion)
+            ..[progressModel.mode] = progressModel.completed ?? false;
+
+          progressMap[flashcardId] = existing.copyWith(
+            modeCompletion: updatedModeCompletion,
+            correctAnswers: existing.correctAnswers + (progressModel.correctAnswers ?? 0),
+            totalAttempts: existing.totalAttempts + (progressModel.totalAttempts ?? 0),
+            lastStudiedAt: progressModel.lastStudiedAt ?? existing.lastStudiedAt,
+          );
+        } else {
+          // Create new progress entry
+          progressMap[flashcardId] = StudyProgress(
+            flashcardId: flashcardId,
+            modeCompletion: {progressModel.mode: progressModel.completed ?? false},
+            correctAnswers: progressModel.correctAnswers ?? 0,
+            totalAttempts: progressModel.totalAttempts ?? 0,
+            lastStudiedAt: progressModel.lastStudiedAt,
+          );
         }
       }
-      progress[entry.key] = StudyProgress(flashcardId: entry.key, modeCompletion: modes);
     }
 
     return StudySession(
@@ -72,18 +90,29 @@ class StudySessionModel {
       currentBatchIndex: currentBatchIndex,
       startedAt: startedAt,
       status: status,
-      progress: progress,
+      progress: progressMap,
     );
   }
 
   factory StudySessionModel.fromEntity(StudySession session) {
-    // Convert progress Map<String, StudyProgress> to Map<String, String>
-    final progressData = <String, String>{};
+    // Convert progress Map<String, StudyProgress> to List<StudyProgressModel>
+    final progressList = <StudyProgressModel>[];
+
     for (final entry in session.progress.entries) {
-      final parts = entry.value.modeCompletion.entries
-          .map((e) => '${studyModeToJson(e.key)}:${e.value}')
-          .join(',');
-      progressData[entry.key] = parts;
+      final flashcardId = entry.key;
+      final studyProgress = entry.value;
+
+      // Create one StudyProgressModel per mode
+      for (final modeEntry in studyProgress.modeCompletion.entries) {
+        progressList.add(StudyProgressModel(
+          flashcardId: flashcardId,
+          mode: modeEntry.key,
+          completed: modeEntry.value,
+          correctAnswers: studyProgress.correctAnswers,
+          totalAttempts: studyProgress.totalAttempts,
+          lastStudiedAt: studyProgress.lastStudiedAt,
+        ));
+      }
     }
 
     return StudySessionModel(
@@ -94,7 +123,7 @@ class StudySessionModel {
       currentBatchIndex: session.currentBatchIndex,
       startedAt: session.startedAt,
       status: session.status,
-      progressData: progressData,
+      progress: progressList.isNotEmpty ? progressList : null,
       createdAt: DateTime.now(), // These should come from backend
       updatedAt: DateTime.now(),
     );

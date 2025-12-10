@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/core/exceptions/exceptions.dart';
+import 'package:flash_mastery/data/models/study_progress_model.dart';
 import 'package:flash_mastery/data/models/study_session_model.dart';
 
 abstract class StudySessionRemoteDataSource {
@@ -9,7 +10,7 @@ abstract class StudySessionRemoteDataSource {
   Future<StudySessionModel> updateSession(String sessionId, {
     String? currentMode,
     int? currentBatchIndex,
-    Map<String, String>? progressData,
+    List<StudyProgressModel>? progressUpdates,
   });
 }
 
@@ -49,12 +50,14 @@ class StudySessionRemoteDataSourceImpl implements StudySessionRemoteDataSource {
   Future<StudySessionModel> updateSession(String sessionId, {
     String? currentMode,
     int? currentBatchIndex,
-    Map<String, String>? progressData,
+    List<StudyProgressModel>? progressUpdates,
   }) async {
     final data = <String, dynamic>{};
     if (currentMode != null) data['currentMode'] = currentMode;
     if (currentBatchIndex != null) data['currentBatchIndex'] = currentBatchIndex;
-    if (progressData != null) data['progressData'] = progressData;
+    if (progressUpdates != null) {
+      data['progressUpdates'] = progressUpdates.map((p) => p.toJson()).toList();
+    }
 
     final response = await dio.put(
       ApiConstants.updateSession(sessionId),

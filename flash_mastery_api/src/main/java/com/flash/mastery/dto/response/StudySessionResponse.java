@@ -2,7 +2,6 @@ package com.flash.mastery.dto.response;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import com.flash.mastery.entity.enums.StudyMode;
@@ -25,7 +24,7 @@ public class StudySessionResponse {
     StudyMode currentMode;
     Integer currentBatchIndex;
     StudySessionStatus status;
-    Map<UUID, String> progressData;
+    List<StudySessionProgressResponse> progress;
     LocalDateTime startedAt;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
