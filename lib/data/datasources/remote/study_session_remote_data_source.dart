@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/core/exceptions/exceptions.dart';
 import 'package:flash_mastery/data/models/study_session_model.dart';
+import 'package:flash_mastery/domain/entities/study_progress_update.dart';
 
 abstract class StudySessionRemoteDataSource {
   Future<StudySessionModel> startSession(String deckId, {List<String>? flashcardIds});
@@ -9,7 +10,7 @@ abstract class StudySessionRemoteDataSource {
   Future<StudySessionModel> updateSession(String sessionId, {
     String? currentMode,
     int? currentBatchIndex,
-    Map<String, String>? progressData,
+    List<StudyProgressUpdate>? progressUpdates,
   });
   Future<void> completeSession(String sessionId);
   Future<void> cancelSession(String sessionId);
@@ -51,12 +52,14 @@ class StudySessionRemoteDataSourceImpl implements StudySessionRemoteDataSource {
   Future<StudySessionModel> updateSession(String sessionId, {
     String? currentMode,
     int? currentBatchIndex,
-    Map<String, String>? progressData,
+    List<StudyProgressUpdate>? progressUpdates,
   }) async {
     final data = <String, dynamic>{};
     if (currentMode != null) data['currentMode'] = currentMode;
     if (currentBatchIndex != null) data['currentBatchIndex'] = currentBatchIndex;
-    if (progressData != null) data['progressData'] = progressData;
+    if (progressUpdates != null) {
+      data['progressUpdates'] = progressUpdates.map(_mapUpdateToJson).toList();
+    }
 
     final response = await dio.put(
       ApiConstants.updateSession(sessionId),
@@ -69,6 +72,16 @@ class StudySessionRemoteDataSourceImpl implements StudySessionRemoteDataSource {
       throw const NotFoundException(message: 'Study session not found');
     }
     throw ServerException(message: response.statusMessage ?? 'Failed to update study session');
+  }
+
+  Map<String, dynamic> _mapUpdateToJson(StudyProgressUpdate update) {
+    return {
+      'flashcardId': update.flashcardId,
+      if (update.completedModes.isNotEmpty)
+        'completedModes': update.completedModes.map((mode) => studyModeToJson(mode)).toList(),
+      if (update.correctAnswers != null) 'correctAnswers': update.correctAnswers,
+      if (update.totalAttempts != null) 'totalAttempts': update.totalAttempts,
+    };
   }
 
   @override

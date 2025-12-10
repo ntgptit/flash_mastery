@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:flash_mastery/core/exceptions/failures.dart';
+import 'package:flash_mastery/domain/entities/study_progress_update.dart';
 import 'package:flash_mastery/domain/entities/study_session.dart';
 
 /// Repository interface for study session operations.
@@ -18,7 +19,7 @@ abstract class StudySessionRepository {
     required String sessionId,
     String? currentMode,
     int? currentBatchIndex,
-    Map<String, String>? progressData,
+    List<StudyProgressUpdate>? progressUpdates,
   });
 
   /// Complete a study session.

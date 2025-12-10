@@ -1,15 +1,14 @@
 package com.flash.mastery.entity;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import com.flash.mastery.constant.NumberConstants;
 import com.flash.mastery.entity.enums.StudyMode;
 import com.flash.mastery.entity.enums.StudySessionStatus;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -19,7 +18,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -65,12 +64,10 @@ public class StudySession extends BaseAuditEntity {
     @Default
     private StudySessionStatus status = StudySessionStatus.IN_PROGRESS;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "study_session_progress", joinColumns = @JoinColumn(name = "session_id"))
-    @MapKeyColumn(name = "flashcard_id")
-    @Column(name = "progress_data")
+    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
     @Default
-    private Map<UUID, String> progressData = new HashMap<>();
+    @ToString.Exclude
+    private List<StudySessionProgress> progressRecords = new ArrayList<>();
 
     @Column(name = "completed_at")
     private java.time.LocalDateTime completedAt;
@@ -90,44 +87,39 @@ public class StudySession extends BaseAuditEntity {
      * Get flashcards for current batch.
      */
     public List<UUID> getCurrentBatch() {
-        final int batchSize = NumberConstants.STUDY_SESSION_BATCH_SIZE;
-        final int start = currentBatchIndex * batchSize;
-        final int end = Math.min(start + batchSize, flashcardIds.size());
-        if (start >= flashcardIds.size()) {
+        final var batchSize = NumberConstants.STUDY_SESSION_BATCH_SIZE;
+        final var start = this.currentBatchIndex * batchSize;
+        final var end = Math.min(start + batchSize, this.flashcardIds.size());
+        if (start >= this.flashcardIds.size()) {
             return new ArrayList<>();
         }
-        return flashcardIds.subList(start, end);
+        return this.flashcardIds.subList(start, end);
     }
 
     /**
      * Check if current batch is complete.
      */
     public boolean isCurrentBatchComplete() {
-        final List<UUID> batch = getCurrentBatch();
+        final var batch = getCurrentBatch();
         return batch.stream()
-                .allMatch(id -> {
-                    String progress = progressData.get(id);
-                    return progress != null && progress.contains("OVERVIEW:true");
-                });
+                .allMatch(id -> this.progressRecords.stream()
+                        .filter(p -> p.getFlashcard().getId().equals(id))
+                        .findFirst()
+                        .map(p -> p.isModeCompleted(this.currentMode))
+                        .orElse(false));
     }
 
     /**
      * Get next mode in sequence.
      */
     public StudyMode getNextMode() {
-        switch (currentMode) {
-            case OVERVIEW:
-                return StudyMode.MATCHING;
-            case MATCHING:
-                return StudyMode.GUESS;
-            case GUESS:
-                return StudyMode.RECALL;
-            case RECALL:
-                return StudyMode.FILL_IN_BLANK;
-            case FILL_IN_BLANK:
-                return null; // All modes completed
-            default:
-                return null;
-        }
+        return switch (this.currentMode) {
+        case OVERVIEW -> StudyMode.MATCHING;
+        case MATCHING -> StudyMode.GUESS;
+        case GUESS -> StudyMode.RECALL;
+        case RECALL -> StudyMode.FILL_IN_BLANK;
+        case FILL_IN_BLANK -> null; // All modes completed
+        default -> null;
+        };
     }
 }

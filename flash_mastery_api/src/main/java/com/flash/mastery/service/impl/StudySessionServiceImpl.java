@@ -13,10 +13,12 @@ import org.springframework.transaction.annotation.Transactional;
 import com.flash.mastery.constant.MessageKeys;
 import com.flash.mastery.constant.NumberConstants;
 import com.flash.mastery.dto.request.StudySessionCreateRequest;
+import com.flash.mastery.dto.request.StudySessionProgressUpdateRequest;
 import com.flash.mastery.dto.request.StudySessionUpdateRequest;
 import com.flash.mastery.dto.response.StudySessionResponse;
 import com.flash.mastery.entity.Flashcard;
 import com.flash.mastery.entity.StudySession;
+import com.flash.mastery.entity.StudySessionProgress;
 import com.flash.mastery.entity.enums.StudyMode;
 import com.flash.mastery.entity.enums.StudySessionStatus;
 import com.flash.mastery.mapper.StudySessionMapper;
@@ -137,9 +139,7 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
         if (request.getCurrentBatchIndex() != null) {
             session.setCurrentBatchIndex(request.getCurrentBatchIndex());
         }
-        if (request.getProgressData() != null) {
-            session.getProgressData().putAll(request.getProgressData());
-        }
+        applyProgressUpdates(session, request.getProgressUpdates());
 
         final var saved = this.studySessionRepository.save(session);
         return this.studySessionMapper.toResponse(saved);
@@ -162,5 +162,42 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
                 MessageKeys.ERROR_NOT_FOUND_SESSION);
         session.setStatus(StudySessionStatus.CANCEL);
         this.studySessionRepository.save(session);
+    }
+
+    private void applyProgressUpdates(StudySession session, List<StudySessionProgressUpdateRequest> updates) {
+        if (updates == null || updates.isEmpty()) {
+            return;
+        }
+
+        for (StudySessionProgressUpdateRequest update : updates) {
+            final var flashcard = findByIdOrThrow(
+                    this.flashcardRepository.findById(update.getFlashcardId()),
+                    MessageKeys.ERROR_NOT_FOUND_FLASHCARD);
+
+            if (!session.getFlashcardIds().contains(flashcard.getId())) {
+                throw new IllegalArgumentException("Flashcard is not part of this study session");
+            }
+
+            final var progress = findOrCreateProgress(session, flashcard);
+
+            if (update.getCompletedModes() != null) {
+                update.getCompletedModes().forEach(progress::markModeCompleted);
+            }
+            progress.updateAttempts(update.getCorrectAnswers(), update.getTotalAttempts());
+        }
+    }
+
+    private StudySessionProgress findOrCreateProgress(StudySession session, Flashcard flashcard) {
+        return session.getProgressRecords().stream()
+                .filter(p -> p.getFlashcard().getId().equals(flashcard.getId()))
+                .findFirst()
+                .orElseGet(() -> {
+                    final var newProgress = StudySessionProgress.builder()
+                            .session(session)
+                            .flashcard(flashcard)
+                            .build();
+                    session.getProgressRecords().add(newProgress);
+                    return newProgress;
+                });
     }
 }

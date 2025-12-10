@@ -2,6 +2,7 @@ import 'package:flash_mastery/core/error/failure_messages.dart';
 import 'package:flash_mastery/data/models/study_session_model.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
 import 'package:flash_mastery/domain/entities/study_mode.dart';
+import 'package:flash_mastery/domain/entities/study_progress_update.dart';
 import 'package:flash_mastery/domain/entities/study_session.dart';
 import 'package:flash_mastery/domain/usecases/study_sessions/study_session_usecases.dart';
 import 'package:flash_mastery/presentation/screens/study/widgets/fill_in_blank_mode_widget.dart';
@@ -230,9 +231,30 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
   }
 
   Future<void> _handleModeComplete(StudySession session) async {
+    final completedMode = session.currentMode;
+    final batchFlashcardIds = session.getCurrentBatch();
+
+    final progressUpdates = batchFlashcardIds
+        .map(
+          (id) => StudyProgressUpdate(
+            flashcardId: id,
+            completedModes: [completedMode],
+          ),
+        )
+        .toList();
+
     final nextMode = session.getNextMode();
     if (nextMode == null) {
-      // All modes completed
+      // Save progress before completing the session
+      if (_sessionId != null) {
+        final viewModel = ref.read(studySessionViewModelProvider(_sessionId).notifier);
+        await viewModel.updateSession(
+          UpdateStudySessionParams(
+            sessionId: session.id,
+            progressUpdates: progressUpdates,
+          ),
+        );
+      }
       await _completeSession();
       return;
     }
@@ -244,6 +266,7 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
         sessionId: session.id,
         currentMode: studyModeToJson(nextMode),
         currentBatchIndex: 0,
+        progressUpdates: progressUpdates,
       ),
     );
   }

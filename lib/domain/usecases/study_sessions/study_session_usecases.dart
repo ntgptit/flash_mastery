@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:flash_mastery/core/exceptions/failures.dart';
 import 'package:flash_mastery/core/usecases/usecase.dart';
+import 'package:flash_mastery/domain/entities/study_progress_update.dart';
 import 'package:flash_mastery/domain/entities/study_session.dart';
 import 'package:flash_mastery/domain/repositories/study_session_repository.dart';
 
@@ -40,7 +41,7 @@ class UpdateStudySessionUseCase extends UseCase<StudySession, UpdateStudySession
       sessionId: params.sessionId,
       currentMode: params.currentMode,
       currentBatchIndex: params.currentBatchIndex,
-      progressData: params.progressData,
+      progressUpdates: params.progressUpdates,
     );
   }
 }
@@ -81,13 +82,13 @@ class UpdateStudySessionParams {
   final String sessionId;
   final String? currentMode;
   final int? currentBatchIndex;
-  final Map<String, String>? progressData;
+  final List<StudyProgressUpdate>? progressUpdates;
 
   const UpdateStudySessionParams({
     required this.sessionId,
     this.currentMode,
     this.currentBatchIndex,
-    this.progressData,
+    this.progressUpdates,
   });
 }
 

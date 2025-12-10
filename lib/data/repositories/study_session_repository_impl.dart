@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:flash_mastery/core/error/error_guard.dart';
 import 'package:flash_mastery/core/exceptions/failures.dart';
 import 'package:flash_mastery/data/datasources/remote/study_session_remote_data_source.dart';
+import 'package:flash_mastery/domain/entities/study_progress_update.dart';
 import 'package:flash_mastery/domain/entities/study_session.dart';
 import 'package:flash_mastery/domain/repositories/study_session_repository.dart';
 
@@ -34,14 +35,14 @@ class StudySessionRepositoryImpl implements StudySessionRepository {
     required String sessionId,
     String? currentMode,
     int? currentBatchIndex,
-    Map<String, String>? progressData,
+    List<StudyProgressUpdate>? progressUpdates,
   }) async {
     return ErrorGuard.run(() async {
       final session = await remoteDataSource.updateSession(
         sessionId,
         currentMode: currentMode,
         currentBatchIndex: currentBatchIndex,
-        progressData: progressData,
+        progressUpdates: progressUpdates,
       );
       return session.toEntity();
     });

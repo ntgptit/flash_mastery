@@ -12,6 +12,9 @@ CREATE TABLE IF NOT EXISTS study_sessions (
     CONSTRAINT chk_study_sessions_status CHECK (status IN ('IN_PROGRESS', 'SUCCESS', 'CANCEL'))
 );
 
+-- Ensure completed_at column exists when table was created earlier without it
+ALTER TABLE study_sessions ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP;
+
 -- Create study_session_flashcard_ids table (for ElementCollection)
 CREATE TABLE IF NOT EXISTS study_session_flashcard_ids (
     session_id UUID NOT NULL,
