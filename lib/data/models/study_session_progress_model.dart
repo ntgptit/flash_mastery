@@ -22,7 +22,7 @@ class StudySessionProgressModel {
     final modeMap = <StudyMode, bool>{};
     final rawModes = json['modeCompletion'] as Map<String, dynamic>?;
     rawModes?.forEach((key, value) {
-      modeMap[studyModeFromJson(key)] = value as bool;
+      modeMap[_studyModeFromJson(key)] = value as bool;
     });
 
     return StudySessionProgressModel(
@@ -56,5 +56,22 @@ class StudySessionProgressModel {
       totalAttempts: progress.totalAttempts,
       lastStudiedAt: progress.lastStudiedAt,
     );
+  }
+}
+
+StudyMode _studyModeFromJson(String json) {
+  switch (json.toUpperCase()) {
+    case 'OVERVIEW':
+      return StudyMode.overview;
+    case 'MATCHING':
+      return StudyMode.matching;
+    case 'GUESS':
+      return StudyMode.guess;
+    case 'RECALL':
+      return StudyMode.recall;
+    case 'FILL_IN_BLANK':
+      return StudyMode.fillInBlank;
+    default:
+      return StudyMode.overview;
   }
 }
