@@ -22,6 +22,7 @@ public class StudySessionResponse {
     UUID deckId;
     List<UUID> flashcardIds;
     StudyMode currentMode;
+    StudyMode nextMode;
     Integer currentBatchIndex;
     StudySessionStatus status;
     List<StudySessionProgressResponse> progress;
@@ -30,4 +31,3 @@ public class StudySessionResponse {
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 }
-

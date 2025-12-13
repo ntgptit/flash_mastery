@@ -9,7 +9,7 @@ import lombok.Data;
 @Data
 public class StudySessionUpdateRequest {
     private StudyMode currentMode;
+    private StudyMode nextMode;
     private Integer currentBatchIndex;
     private List<StudySessionProgressUpdateRequest> progressUpdates;
 }
-

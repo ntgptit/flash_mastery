@@ -110,6 +110,7 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
                 .deck(deck)
                 .flashcardIds(flashcardIds)
                 .currentMode(StudyMode.OVERVIEW)
+                .nextMode(StudySession.resolveNextMode(StudyMode.OVERVIEW))
                 .currentBatchIndex(0)
                 .status(StudySessionStatus.IN_PROGRESS)
                 .build();
@@ -136,6 +137,11 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
         if (request.getCurrentMode() != null) {
             session.setCurrentMode(request.getCurrentMode());
         }
+        if (request.getNextMode() != null) {
+            session.setNextMode(request.getNextMode());
+        } else if (request.getCurrentMode() != null) {
+            session.setNextMode(StudySession.resolveNextMode(request.getCurrentMode()));
+        }
         if (request.getCurrentBatchIndex() != null) {
             session.setCurrentBatchIndex(request.getCurrentBatchIndex());
         }
@@ -151,6 +157,7 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
                 this.studySessionRepository.findById(sessionId),
                 MessageKeys.ERROR_NOT_FOUND_SESSION);
         session.setCompletedAt(LocalDateTime.now());
+        session.setNextMode(null);
         session.setStatus(StudySessionStatus.SUCCESS);
         this.studySessionRepository.save(session);
     }
@@ -160,6 +167,7 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
         final var session = findByIdOrThrow(
                 this.studySessionRepository.findById(sessionId),
                 MessageKeys.ERROR_NOT_FOUND_SESSION);
+        session.setNextMode(null);
         session.setStatus(StudySessionStatus.CANCEL);
         this.studySessionRepository.save(session);
     }

@@ -244,31 +244,26 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
         .toList();
 
     final nextMode = session.getNextMode();
+    final followingMode = nextMode != null ? StudySession.calculateNextMode(nextMode) : null;
+
+    // Persist progress and the next mode to resume later
+    if (_sessionId != null) {
+      final viewModel = ref.read(studySessionViewModelProvider(_sessionId).notifier);
+      await viewModel.updateSession(
+        UpdateStudySessionParams(
+          sessionId: session.id,
+          currentMode: studyModeToJson(nextMode ?? session.currentMode),
+          nextMode: followingMode != null ? studyModeToJson(followingMode) : null,
+          currentBatchIndex: nextMode != null ? 0 : session.currentBatchIndex,
+          progressUpdates: progressUpdates,
+        ),
+      );
+    }
+
     if (nextMode == null) {
-      // Save progress before completing the session
-      if (_sessionId != null) {
-        final viewModel = ref.read(studySessionViewModelProvider(_sessionId).notifier);
-        await viewModel.updateSession(
-          UpdateStudySessionParams(
-            sessionId: session.id,
-            progressUpdates: progressUpdates,
-          ),
-        );
-      }
       await _completeSession();
       return;
     }
-
-    // Move to next mode
-    final viewModel = ref.read(studySessionViewModelProvider(_sessionId).notifier);
-    await viewModel.updateSession(
-      UpdateStudySessionParams(
-        sessionId: session.id,
-        currentMode: studyModeToJson(nextMode),
-        currentBatchIndex: 0,
-        progressUpdates: progressUpdates,
-      ),
-    );
   }
 
   Future<void> _completeSession() async {
@@ -351,4 +346,3 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
     }
   }
 }
-

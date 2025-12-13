@@ -40,6 +40,7 @@ class UpdateStudySessionUseCase extends UseCase<StudySession, UpdateStudySession
     return repository.updateSession(
       sessionId: params.sessionId,
       currentMode: params.currentMode,
+      nextMode: params.nextMode,
       currentBatchIndex: params.currentBatchIndex,
       progressUpdates: params.progressUpdates,
     );
@@ -81,14 +82,15 @@ class StartStudySessionParams {
 class UpdateStudySessionParams {
   final String sessionId;
   final String? currentMode;
+  final String? nextMode;
   final int? currentBatchIndex;
   final List<StudyProgressUpdate>? progressUpdates;
 
   const UpdateStudySessionParams({
     required this.sessionId,
     this.currentMode,
+    this.nextMode,
     this.currentBatchIndex,
     this.progressUpdates,
   });
 }
-

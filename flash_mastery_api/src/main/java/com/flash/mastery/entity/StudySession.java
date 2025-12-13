@@ -55,6 +55,10 @@ public class StudySession extends BaseAuditEntity {
     @Default
     private StudyMode currentMode = StudyMode.OVERVIEW;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "next_mode")
+    private StudyMode nextMode;
+
     @Column(name = "current_batch_index", nullable = false)
     @Default
     private Integer currentBatchIndex = 0;
@@ -80,6 +84,9 @@ public class StudySession extends BaseAuditEntity {
     private void ensureStatus() {
         if (this.status == null) {
             this.status = StudySessionStatus.IN_PROGRESS;
+        }
+        if (this.nextMode == null && this.status == StudySessionStatus.IN_PROGRESS) {
+            this.nextMode = resolveNextMode(this.currentMode);
         }
     }
 
@@ -110,10 +117,10 @@ public class StudySession extends BaseAuditEntity {
     }
 
     /**
-     * Get next mode in sequence.
+     * Calculate the next mode in sequence for the given mode.
      */
-    public StudyMode getNextMode() {
-        return switch (this.currentMode) {
+    public static StudyMode resolveNextMode(StudyMode mode) {
+        return switch (mode) {
         case OVERVIEW -> StudyMode.MATCHING;
         case MATCHING -> StudyMode.GUESS;
         case GUESS -> StudyMode.RECALL;
@@ -121,5 +128,12 @@ public class StudySession extends BaseAuditEntity {
         case FILL_IN_BLANK -> null; // All modes completed
         default -> null;
         };
+    }
+
+    /**
+     * Convenience accessor to determine the following mode based on the current mode.
+     */
+    public StudyMode calculateFollowingMode() {
+        return resolveNextMode(this.currentMode);
     }
 }

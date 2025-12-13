@@ -7,8 +7,10 @@ import 'package:flash_mastery/domain/entities/study_progress_update.dart';
 abstract class StudySessionRemoteDataSource {
   Future<StudySessionModel> startSession(String deckId, {List<String>? flashcardIds});
   Future<StudySessionModel> getSession(String sessionId);
-  Future<StudySessionModel> updateSession(String sessionId, {
+  Future<StudySessionModel> updateSession(
+    String sessionId, {
     String? currentMode,
+    String? nextMode,
     int? currentBatchIndex,
     List<StudyProgressUpdate>? progressUpdates,
   });
@@ -49,13 +51,16 @@ class StudySessionRemoteDataSourceImpl implements StudySessionRemoteDataSource {
   }
 
   @override
-  Future<StudySessionModel> updateSession(String sessionId, {
+  Future<StudySessionModel> updateSession(
+    String sessionId, {
     String? currentMode,
+    String? nextMode,
     int? currentBatchIndex,
     List<StudyProgressUpdate>? progressUpdates,
   }) async {
     final data = <String, dynamic>{};
     if (currentMode != null) data['currentMode'] = currentMode;
+    if (nextMode != null) data['nextMode'] = nextMode;
     if (currentBatchIndex != null) data['currentBatchIndex'] = currentBatchIndex;
     if (progressUpdates != null) {
       data['progressUpdates'] = progressUpdates.map(_mapUpdateToJson).toList();
@@ -104,4 +109,3 @@ class StudySessionRemoteDataSourceImpl implements StudySessionRemoteDataSource {
     throw ServerException(message: response.statusMessage ?? 'Failed to cancel study session');
   }
 }
-

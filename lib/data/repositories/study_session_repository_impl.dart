@@ -34,6 +34,7 @@ class StudySessionRepositoryImpl implements StudySessionRepository {
   Future<Either<Failure, StudySession>> updateSession({
     required String sessionId,
     String? currentMode,
+    String? nextMode,
     int? currentBatchIndex,
     List<StudyProgressUpdate>? progressUpdates,
   }) async {
@@ -41,6 +42,7 @@ class StudySessionRepositoryImpl implements StudySessionRepository {
       final session = await remoteDataSource.updateSession(
         sessionId,
         currentMode: currentMode,
+        nextMode: nextMode,
         currentBatchIndex: currentBatchIndex,
         progressUpdates: progressUpdates,
       );
@@ -64,4 +66,3 @@ class StudySessionRepositoryImpl implements StudySessionRepository {
     });
   }
 }
-

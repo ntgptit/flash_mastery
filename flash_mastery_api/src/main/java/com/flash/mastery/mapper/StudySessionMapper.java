@@ -23,6 +23,7 @@ public interface StudySessionMapper {
     @Mapping(target = "completedAt", source = "completedAt")
     @Mapping(target = "currentBatchIndex", source = "currentBatchIndex")
     @Mapping(target = "currentMode", source = "currentMode")
+    @Mapping(target = "nextMode", source = "nextMode")
     @Mapping(target = "status", source = "status")
     @Mapping(target = "flashcardIds", source = "flashcardIds")
     @Mapping(target = "progress", expression = "java(mapProgress(session.getProgressRecords()))")

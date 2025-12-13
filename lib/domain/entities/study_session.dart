@@ -8,6 +8,7 @@ class StudySession extends Equatable {
   final String deckId;
   final List<String> flashcardIds;
   final StudyMode currentMode;
+  final StudyMode? nextMode;
   final int currentBatchIndex;
   final DateTime startedAt;
   final DateTime? completedAt;
@@ -19,6 +20,7 @@ class StudySession extends Equatable {
     required this.deckId,
     required this.flashcardIds,
     required this.currentMode,
+    this.nextMode,
     this.currentBatchIndex = 0,
     required this.startedAt,
     this.completedAt,
@@ -31,6 +33,7 @@ class StudySession extends Equatable {
     String? deckId,
     List<String>? flashcardIds,
     StudyMode? currentMode,
+    StudyMode? nextMode,
     int? currentBatchIndex,
     DateTime? startedAt,
     DateTime? completedAt,
@@ -42,6 +45,7 @@ class StudySession extends Equatable {
       deckId: deckId ?? this.deckId,
       flashcardIds: flashcardIds ?? this.flashcardIds,
       currentMode: currentMode ?? this.currentMode,
+      nextMode: nextMode ?? this.nextMode,
       currentBatchIndex: currentBatchIndex ?? this.currentBatchIndex,
       startedAt: startedAt ?? this.startedAt,
       completedAt: completedAt ?? this.completedAt,
@@ -71,7 +75,11 @@ class StudySession extends Equatable {
 
   /// Get next mode in sequence.
   StudyMode? getNextMode() {
-    switch (currentMode) {
+    return nextMode ?? calculateNextMode(currentMode);
+  }
+
+  static StudyMode? calculateNextMode(StudyMode mode) {
+    switch (mode) {
       case StudyMode.overview:
         return StudyMode.matching;
       case StudyMode.matching:
@@ -81,7 +89,7 @@ class StudySession extends Equatable {
       case StudyMode.recall:
         return StudyMode.fillInBlank;
       case StudyMode.fillInBlank:
-        return null; // All modes completed
+        return null;
     }
   }
 
@@ -91,6 +99,7 @@ class StudySession extends Equatable {
         deckId,
         flashcardIds,
         currentMode,
+        nextMode,
         currentBatchIndex,
         startedAt,
         completedAt,
@@ -165,4 +174,3 @@ class StudyProgress extends Equatable {
         lastStudiedAt,
       ];
 }
-

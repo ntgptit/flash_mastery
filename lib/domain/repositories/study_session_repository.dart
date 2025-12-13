@@ -18,6 +18,7 @@ abstract class StudySessionRepository {
   Future<Either<Failure, StudySession>> updateSession({
     required String sessionId,
     String? currentMode,
+    String? nextMode,
     int? currentBatchIndex,
     List<StudyProgressUpdate>? progressUpdates,
   });
@@ -28,4 +29,3 @@ abstract class StudySessionRepository {
   /// Cancel a study session.
   Future<Either<Failure, void>> cancelSession(String sessionId);
 }
-

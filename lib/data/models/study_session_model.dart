@@ -8,6 +8,7 @@ class StudySessionModel {
   final String deckId;
   final List<String> flashcardIds;
   final StudyMode currentMode;
+  final StudyMode? nextMode;
   final int currentBatchIndex;
   final DateTime startedAt;
   final DateTime? completedAt;
@@ -21,6 +22,7 @@ class StudySessionModel {
     required this.deckId,
     required this.flashcardIds,
     required this.currentMode,
+    this.nextMode,
     this.currentBatchIndex = 0,
     required this.startedAt,
     this.completedAt,
@@ -36,6 +38,9 @@ class StudySessionModel {
       deckId: json['deckId'] as String,
       flashcardIds: (json['flashcardIds'] as List).cast<String>(),
       currentMode: studyModeFromJson(json['currentMode'] as String),
+      nextMode: json['nextMode'] != null
+          ? studyModeFromJson(json['nextMode'] as String)
+          : null,
       currentBatchIndex: json['currentBatchIndex'] as int? ?? 0,
       startedAt: DateTime.parse(json['startedAt'] as String),
       completedAt: json['completedAt'] != null
@@ -67,6 +72,7 @@ class StudySessionModel {
       deckId: deckId,
       flashcardIds: flashcardIds,
       currentMode: currentMode,
+      nextMode: nextMode,
       currentBatchIndex: currentBatchIndex,
       startedAt: startedAt,
       completedAt: completedAt,
@@ -85,6 +91,7 @@ class StudySessionModel {
       deckId: session.deckId,
       flashcardIds: session.flashcardIds,
       currentMode: session.currentMode,
+      nextMode: session.nextMode,
       currentBatchIndex: session.currentBatchIndex,
       startedAt: session.startedAt,
       completedAt: session.completedAt,
