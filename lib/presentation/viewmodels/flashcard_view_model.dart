@@ -1,4 +1,5 @@
 import 'package:flash_mastery/core/error/failure_messages.dart';
+import 'package:flash_mastery/core/exceptions/failures.dart';
 import 'package:flash_mastery/domain/entities/flashcard.dart';
 import 'package:flash_mastery/domain/usecases/flashcards/flashcard_usecases.dart';
 import 'package:flash_mastery/presentation/providers/flashcard_providers.dart';
@@ -13,7 +14,7 @@ class FlashcardListState with _$FlashcardListState {
   const factory FlashcardListState.initial() = _Initial;
   const factory FlashcardListState.loading() = _Loading;
   const factory FlashcardListState.success(List<Flashcard> flashcards) = _Success;
-  const factory FlashcardListState.error(String message) = _Error;
+  const factory FlashcardListState.error(Failure failure) = _Error;
 }
 
 @riverpod
@@ -49,7 +50,7 @@ class FlashcardListViewModel extends _$FlashcardListViewModel {
     state = const FlashcardListState.loading();
     final result = await ref.read(getFlashcardsUseCaseProvider).call(deckId);
     state = result.fold(
-      (failure) => FlashcardListState.error(failure.toDisplayMessage()),
+      (failure) => FlashcardListState.error(failure),
       (cards) => FlashcardListState.success(cards),
     );
   }

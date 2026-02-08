@@ -124,11 +124,11 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
           initial: () => const Center(child: CircularProgressIndicator()),
           loading: () => const Center(child: CircularProgressIndicator()),
           success: (_) => const Center(child: CircularProgressIndicator()),
-          error: (message) => Center(
+          error: (failure) => Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('Error: $message'),
+                Text('Error: ${failure.message}'),
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () => context.pop(),
@@ -166,10 +166,10 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
           body: _buildModeWidget(session, flashcards),
         );
       },
-      error: (message) => Scaffold(
+      error: (failure) => Scaffold(
         appBar: AppBar(title: const Text('Study Session')),
-        body: AppErrorWidget(
-          message: message,
+        body: AppErrorWidget.fromFailure(
+          failure,
           onRetry: () => _initializeSession(),
         ),
       ),

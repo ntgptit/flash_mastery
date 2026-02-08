@@ -50,8 +50,8 @@ class _DashboardScreenBody extends ConsumerWidget {
         child: foldersState.when(
           initial: () => const LoadingWidget(),
           loading: () => const LoadingWidget(),
-          error: (message) => AppErrorWidget(
-            message: message,
+          error: (failure) => AppErrorWidget.fromFailure(
+            failure,
             onRetry: () => ref.read(folderListViewModelProvider(ViewScope.dashboard).notifier).load(),
           ),
           success: (folders) {

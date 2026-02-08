@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/core/exceptions/exceptions.dart';
+import 'package:flash_mastery/core/network/api_error_parser.dart';
 import 'package:flash_mastery/data/models/study_session_model.dart';
 import 'package:flash_mastery/domain/entities/study_progress_update.dart';
 
@@ -35,7 +36,7 @@ class StudySessionRemoteDataSourceImpl implements StudySessionRemoteDataSource {
     if (response.statusCode == 201 || response.statusCode == 200) {
       return StudySessionModel.fromJson(response.data as Map<String, dynamic>);
     }
-    throw ServerException(message: response.statusMessage ?? 'Failed to start study session');
+    throw _serverException(response);
   }
 
   @override
@@ -45,9 +46,9 @@ class StudySessionRemoteDataSourceImpl implements StudySessionRemoteDataSource {
       return StudySessionModel.fromJson(response.data as Map<String, dynamic>);
     }
     if (response.statusCode == 404) {
-      throw const NotFoundException(message: 'Study session not found');
+      throw _notFoundException(response);
     }
-    throw ServerException(message: response.statusMessage ?? 'Failed to load study session');
+    throw _serverException(response);
   }
 
   @override
@@ -74,9 +75,9 @@ class StudySessionRemoteDataSourceImpl implements StudySessionRemoteDataSource {
       return StudySessionModel.fromJson(response.data as Map<String, dynamic>);
     }
     if (response.statusCode == 404) {
-      throw const NotFoundException(message: 'Study session not found');
+      throw _notFoundException(response);
     }
-    throw ServerException(message: response.statusMessage ?? 'Failed to update study session');
+    throw _serverException(response);
   }
 
   Map<String, dynamic> _mapUpdateToJson(StudyProgressUpdate update) {
@@ -94,9 +95,9 @@ class StudySessionRemoteDataSourceImpl implements StudySessionRemoteDataSource {
     final response = await dio.post(ApiConstants.completeSession(sessionId));
     if (response.statusCode == 204) return;
     if (response.statusCode == 404) {
-      throw const NotFoundException(message: 'Study session not found');
+      throw _notFoundException(response);
     }
-    throw ServerException(message: response.statusMessage ?? 'Failed to complete study session');
+    throw _serverException(response);
   }
 
   @override
@@ -104,8 +105,23 @@ class StudySessionRemoteDataSourceImpl implements StudySessionRemoteDataSource {
     final response = await dio.post(ApiConstants.cancelSession(sessionId));
     if (response.statusCode == 204 || response.statusCode == 200) return;
     if (response.statusCode == 404) {
-      throw const NotFoundException(message: 'Study session not found');
+      throw _notFoundException(response);
     }
-    throw ServerException(message: response.statusMessage ?? 'Failed to cancel study session');
+    throw _serverException(response);
   }
+}
+
+NotFoundException _notFoundException(Response response) {
+  return NotFoundException(
+    message: ApiErrorParser.extractMessage(response.data) ?? 'Resource not found',
+    errorCode: ApiErrorParser.extractCode(response.data),
+  );
+}
+
+ServerException _serverException(Response response) {
+  return ServerException(
+    message: ApiErrorParser.extractMessage(response.data) ?? response.statusMessage ?? 'Request failed',
+    statusCode: response.statusCode,
+    errorCode: ApiErrorParser.extractCode(response.data),
+  );
 }

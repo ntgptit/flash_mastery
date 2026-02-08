@@ -1,5 +1,6 @@
 import 'package:flash_mastery/core/constants/config/view_scopes.dart';
 import 'package:flash_mastery/core/error/failure_messages.dart';
+import 'package:flash_mastery/core/exceptions/failures.dart';
 import 'package:flash_mastery/domain/entities/deck.dart';
 import 'package:flash_mastery/domain/entities/import_summary.dart';
 import 'package:flash_mastery/domain/usecases/decks/deck_usecases.dart';
@@ -20,7 +21,7 @@ class DeckListState with _$DeckListState {
     @Default(false) bool isLoadingMore,
     @Default(true) bool hasMore,
   }) = _Success;
-  const factory DeckListState.error(String message) = _Error;
+  const factory DeckListState.error(Failure failure) = _Error;
 }
 
 @riverpod
@@ -86,7 +87,7 @@ class DeckListViewModel extends _$DeckListViewModel {
           ),
         );
     state = result.fold(
-      (failure) => DeckListState.error(failure.toDisplayMessage()),
+      (failure) => DeckListState.error(failure),
       (decks) {
         _cache = decks;
         _hasMore = decks.length == _pageSize;

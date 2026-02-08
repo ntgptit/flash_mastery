@@ -10,12 +10,14 @@ import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.flash.mastery.constant.ErrorCodes;
 import com.flash.mastery.constant.MessageKeys;
 import com.flash.mastery.constant.NumberConstants;
 import com.flash.mastery.dto.request.StudySessionCreateRequest;
 import com.flash.mastery.dto.request.StudySessionProgressUpdateRequest;
 import com.flash.mastery.dto.request.StudySessionUpdateRequest;
 import com.flash.mastery.dto.response.StudySessionResponse;
+import com.flash.mastery.exception.BadRequestException;
 import com.flash.mastery.entity.Flashcard;
 import com.flash.mastery.entity.StudySession;
 import com.flash.mastery.entity.StudySessionProgress;
@@ -54,13 +56,14 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
     public StudySessionResponse startSession(StudySessionCreateRequest request) {
         final var deck = findByIdOrThrow(
                 this.deckRepository.findById(request.getDeckId()),
-                MessageKeys.ERROR_NOT_FOUND_DECK);
+                ErrorCodes.DECK_NOT_FOUND, MessageKeys.ERROR_DECK_NOT_FOUND);
 
         // Use provided flashcard IDs if available (for custom selection)
         if ((request.getFlashcardIds() != null) && !request.getFlashcardIds().isEmpty()) {
             final var flashcardIds = request.getFlashcardIds();
             if (flashcardIds.isEmpty()) {
-                throw new IllegalArgumentException("No flashcards available for study");
+                throw new BadRequestException(
+                        ErrorCodes.NO_FLASHCARDS_AVAILABLE, MessageKeys.ERROR_NO_FLASHCARDS_AVAILABLE);
             }
             return createSession(deck, flashcardIds);
         }
@@ -68,7 +71,8 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
         // Get all flashcards from deck
         final var flashcards = this.flashcardRepository.findByDeckId(request.getDeckId());
         if (flashcards.isEmpty()) {
-            throw new IllegalArgumentException("No flashcards available for study");
+            throw new BadRequestException(
+                    ErrorCodes.NO_FLASHCARDS_AVAILABLE, MessageKeys.ERROR_NO_FLASHCARDS_AVAILABLE);
         }
 
         final var allFlashcardIds = flashcards.stream()
@@ -90,8 +94,8 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
                 .collect(Collectors.toList());
 
         if (unstudiedFlashcardIds.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "All flashcards have been studied. Please add more flashcards to the deck.");
+            throw new BadRequestException(
+                    ErrorCodes.ALL_FLASHCARDS_STUDIED, MessageKeys.ERROR_ALL_FLASHCARDS_STUDIED);
         }
 
         // Shuffle to randomize order
@@ -124,7 +128,7 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
     public StudySessionResponse getSession(UUID sessionId) {
         final var session = findByIdOrThrow(
                 this.studySessionRepository.findById(sessionId),
-                MessageKeys.ERROR_NOT_FOUND_SESSION);
+                ErrorCodes.SESSION_NOT_FOUND, MessageKeys.ERROR_SESSION_NOT_FOUND);
         return this.studySessionMapper.toResponse(session);
     }
 
@@ -132,7 +136,7 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
     public StudySessionResponse updateSession(UUID sessionId, StudySessionUpdateRequest request) {
         final var session = findByIdOrThrow(
                 this.studySessionRepository.findById(sessionId),
-                MessageKeys.ERROR_NOT_FOUND_SESSION);
+                ErrorCodes.SESSION_NOT_FOUND, MessageKeys.ERROR_SESSION_NOT_FOUND);
 
         if (request.getCurrentMode() != null) {
             session.setCurrentMode(request.getCurrentMode());
@@ -155,7 +159,7 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
     public void completeSession(UUID sessionId) {
         final var session = findByIdOrThrow(
                 this.studySessionRepository.findById(sessionId),
-                MessageKeys.ERROR_NOT_FOUND_SESSION);
+                ErrorCodes.SESSION_NOT_FOUND, MessageKeys.ERROR_SESSION_NOT_FOUND);
         session.setCompletedAt(LocalDateTime.now());
         session.setNextMode(null);
         session.setStatus(StudySessionStatus.SUCCESS);
@@ -166,7 +170,7 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
     public void cancelSession(UUID sessionId) {
         final var session = findByIdOrThrow(
                 this.studySessionRepository.findById(sessionId),
-                MessageKeys.ERROR_NOT_FOUND_SESSION);
+                ErrorCodes.SESSION_NOT_FOUND, MessageKeys.ERROR_SESSION_NOT_FOUND);
         session.setNextMode(null);
         session.setStatus(StudySessionStatus.CANCEL);
         this.studySessionRepository.save(session);
@@ -180,10 +184,11 @@ public class StudySessionServiceImpl extends BaseService implements StudySession
         for (StudySessionProgressUpdateRequest update : updates) {
             final var flashcard = findByIdOrThrow(
                     this.flashcardRepository.findById(update.getFlashcardId()),
-                    MessageKeys.ERROR_NOT_FOUND_FLASHCARD);
+                    ErrorCodes.FLASHCARD_NOT_FOUND, MessageKeys.ERROR_FLASHCARD_NOT_FOUND);
 
             if (!session.getFlashcardIds().contains(flashcard.getId())) {
-                throw new IllegalArgumentException("Flashcard is not part of this study session");
+                throw new BadRequestException(
+                        ErrorCodes.FLASHCARD_NOT_IN_SESSION, MessageKeys.ERROR_FLASHCARD_NOT_IN_SESSION);
             }
 
             final var progress = findOrCreateProgress(session, flashcard);

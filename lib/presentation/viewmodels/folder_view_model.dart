@@ -1,5 +1,6 @@
 import 'package:flash_mastery/core/constants/config/view_scopes.dart';
 import 'package:flash_mastery/core/error/failure_messages.dart';
+import 'package:flash_mastery/core/exceptions/failures.dart';
 import 'package:flash_mastery/domain/entities/folder.dart';
 import 'package:flash_mastery/domain/usecases/folders/folder_usecases.dart';
 import 'package:flash_mastery/presentation/providers/folder_providers.dart';
@@ -14,7 +15,7 @@ class FolderListState with _$FolderListState {
   const factory FolderListState.initial() = _Initial;
   const factory FolderListState.loading() = _Loading;
   const factory FolderListState.success(List<Folder> folders) = _Success;
-  const factory FolderListState.error(String message) = _Error;
+  const factory FolderListState.error(Failure failure) = _Error;
 }
 
 @riverpod
@@ -50,7 +51,7 @@ class FolderListViewModel extends _$FolderListViewModel {
     state = const FolderListState.loading();
     final result = await ref.read(getFoldersUseCaseProvider).call(const GetFoldersParams());
     state = result.fold(
-      (failure) => FolderListState.error(failure.toDisplayMessage()),
+      (failure) => FolderListState.error(failure),
       (folders) => FolderListState.success(folders),
     );
   }

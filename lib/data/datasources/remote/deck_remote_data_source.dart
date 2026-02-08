@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/core/exceptions/exceptions.dart';
+import 'package:flash_mastery/core/network/api_error_parser.dart';
 import 'package:flash_mastery/data/models/deck_model.dart';
 import 'package:flash_mastery/data/models/import_summary_model.dart';
 import 'package:flash_mastery/domain/entities/flashcard_type.dart';
@@ -56,9 +57,7 @@ class DeckRemoteDataSourceImpl implements DeckRemoteDataSource {
       final data = (response.data as List).cast<Map<String, dynamic>>();
       return data.map(DeckModel.fromJson).toList();
     }
-    throw ServerException(
-      message: response.statusMessage ?? 'Failed to load decks',
-    );
+    throw _serverException(response);
   }
 
   @override
@@ -68,11 +67,9 @@ class DeckRemoteDataSourceImpl implements DeckRemoteDataSource {
       return DeckModel.fromJson(response.data as Map<String, dynamic>);
     }
     if (response.statusCode == 404) {
-      throw const NotFoundException(message: 'Deck not found');
+      throw _notFoundException(response);
     }
-    throw ServerException(
-      message: response.statusMessage ?? 'Failed to load deck',
-    );
+    throw _serverException(response);
   }
 
   @override
@@ -89,9 +86,7 @@ class DeckRemoteDataSourceImpl implements DeckRemoteDataSource {
     if (response.statusCode == 201 || response.statusCode == 200) {
       return DeckModel.fromJson(response.data as Map<String, dynamic>);
     }
-    throw ServerException(
-      message: response.statusMessage ?? 'Failed to create deck',
-    );
+    throw _serverException(response);
   }
 
   @override
@@ -109,11 +104,9 @@ class DeckRemoteDataSourceImpl implements DeckRemoteDataSource {
       return DeckModel.fromJson(response.data as Map<String, dynamic>);
     }
     if (response.statusCode == 404) {
-      throw const NotFoundException(message: 'Deck not found');
+      throw _notFoundException(response);
     }
-    throw ServerException(
-      message: response.statusMessage ?? 'Failed to update deck',
-    );
+    throw _serverException(response);
   }
 
   @override
@@ -121,11 +114,9 @@ class DeckRemoteDataSourceImpl implements DeckRemoteDataSource {
     final response = await dio.delete(ApiConstants.deleteDeck(id));
     if (response.statusCode == 204) return;
     if (response.statusCode == 404) {
-      throw const NotFoundException(message: 'Deck not found');
+      throw _notFoundException(response);
     }
-    throw ServerException(
-      message: response.statusMessage ?? 'Failed to delete deck',
-    );
+    throw _serverException(response);
   }
 
   @override
@@ -164,6 +155,21 @@ class DeckRemoteDataSourceImpl implements DeckRemoteDataSource {
     if (response.statusCode == 200) {
       return ImportSummaryModel.fromJson(response.data as Map<String, dynamic>);
     }
-    throw ServerException(message: response.statusMessage ?? 'Failed to import decks');
+    throw _serverException(response);
   }
+}
+
+NotFoundException _notFoundException(Response response) {
+  return NotFoundException(
+    message: ApiErrorParser.extractMessage(response.data) ?? 'Resource not found',
+    errorCode: ApiErrorParser.extractCode(response.data),
+  );
+}
+
+ServerException _serverException(Response response) {
+  return ServerException(
+    message: ApiErrorParser.extractMessage(response.data) ?? response.statusMessage ?? 'Request failed',
+    statusCode: response.statusCode,
+    errorCode: ApiErrorParser.extractCode(response.data),
+  );
 }

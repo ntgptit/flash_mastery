@@ -198,10 +198,10 @@ class _FlashcardListScreenState extends ConsumerState<_FlashcardListBody> {
             ),
           );
         },
-        error: (message) => Padding(
+        error: (failure) => Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
-          child: AppErrorWidget(
-            message: message,
+          child: AppErrorWidget.fromFailure(
+            failure,
             onRetry: () => ref.read(flashcardListViewModelProvider(widget.deck.id).notifier).load(),
           ),
         ),

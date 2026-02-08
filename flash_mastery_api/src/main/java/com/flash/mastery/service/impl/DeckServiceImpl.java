@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.flash.mastery.constant.ErrorCodes;
 import com.flash.mastery.constant.MessageKeys;
 import com.flash.mastery.constant.NumberConstants;
 import com.flash.mastery.dto.criteria.DeckSearchCriteria;
@@ -131,7 +132,7 @@ public class DeckServiceImpl extends BaseService implements DeckService {
     public DeckResponse getDeck(UUID id) {
         final var deck = findByIdOrThrow(
                 this.deckRepository.findById(id),
-                MessageKeys.ERROR_NOT_FOUND_DECK);
+                ErrorCodes.DECK_NOT_FOUND, MessageKeys.ERROR_DECK_NOT_FOUND);
         return this.deckMapper.toResponse(deck);
     }
 
@@ -139,7 +140,7 @@ public class DeckServiceImpl extends BaseService implements DeckService {
     public DeckResponse create(DeckCreateRequest request) {
         final var folder = findByIdOrThrow(
                 this.folderRepository.findById(request.getFolderId()),
-                MessageKeys.ERROR_NOT_FOUND_FOLDER);
+                ErrorCodes.FOLDER_NOT_FOUND, MessageKeys.ERROR_FOLDER_NOT_FOUND);
         final var deck = this.deckMapper.fromCreate(request, folder);
         final var saved = this.deckRepository.save(deck);
         folder.setDeckCount(incrementCount(folder.getDeckCount(), NumberConstants.ONE));
@@ -151,11 +152,12 @@ public class DeckServiceImpl extends BaseService implements DeckService {
     public DeckResponse update(UUID id, DeckUpdateRequest request) {
         final var deck = findByIdOrThrow(
                 this.deckRepository.findById(id),
-                MessageKeys.ERROR_NOT_FOUND_DECK);
+                ErrorCodes.DECK_NOT_FOUND, MessageKeys.ERROR_DECK_NOT_FOUND);
         var folder = deck.getFolder();
         if (request.getFolderId() != null) {
             folder = this.folderRepository.findById(request.getFolderId())
-                    .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FOLDER)));
+                    .orElseThrow(() -> new NotFoundException(
+                            ErrorCodes.FOLDER_NOT_FOUND, MessageKeys.ERROR_FOLDER_NOT_FOUND));
         }
         this.deckMapper.update(deck, request, folder);
         if (request.getType() != null) {
@@ -169,7 +171,7 @@ public class DeckServiceImpl extends BaseService implements DeckService {
     public void delete(UUID id) {
         final var deck = findByIdOrThrow(
                 this.deckRepository.findById(id),
-                MessageKeys.ERROR_NOT_FOUND_DECK);
+                ErrorCodes.DECK_NOT_FOUND, MessageKeys.ERROR_DECK_NOT_FOUND);
         this.deckRepository.delete(deck);
         final var folder = deck.getFolder();
         if ((folder != null) && (folder.getDeckCount() > NumberConstants.ZERO)) {
@@ -182,7 +184,8 @@ public class DeckServiceImpl extends BaseService implements DeckService {
     public ImportResult<ImportRow> importDecks(UUID folderId, MultipartFile file, FlashcardType type,
             boolean skipHeader) throws java.io.IOException {
         final var folder = this.folderRepository.findById(folderId)
-                .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FOLDER)));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCodes.FOLDER_NOT_FOUND, MessageKeys.ERROR_FOLDER_NOT_FOUND));
         final var importer = ImporterFactory.<ImportRow>forFilename(file.getOriginalFilename());
         final var parsed = importer.importStream(file.getInputStream(), this::mapRow,
                 skipHeader);

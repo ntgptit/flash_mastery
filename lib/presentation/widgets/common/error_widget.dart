@@ -1,4 +1,6 @@
 import 'package:flash_mastery/core/constants/constants.dart';
+import 'package:flash_mastery/core/error/failure_messages.dart';
+import 'package:flash_mastery/core/exceptions/failures.dart';
 import 'package:flutter/material.dart';
 
 /// A reusable error display widget
@@ -19,6 +21,20 @@ class AppErrorWidget extends StatelessWidget {
     this.retryButtonText,
     this.iconColor,
   });
+
+  /// Factory that picks the right style based on [Failure] type.
+  factory AppErrorWidget.fromFailure(Failure failure, {VoidCallback? onRetry}) {
+    if (failure is NetworkFailure || failure is TimeoutFailure) {
+      return AppErrorWidget.network(message: failure.toDisplayMessage(), onRetry: onRetry);
+    }
+    if (failure is NotFoundFailure) {
+      return AppErrorWidget.notFound(message: failure.toDisplayMessage(), onRetry: onRetry);
+    }
+    if (failure is AuthorizationFailure) {
+      return AppErrorWidget.permission(message: failure.toDisplayMessage(), onRetry: onRetry);
+    }
+    return AppErrorWidget.server(message: failure.toDisplayMessage(), onRetry: onRetry);
+  }
 
   /// Factory for network errors
   factory AppErrorWidget.network({

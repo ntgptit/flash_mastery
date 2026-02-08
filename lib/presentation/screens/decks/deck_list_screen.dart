@@ -67,9 +67,9 @@ class _DeckListScreenState extends ConsumerState<_DeckListScreenBody> {
         child: deckListState.when(
           initial: () => const Center(child: LoadingWidget()),
           loading: () => const Center(child: LoadingWidget()),
-          error: (message) => Padding(
+          error: (failure) => Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
-            child: AppErrorWidget(message: message, onRetry: _refreshWithDefaults),
+            child: AppErrorWidget.fromFailure(failure, onRetry: _refreshWithDefaults),
           ),
           success: (decks, isLoadingMore, hasMore) {
             return RefreshIndicator(

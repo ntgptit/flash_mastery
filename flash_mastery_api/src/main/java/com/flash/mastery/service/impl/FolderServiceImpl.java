@@ -10,12 +10,14 @@ import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.flash.mastery.constant.ErrorCodes;
 import com.flash.mastery.constant.MessageKeys;
 import com.flash.mastery.dto.criteria.FolderSearchCriteria;
 import com.flash.mastery.dto.request.FolderCreateRequest;
 import com.flash.mastery.dto.request.FolderUpdateRequest;
 import com.flash.mastery.dto.response.FolderResponse;
 import com.flash.mastery.entity.Folder;
+import com.flash.mastery.exception.BadRequestException;
 import com.flash.mastery.exception.NotFoundException;
 import com.flash.mastery.mapper.FolderMapper;
 import com.flash.mastery.repository.FolderRepository;
@@ -49,7 +51,7 @@ public class FolderServiceImpl extends BaseService implements FolderService {
         if (criteria.hasParentFilter()) {
             findByIdOrThrow(
                     this.folderRepository.findById(criteria.getParentId()),
-                    MessageKeys.ERROR_NOT_FOUND_FOLDER);
+                    ErrorCodes.FOLDER_NOT_FOUND, MessageKeys.ERROR_FOLDER_NOT_FOUND);
         }
 
         final var folders = this.folderRepository.findByCriteria(criteria);
@@ -61,7 +63,7 @@ public class FolderServiceImpl extends BaseService implements FolderService {
     public FolderResponse getFolder(UUID id) {
         final var folder = findByIdOrThrow(
                 this.folderRepository.findById(id),
-                MessageKeys.ERROR_NOT_FOUND_FOLDER);
+                ErrorCodes.FOLDER_NOT_FOUND, MessageKeys.ERROR_FOLDER_NOT_FOUND);
         return toResponseWithPath(folder);
     }
 
@@ -71,7 +73,8 @@ public class FolderServiceImpl extends BaseService implements FolderService {
         if (request.getParentId() != null) {
             final var parent = this.folderRepository
                     .findById(request.getParentId())
-                    .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FOLDER)));
+                    .orElseThrow(() -> new NotFoundException(
+                            ErrorCodes.FOLDER_NOT_FOUND, MessageKeys.ERROR_FOLDER_NOT_FOUND));
             folder.setParent(parent);
         }
         final var saved = this.folderRepository.save(folder);
@@ -82,14 +85,16 @@ public class FolderServiceImpl extends BaseService implements FolderService {
     public FolderResponse update(UUID id, FolderUpdateRequest request) {
         final var folder = findByIdOrThrow(
                 this.folderRepository.findById(id),
-                MessageKeys.ERROR_NOT_FOUND_FOLDER);
+                ErrorCodes.FOLDER_NOT_FOUND, MessageKeys.ERROR_FOLDER_NOT_FOUND);
         if (request.getParentId() != null) {
             if (id.equals(request.getParentId())) {
-                throw new IllegalArgumentException("Folder cannot reference itself as parent");
+                throw new BadRequestException(
+                        ErrorCodes.FOLDER_SELF_REFERENCE, MessageKeys.ERROR_FOLDER_SELF_REFERENCE);
             }
             final var parent = this.folderRepository
                     .findById(request.getParentId())
-                    .orElseThrow(() -> new NotFoundException(msg(MessageKeys.ERROR_NOT_FOUND_FOLDER)));
+                    .orElseThrow(() -> new NotFoundException(
+                            ErrorCodes.FOLDER_NOT_FOUND, MessageKeys.ERROR_FOLDER_NOT_FOUND));
             validateParent(folder, parent);
             folder.setParent(parent);
         }
@@ -102,7 +107,7 @@ public class FolderServiceImpl extends BaseService implements FolderService {
     public void delete(UUID id) {
         final var folder = findByIdOrThrow(
                 this.folderRepository.findById(id),
-                MessageKeys.ERROR_NOT_FOUND_FOLDER);
+                ErrorCodes.FOLDER_NOT_FOUND, MessageKeys.ERROR_FOLDER_NOT_FOUND);
         // Recursively delete all subfolders and their contents
         deleteRecursively(folder);
     }
@@ -121,7 +126,8 @@ public class FolderServiceImpl extends BaseService implements FolderService {
         var current = newParent;
         while (current != null) {
             if ((folder.getId() != null) && folder.getId().equals(current.getId())) {
-                throw new IllegalArgumentException("Parent folder cannot be a descendant of the folder");
+                throw new BadRequestException(
+                        ErrorCodes.FOLDER_CIRCULAR_PARENT, MessageKeys.ERROR_FOLDER_CIRCULAR_PARENT);
             }
             current = current.getParent();
         }

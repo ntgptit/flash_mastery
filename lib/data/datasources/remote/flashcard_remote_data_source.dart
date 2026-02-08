@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flash_mastery/core/constants/constants.dart';
 import 'package:flash_mastery/core/exceptions/exceptions.dart';
+import 'package:flash_mastery/core/network/api_error_parser.dart';
 import 'package:flash_mastery/data/models/flashcard_model.dart';
 
 abstract class FlashcardRemoteDataSource {
@@ -29,7 +30,7 @@ class FlashcardRemoteDataSourceImpl implements FlashcardRemoteDataSource {
       final data = (response.data as List).cast<Map<String, dynamic>>();
       return data.map(FlashcardModel.fromJson).toList();
     }
-    throw ServerException(message: response.statusMessage ?? 'Failed to load flashcards');
+    throw _serverException(response);
   }
 
   @override
@@ -39,9 +40,9 @@ class FlashcardRemoteDataSourceImpl implements FlashcardRemoteDataSource {
       return FlashcardModel.fromJson(response.data as Map<String, dynamic>);
     }
     if (response.statusCode == 404) {
-      throw const NotFoundException(message: 'Flashcard not found');
+      throw _notFoundException(response);
     }
-    throw ServerException(message: response.statusMessage ?? 'Failed to load flashcard');
+    throw _serverException(response);
   }
 
   @override
@@ -58,7 +59,7 @@ class FlashcardRemoteDataSourceImpl implements FlashcardRemoteDataSource {
     if (response.statusCode == 201 || response.statusCode == 200) {
       return FlashcardModel.fromJson(response.data as Map<String, dynamic>);
     }
-    throw ServerException(message: response.statusMessage ?? 'Failed to create flashcard');
+    throw _serverException(response);
   }
 
   @override
@@ -76,9 +77,9 @@ class FlashcardRemoteDataSourceImpl implements FlashcardRemoteDataSource {
       return FlashcardModel.fromJson(response.data as Map<String, dynamic>);
     }
     if (response.statusCode == 404) {
-      throw const NotFoundException(message: 'Flashcard not found');
+      throw _notFoundException(response);
     }
-    throw ServerException(message: response.statusMessage ?? 'Failed to update flashcard');
+    throw _serverException(response);
   }
 
   @override
@@ -86,8 +87,23 @@ class FlashcardRemoteDataSourceImpl implements FlashcardRemoteDataSource {
     final response = await dio.delete(ApiConstants.deleteFlashcard(id));
     if (response.statusCode == 204) return;
     if (response.statusCode == 404) {
-      throw const NotFoundException(message: 'Flashcard not found');
+      throw _notFoundException(response);
     }
-    throw ServerException(message: response.statusMessage ?? 'Failed to delete flashcard');
+    throw _serverException(response);
   }
+}
+
+NotFoundException _notFoundException(Response response) {
+  return NotFoundException(
+    message: ApiErrorParser.extractMessage(response.data) ?? 'Resource not found',
+    errorCode: ApiErrorParser.extractCode(response.data),
+  );
+}
+
+ServerException _serverException(Response response) {
+  return ServerException(
+    message: ApiErrorParser.extractMessage(response.data) ?? response.statusMessage ?? 'Request failed',
+    statusCode: response.statusCode,
+    errorCode: ApiErrorParser.extractCode(response.data),
+  );
 }

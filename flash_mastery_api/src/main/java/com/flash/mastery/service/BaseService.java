@@ -30,16 +30,16 @@ public abstract class BaseService {
 
     /**
      * Find entity by ID or throw NotFoundException.
-     * Common pattern for all services.
      *
-     * @param <T>             the entity type
-     * @param optional        the optional entity from repository
-     * @param errorMessageKey the message key for error message
+     * @param <T>        the entity type
+     * @param optional   the optional entity from repository
+     * @param errorCode  domain-specific error code (e.g. ErrorCodes.DECK_NOT_FOUND)
+     * @param messageKey i18n message key (e.g. MessageKeys.ERROR_DECK_NOT_FOUND)
      * @return the entity if found
      * @throws NotFoundException if entity not found
      */
-    protected <T> T findByIdOrThrow(Optional<T> optional, String errorMessageKey) {
-        return optional.orElseThrow(() -> new NotFoundException(msg(errorMessageKey)));
+    protected <T> T findByIdOrThrow(Optional<T> optional, String errorCode, String messageKey) {
+        return optional.orElseThrow(() -> new NotFoundException(errorCode, messageKey));
     }
 
     /**

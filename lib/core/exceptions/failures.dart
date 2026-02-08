@@ -7,14 +7,16 @@ import 'package:equatable/equatable.dart';
 abstract class Failure extends Equatable {
   final String message;
   final int? code;
+  final String? errorCode;
 
   const Failure({
     required this.message,
     this.code,
+    this.errorCode,
   });
 
   @override
-  List<Object?> get props => [message, code];
+  List<Object?> get props => [message, code, errorCode];
 }
 
 /// Failure when there's a server error
@@ -22,6 +24,7 @@ class ServerFailure extends Failure {
   const ServerFailure({
     super.message = 'Server error occurred',
     super.code,
+    super.errorCode,
   });
 }
 
@@ -30,6 +33,7 @@ class CacheFailure extends Failure {
   const CacheFailure({
     super.message = 'Cache error occurred',
     super.code,
+    super.errorCode,
   });
 }
 
@@ -38,6 +42,7 @@ class NetworkFailure extends Failure {
   const NetworkFailure({
     super.message = 'Network connection failed',
     super.code,
+    super.errorCode,
   });
 }
 
@@ -46,6 +51,7 @@ class AuthenticationFailure extends Failure {
   const AuthenticationFailure({
     super.message = 'Authentication failed',
     super.code,
+    super.errorCode,
   });
 }
 
@@ -54,6 +60,7 @@ class AuthorizationFailure extends Failure {
   const AuthorizationFailure({
     super.message = 'You are not authorized to perform this action',
     super.code,
+    super.errorCode,
   });
 }
 
@@ -64,11 +71,12 @@ class ValidationFailure extends Failure {
   const ValidationFailure({
     super.message = 'Validation failed',
     super.code,
+    super.errorCode,
     this.errors,
   });
 
   @override
-  List<Object?> get props => [message, code, errors];
+  List<Object?> get props => [message, code, errorCode, errors];
 }
 
 /// Failure when a timeout occurs
@@ -76,6 +84,7 @@ class TimeoutFailure extends Failure {
   const TimeoutFailure({
     super.message = 'Request timeout',
     super.code,
+    super.errorCode,
   });
 }
 
@@ -84,6 +93,7 @@ class FormatFailure extends Failure {
   const FormatFailure({
     super.message = 'Invalid data format',
     super.code,
+    super.errorCode,
   });
 }
 
@@ -92,6 +102,7 @@ class NotFoundFailure extends Failure {
   const NotFoundFailure({
     super.message = 'Resource not found',
     super.code,
+    super.errorCode,
   });
 }
 
@@ -100,5 +111,6 @@ class UnexpectedFailure extends Failure {
   const UnexpectedFailure({
     super.message = 'An unexpected error occurred',
     super.code,
+    super.errorCode,
   });
 }

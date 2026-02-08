@@ -2,6 +2,9 @@ package com.flash.mastery.util.importer;
 
 import java.util.Locale;
 
+import com.flash.mastery.constant.ErrorCodes;
+import com.flash.mastery.constant.MessageKeys;
+import com.flash.mastery.exception.BadRequestException;
 import com.flash.mastery.util.importer.csv.CsvImporter;
 import com.flash.mastery.util.importer.excel.ExcelImporter;
 
@@ -15,6 +18,9 @@ public class ImporterFactory {
         if (lower.endsWith(".xlsx")) {
             return new ExcelImporter<>();
         }
-        throw new IllegalArgumentException("Unsupported file type: " + filename);
+        throw new BadRequestException(
+                ErrorCodes.UNSUPPORTED_FILE_TYPE,
+                MessageKeys.ERROR_UNSUPPORTED_FILE_TYPE,
+                "Unsupported file type: " + filename);
     }
 }

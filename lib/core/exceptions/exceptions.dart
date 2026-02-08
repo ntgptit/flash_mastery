@@ -7,10 +7,12 @@ library;
 class ServerException implements Exception {
   final String message;
   final int? statusCode;
+  final String? errorCode;
 
   const ServerException({
     this.message = 'Server error occurred',
     this.statusCode,
+    this.errorCode,
   });
 
   @override
@@ -44,9 +46,11 @@ class NetworkException implements Exception {
 /// Exception thrown when authentication fails
 class AuthenticationException implements Exception {
   final String message;
+  final String? errorCode;
 
   const AuthenticationException({
     this.message = 'Authentication failed',
+    this.errorCode,
   });
 
   @override
@@ -56,9 +60,11 @@ class AuthenticationException implements Exception {
 /// Exception thrown when authorization fails
 class AuthorizationException implements Exception {
   final String message;
+  final String? errorCode;
 
   const AuthorizationException({
     this.message = 'Authorization failed',
+    this.errorCode,
   });
 
   @override
@@ -68,10 +74,12 @@ class AuthorizationException implements Exception {
 /// Exception thrown when validation fails
 class ValidationException implements Exception {
   final String message;
+  final String? errorCode;
   final Map<String, dynamic>? errors;
 
   const ValidationException({
     this.message = 'Validation failed',
+    this.errorCode,
     this.errors,
   });
 
@@ -106,9 +114,11 @@ class FormatException implements Exception {
 /// Exception thrown when a resource is not found
 class NotFoundException implements Exception {
   final String message;
+  final String? errorCode;
 
   const NotFoundException({
     this.message = 'Resource not found',
+    this.errorCode,
   });
 
   @override

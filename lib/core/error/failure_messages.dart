@@ -1,13 +1,23 @@
 import 'package:flash_mastery/core/exceptions/failures.dart';
 
-/// Provides user-friendly messages for [Failure] types in one place.
+/// Provides user-friendly messages for [Failure] types.
+///
+/// Backend already returns i18n-safe messages, so we use `failure.message`
+/// directly. Fallbacks are only for offline/network errors where there's
+/// no backend message.
 extension FailureMessages on Failure {
   String toDisplayMessage() {
-    if (this is ValidationFailure) return message.isNotEmpty ? message : 'Invalid data provided.';
-    if (this is NotFoundFailure) return message.isNotEmpty ? message : 'Item not found.';
-    if (this is NetworkFailure) return message.isNotEmpty ? message : 'Network error. Please try again.';
-    if (this is CacheFailure) return message.isNotEmpty ? message : 'Storage error. Please try again.';
-    if (this is ServerFailure) return message.isNotEmpty ? message : 'Server error. Please try again later.';
-    return message.isNotEmpty ? message : 'Something went wrong. Please try again.';
+    if (message.isNotEmpty) return message;
+
+    // Fallbacks for cases without backend message
+    if (this is NetworkFailure) return 'Network error. Please try again.';
+    if (this is TimeoutFailure) return 'Request timeout. Please try again.';
+    if (this is CacheFailure) return 'Storage error. Please try again.';
+    if (this is ServerFailure) return 'Server error. Please try again later.';
+    if (this is ValidationFailure) return 'Invalid data provided.';
+    if (this is NotFoundFailure) return 'Item not found.';
+    if (this is AuthenticationFailure) return 'Authentication failed.';
+    if (this is AuthorizationFailure) return 'Access denied.';
+    return 'Something went wrong. Please try again.';
   }
 }

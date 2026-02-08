@@ -123,8 +123,8 @@ class _FolderListScreenState extends ConsumerState<_FolderListScreenBody> {
             ),
           );
         },
-        error: (message) => AppErrorWidget(
-          message: message,
+        error: (failure) => AppErrorWidget.fromFailure(
+          failure,
           onRetry: () => ref.read(folderListViewModelProvider(ViewScope.folders).notifier).load(),
         ),
       ),

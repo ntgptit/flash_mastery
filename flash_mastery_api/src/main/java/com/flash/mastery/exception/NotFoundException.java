@@ -1,9 +1,14 @@
 package com.flash.mastery.exception;
 
-public class NotFoundException extends RuntimeException {
-    private static final long serialVersionUID = -1791292593081061951L;
+import org.springframework.http.HttpStatus;
 
-    public NotFoundException(String message) {
-        super(message);
+public class NotFoundException extends BusinessException {
+
+    public NotFoundException(String errorCode, String messageKey) {
+        super(messageKey, errorCode, HttpStatus.NOT_FOUND);
+    }
+
+    public NotFoundException(String errorCode, String messageKey, String logMessage) {
+        super(messageKey, errorCode, HttpStatus.NOT_FOUND, logMessage);
     }
 }

@@ -1,0 +1,375 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Flash Mastery",
+
+  "dashboard": "Dashboard",
+  "folders": "Folders",
+  "decks": "Decks",
+  "flashcards": "Flashcards",
+
+  "refresh": "Refresh",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "create": "Create",
+  "update": "Update",
+  "search": "Search",
+  "close": "Close",
+  "edit": "Edit",
+  "open": "Open",
+  "save": "Save",
+  "import": "Import",
+  "continueAction": "Continue",
+  "goBack": "Go Back",
+  "viewAll": "View all",
+  "yes": "Yes",
+  "no": "No",
+
+  "heroTitle": "Your flashcard HQ",
+  "heroSubtitle": "Organize knowledge, launch study sessions, and keep momentum.",
+  "openFolders": "Open folders",
+  "startStudying": "Start studying",
+  "newFolder": "New folder",
+  "totalFolders": "Total folders",
+  "totalDecks": "Total decks",
+  "createNow": "Create now",
+  "stayOrganized": "Stay organized",
+  "jumpToFolders": "Jump to folders",
+  "topFolders": "Top folders",
+  "recentActivity": "Recent activity",
+  "folderCreatedSuccessfully": "Folder created successfully",
+  "folderUpdatedSuccessfully": "Folder updated successfully",
+  "folderDeleted": "Folder deleted",
+  "updatedAgo": "updated {time}",
+  "@updatedAgo": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+
+  "nDecks": "{count, plural, =0{0 decks} =1{1 deck} other{{count} decks}}",
+  "@nDecks": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "nSubfolders": "{count, plural, =0{0 subfolders} =1{1 subfolder} other{{count} subfolders}}",
+  "@nSubfolders": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "nCards": "{count, plural, =0{0 cards} =1{1 card} other{{count} cards}}",
+  "@nCards": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "nTerms": "{count} terms",
+  "@nTerms": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "searchDecks": "Search Decks",
+  "enterDeckName": "Enter deck name...",
+  "organizeDecks": "Organize and review your decks",
+  "createDeck": "Create Deck",
+  "editDeck": "Edit Deck",
+  "importDecks": "Import decks",
+  "intoFolder": "Into {folderName}",
+  "@intoFolder": {
+    "placeholders": {
+      "folderName": { "type": "String" }
+    }
+  },
+  "selectAFolder": "Select a folder",
+  "createFolderBeforeDecks": "Create a folder before adding decks",
+  "deleteDeck": "Delete Deck",
+  "deleteDeckConfirm": "Are you sure you want to delete \"{name}\"?\nThis action cannot be undone.",
+  "@deleteDeckConfirm": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "deckCreatedSuccessfully": "Deck created successfully",
+  "deckUpdatedSuccessfully": "Deck updated successfully",
+  "deckDeleted": "Deck deleted",
+  "deleteFolder": "Delete Folder",
+  "deleteFolderConfirm": "Are you sure you want to delete \"{name}\"?",
+  "@deleteFolderConfirm": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "deleteSubfolderConfirm": "Delete subfolder \"{name}\"?\nThis will remove it from this folder.",
+  "@deleteSubfolderConfirm": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "subfolderCreatedSuccessfully": "Subfolder created successfully",
+  "subfolderUpdated": "Subfolder updated",
+  "selectFolder": "Select folder",
+  "importOptions": "Import options",
+  "vocabulary": "Vocabulary",
+  "grammar": "Grammar",
+  "fileHasHeaderRow": "File has header row",
+  "importSummary": "Import Summary",
+  "success": "Success",
+  "nDecksNCards": "{deckCount} decks, {cardCount} cards",
+  "@nDecksNCards": {
+    "placeholders": {
+      "deckCount": { "type": "int" },
+      "cardCount": { "type": "int" }
+    }
+  },
+  "decksCreated": "Decks created: {count}",
+  "@decksCreated": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "flashcardsImported": "Flashcards imported: {count}",
+  "@flashcardsImported": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "skipped": "Skipped",
+  "decksSkippedDuplicate": "Decks skipped (duplicate): {count}",
+  "@decksSkippedDuplicate": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "flashcardsSkippedDuplicate": "Flashcards skipped (duplicate term): {count}",
+  "@flashcardsSkippedDuplicate": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "errors": "Errors",
+  "nInvalidRows": "{count} invalid rows",
+  "@nInvalidRows": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "noErrors": "No errors",
+  "invalidRows": "Invalid rows: {count}",
+  "@invalidRows": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "rowError": "Row {row}: {message}",
+  "@rowError": {
+    "placeholders": {
+      "row": { "type": "int" },
+      "message": { "type": "String" }
+    }
+  },
+  "noDecksYet": "No decks yet",
+  "createDeckToStart": "Create a deck to start adding flashcards",
+  "noDescription": "No description",
+  "general": "General",
+
+  "subfolders": "Subfolders",
+  "newSubfolder": "New subfolder",
+  "noSubfoldersYet": "No subfolders yet. Create one to organize deeper.",
+  "back": "Back",
+
+  "deckName": "Deck Name",
+  "enterDeckNameHint": "Enter deck name",
+  "pleaseEnterDeckName": "Please enter a deck name",
+  "nameTooShort": "Name must be at least {min} characters",
+  "@nameTooShort": {
+    "placeholders": {
+      "min": { "type": "int" }
+    }
+  },
+  "descriptionOptional": "Description (optional)",
+  "enterDeckDescription": "Enter deck description",
+  "descriptionTooLong": "Description must not exceed {max} characters",
+  "@descriptionTooLong": {
+    "placeholders": {
+      "max": { "type": "int" }
+    }
+  },
+  "deckType": "Deck type",
+  "folder": "Folder",
+  "pleaseSelectFolder": "Please select a folder",
+
+  "cardsOfDeck": "Cards · {deckName}",
+  "@cardsOfDeck": {
+    "placeholders": {
+      "deckName": { "type": "String" }
+    }
+  },
+  "noFlashcardsYet": "No flashcards yet",
+  "createFlashcardsToStart": "Create flashcards to start practicing",
+  "createFlashcard": "Create Flashcard",
+  "editFlashcard": "Edit Flashcard",
+  "searchFlashcards": "Search Flashcards",
+  "enterKeyword": "Enter keyword...",
+  "sectionDeckName": "Section: {name}",
+  "@sectionDeckName": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "sharedDeck": "Shared deck",
+  "study": "Study",
+  "test": "Test",
+  "yourProgress": "Your progress",
+  "notStarted": "Not started",
+  "inProgress": "In progress",
+  "mastered": "Mastered",
+  "cards": "Cards",
+  "originalOrder": "Original order",
+  "sort": "Sort",
+  "playAudio": "Play audio",
+  "deleteFlashcard": "Delete Flashcard",
+  "deleteFlashcardConfirm": "Are you sure you want to delete this flashcard?",
+  "flashcardCreated": "Flashcard created",
+  "flashcardUpdated": "Flashcard updated",
+  "flashcardDeleted": "Flashcard deleted",
+
+  "question": "Question",
+  "enterQuestion": "Enter question",
+  "answer": "Answer",
+  "enterAnswer": "Enter answer",
+  "hintOptional": "Hint (optional)",
+  "enterHint": "Enter hint",
+  "type": "Type",
+
+  "switchToListView": "Switch to list view",
+  "switchToGridView": "Switch to grid view",
+  "noFoldersYet": "No folders yet",
+  "createFirstFolder": "Create your first folder to organize your decks",
+  "createFolder": "Create Folder",
+  "editFolder": "Edit Folder",
+  "createNewFolder": "Create New Folder",
+  "searchFolders": "Search Folders",
+  "enterFolderName": "Enter folder name...",
+  "thisFolderContains": "This folder contains:",
+  "actionCannotBeUndone": "This action cannot be undone.",
+  "allContentsDeleted": "All contents will be permanently deleted.",
+  "addSubfolder": "Add subfolder",
+
+  "parentFolder": "Parent folder",
+  "noParentRoot": "No parent (root)",
+  "pathLabel": "Path: ",
+  "folderName": "Folder Name",
+  "enterFolderNameHint": "Enter folder name",
+  "pleaseEnterFolderName": "Please enter a folder name",
+  "nameTooLong": "Name must not exceed {max} characters",
+  "@nameTooLong": {
+    "placeholders": {
+      "max": { "type": "int" }
+    }
+  },
+  "enterFolderDescription": "Enter folder description",
+  "chooseColor": "Choose Color",
+  "unknownFolder": "Unknown folder",
+
+  "startingStudySession": "Starting Study Session",
+  "testMode": "Test Mode",
+  "studyMode": "Study - {mode}",
+  "@studyMode": {
+    "placeholders": {
+      "mode": { "type": "String" }
+    }
+  },
+  "exitTest": "Exit Test?",
+  "exitStudySession": "Exit Study Session?",
+  "saveProgressQuestion": "Do you want to save your progress?",
+  "progressSaved": "Study progress saved",
+  "sessionCancelled": "Study session cancelled",
+  "sessionCompleted": "Study session completed!",
+  "failedToLoadFlashcards": "Failed to load flashcards: {error}",
+  "@failedToLoadFlashcards": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "noFlashcardsInBatch": "No flashcards in this batch",
+  "meaning": "Meaning",
+  "term": "Term",
+  "show": "Show",
+  "remembered": "Remembered",
+  "forgot": "Forgot",
+  "matchTermsWithMeanings": "Match terms with their meanings",
+  "matchesProgress": "Matches: {current} / {total}",
+  "@matchesProgress": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "terms": "Terms",
+  "meanings": "Meanings",
+  "incorrectMatch": "Incorrect match. Try again.",
+  "typeTheTerm": "Type the term",
+  "enterYourAnswer": "Enter your answer",
+  "correctAnswer": "Correct Answer",
+  "correct": "Correct!",
+  "progressCount": "{current} / {total}",
+  "@progressCount": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "toReview": "To Review: {count}",
+  "@toReview": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "timerSeconds": "{seconds} s",
+  "@timerSeconds": {
+    "placeholders": {
+      "seconds": { "type": "int" }
+    }
+  },
+
+  "errorPrefix": "Error: {message}",
+  "@errorPrefix": {
+    "placeholders": {
+      "message": { "type": "String" }
+    }
+  },
+
+  "emptyStateTitle": "No Items Found",
+  "emptyStateMessage": "There are no items to display at the moment.",
+  "noResultsFound": "No Results Found",
+  "noResultsForQuery": "No results found for \"{query}\"",
+  "@noResultsForQuery": {
+    "placeholders": {
+      "query": { "type": "String" }
+    }
+  },
+  "tryAdjustingSearch": "Try adjusting your search criteria.",
+  "clearSearch": "Clear Search",
+  "noFavoritesYet": "No Favorites Yet",
+  "addFavoritesMessage": "Start adding items to your favorites to see them here.",
+  "browseItems": "Browse Items",
+  "noNotifications": "No Notifications",
+  "allCaughtUp": "You're all caught up! No new notifications.",
+  "noConnection": "No Connection",
+  "unableToLoadData": "Unable to load data. Please check your internet connection.",
+  "retry": "Retry",
+
+  "connectionError": "Connection Error",
+  "checkInternetConnection": "Please check your internet connection and try again.",
+  "serverError": "Server Error",
+  "serverErrorMessage": "Something went wrong on our end. Please try again later.",
+  "notFound": "Not Found",
+  "notFoundMessage": "The resource you are looking for could not be found.",
+  "accessDenied": "Access Denied",
+  "accessDeniedMessage": "You do not have permission to access this resource.",
+  "tryAgain": "Try Again"
+}

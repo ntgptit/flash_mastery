@@ -7,12 +7,14 @@ import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.flash.mastery.constant.ErrorCodes;
 import com.flash.mastery.constant.MessageKeys;
 import com.flash.mastery.constant.NumberConstants;
 import com.flash.mastery.dto.criteria.FlashcardSearchCriteria;
 import com.flash.mastery.dto.request.FlashcardCreateRequest;
 import com.flash.mastery.dto.request.FlashcardUpdateRequest;
 import com.flash.mastery.dto.response.FlashcardResponse;
+import com.flash.mastery.exception.BadRequestException;
 import com.flash.mastery.mapper.FlashcardMapper;
 import com.flash.mastery.repository.DeckRepository;
 import com.flash.mastery.repository.FlashcardRepository;
@@ -75,22 +77,24 @@ public class FlashcardServiceImpl extends BaseService implements FlashcardServic
     public FlashcardResponse getById(UUID id) {
         final var card = findByIdOrThrow(
                 this.flashcardRepository.findById(id),
-                MessageKeys.ERROR_NOT_FOUND_FLASHCARD);
+                ErrorCodes.FLASHCARD_NOT_FOUND, MessageKeys.ERROR_FLASHCARD_NOT_FOUND);
         return this.flashcardMapper.toResponse(card);
     }
 
     @Override
     public FlashcardResponse create(FlashcardCreateRequest request) {
         if (request.getDeckId() == null) {
-            throw new IllegalArgumentException("Deck ID must not be null when creating flashcard");
+            throw new BadRequestException(
+                    ErrorCodes.DECK_ID_REQUIRED, MessageKeys.ERROR_DECK_ID_REQUIRED);
         }
         final var deck = findByIdOrThrow(
                 this.deckRepository.findById(request.getDeckId()),
-                MessageKeys.ERROR_NOT_FOUND_DECK);
+                ErrorCodes.DECK_NOT_FOUND, MessageKeys.ERROR_DECK_NOT_FOUND);
         final var deckType = deck.getType() != null ? deck.getType() : request.getType();
         final var requestedType = request.getType() != null ? request.getType() : deckType;
         if ((deckType != null) && (requestedType != null) && (deckType != requestedType)) {
-            throw new IllegalArgumentException("Flashcard type must match deck type");
+            throw new BadRequestException(
+                    ErrorCodes.FLASHCARD_TYPE_MISMATCH, MessageKeys.ERROR_FLASHCARD_TYPE_MISMATCH);
         }
         if (requestedType != null) {
             request.setType(requestedType);
@@ -106,13 +110,14 @@ public class FlashcardServiceImpl extends BaseService implements FlashcardServic
     public FlashcardResponse update(UUID id, FlashcardUpdateRequest request) {
         final var card = findByIdOrThrow(
                 this.flashcardRepository.findById(id),
-                MessageKeys.ERROR_NOT_FOUND_FLASHCARD);
+                ErrorCodes.FLASHCARD_NOT_FOUND, MessageKeys.ERROR_FLASHCARD_NOT_FOUND);
         this.flashcardMapper.update(card, request);
         final var deck = card.getDeck();
         final var deckType = deck != null ? deck.getType() : null;
         final var targetType = request.getType() != null ? request.getType() : card.getType();
         if ((deckType != null) && (targetType != null) && (deckType != targetType)) {
-            throw new IllegalArgumentException("Flashcard type must match deck type");
+            throw new BadRequestException(
+                    ErrorCodes.FLASHCARD_TYPE_MISMATCH, MessageKeys.ERROR_FLASHCARD_TYPE_MISMATCH);
         }
         if (targetType != null) {
             card.setType(targetType);
@@ -128,7 +133,7 @@ public class FlashcardServiceImpl extends BaseService implements FlashcardServic
     public void delete(UUID id) {
         final var card = findByIdOrThrow(
                 this.flashcardRepository.findById(id),
-                MessageKeys.ERROR_NOT_FOUND_FLASHCARD);
+                ErrorCodes.FLASHCARD_NOT_FOUND, MessageKeys.ERROR_FLASHCARD_NOT_FOUND);
         this.flashcardRepository.delete(card);
         final var deck = card.getDeck();
         if ((deck != null) && (deck.getCardCount() > NumberConstants.ZERO)) {

@@ -1,7 +1,13 @@
+import 'package:flash_mastery/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Extension methods for BuildContext
 extension ContextExtensions on BuildContext {
+  // ==================== LOCALIZATION ====================
+
+  /// Get AppLocalizations instance
+  AppLocalizations get l10n => AppLocalizations.of(this)!;
+
   // ==================== THEME ACCESS ====================
 
   /// Get current theme data
